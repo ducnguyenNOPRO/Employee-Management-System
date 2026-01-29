@@ -14,9 +14,9 @@ function App() {
   return (
     <>
       <div className="font-bold">{message}</div>
-          <Button variant="outline">Click me</Button>
+      <Button variant="outline">Click me</Button>
     </>
-  )
+  );
 }
 
 export default App;
