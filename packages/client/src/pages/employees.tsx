@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import AddEmployeeModal from "@/components/modals/Employee/AddEmployeeModal";
 
 const columns: ColumnDef<Employee>[] = [
   {
@@ -88,6 +89,7 @@ const columns: ColumnDef<Employee>[] = [
 const departments = Array.from(new Set(mockEmployees.map((e) => e.department)));
 export default function Employees() {
   const [data, setData] = useState<Employee[]>(mockEmployees);
+  const [openModal, setOpenModal] = useState(false);
   const [department, setDepartment] = useState("");
   const [status, setStatus] = useState("");
   const table = useReactTable({
@@ -120,6 +122,7 @@ export default function Employees() {
             textColor="text-white"
             hoverBgColor="hover:bg-blue-700"
             icon={<Plus className="h-4 w-4" />}
+            onClick={() => setOpenModal(true)}
           >
             Add Employee
           </Button>
@@ -206,6 +209,8 @@ export default function Employees() {
           </TableBody>
         </Table>
       </div>
+
+      <AddEmployeeModal isOpen={openModal} setOpenModal={setOpenModal} />
     </div>
   );
 }

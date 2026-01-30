@@ -1,3 +1,4 @@
+import AddDepartmentModal from "@/components/modals/Department/AddDepartmentModal";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -9,8 +10,10 @@ import {
 } from "@/components/ui/table";
 import { mockDepartments, mockEmployees } from "@/lib/mockData";
 import { Building2, DollarSign, Edit, Plus, Trash2, Users } from "lucide-react";
+import { useState } from "react";
 
 export default function Departments() {
+  const [openModal, setOpenModal] = useState(false);
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -27,6 +30,7 @@ export default function Departments() {
           hoverBgColor="hover:bg-blue-700"
           icon={<Plus />}
           className="self-start"
+          onClick={() => setOpenModal(true)}
         >
           Add Department
         </Button>
@@ -170,6 +174,11 @@ export default function Departments() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Add Modal */}
+      {openModal && (
+        <AddDepartmentModal isOpen={openModal} setOpenModal={setOpenModal} />
+      )}
     </div>
   );
 }

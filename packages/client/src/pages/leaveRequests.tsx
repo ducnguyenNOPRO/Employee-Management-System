@@ -1,3 +1,4 @@
+import AddLeaveRequestModal from "@/components/modals/LeaveRequest/AddLeaveRequestModal";
 import { Button } from "@/components/ui/button";
 import UserCharacters from "@/components/ui/characters";
 import {
@@ -167,6 +168,7 @@ export default function LeaveRequests() {
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
+  const [openModal, setOpenModal] = useState(false);
 
   return (
     <div className="space-y-6 p-6">
@@ -184,6 +186,7 @@ export default function LeaveRequests() {
           hoverBgColor="hover:bg-blue-700"
           icon={<Plus className="h-4 w-4" />}
           className="self-start"
+          onClick={() => setOpenModal(true)}
         >
           New Request
         </Button>
@@ -304,6 +307,8 @@ export default function LeaveRequests() {
           </TableBody>
         </Table>
       </div>
+
+      <AddLeaveRequestModal isOpen={openModal} setOpenModal={setOpenModal} />
     </div>
   );
 }
