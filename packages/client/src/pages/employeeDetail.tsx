@@ -22,9 +22,9 @@ export default function EmployeeDetail() {
   }
 
   return (
-    <div className="space-y-6 px-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="h-16 mt-10 gap-3 flex items-center">
+      <div className="gap-3 flex items-center">
         <button onClick={() => navigate(-1)}>
           <ArrowLeft />
         </button>

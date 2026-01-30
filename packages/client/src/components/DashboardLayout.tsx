@@ -81,7 +81,7 @@ export default function DashboardLayout() {
                   }`
                 }
               >
-                <item.icon size={24} className="flex-shrink-0" />
+                <item.icon size={24} />
                 {!collapsed && (
                   <span className="whitespace-nowrap">{item.name}</span>
                 )}
@@ -107,10 +107,9 @@ export default function DashboardLayout() {
 
       {/* Main content */}
       <div
-        className={`
-        flex-1
+        className={`w-full
         transition-all duration-300
-        ${isMobile ? "ml-15" : collapsed ? "ml-[60px]" : "ml-[200px]"}
+        ${isMobile ? "ml-15" : collapsed ? "ml-15" : "ml-50"}
       `}
       >
         {/* Your main content here */}
