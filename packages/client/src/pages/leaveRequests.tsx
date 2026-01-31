@@ -17,7 +17,7 @@ import {
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
-import { Calendar, Check, Clock, Filter, Link, Plus, X } from "lucide-react";
+import { Calendar, Check, Clock, Filter, Plus, X } from "lucide-react";
 import { useState } from "react";
 const stats = [
   {
