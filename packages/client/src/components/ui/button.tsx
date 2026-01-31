@@ -14,13 +14,11 @@ export const Button: React.FC<ButtonProps> = ({
   textColor = "text-green-700",
   hoverBgColor = "hover:bg-green-100",
   className = "",
-  type = "button",
   icon,
   ...props
 }) => {
   return (
     <button
-      type={type}
       className={`flex items-center outline-1 gap-2 px-3 py-2 text-sm font-semibold rounded ${bgColor} ${textColor} ${hoverBgColor} ${className}`}
       {...props}
     >

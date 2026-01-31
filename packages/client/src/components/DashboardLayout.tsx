@@ -91,7 +91,7 @@ export default function DashboardLayout() {
         </nav>
 
         <div className="mt-auto p-3 flex gap-3 h-16 items-center border-t-2">
-          <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
             A
           </div>
           {!collapsed && (

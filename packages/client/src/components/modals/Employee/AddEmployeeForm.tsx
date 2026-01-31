@@ -6,25 +6,8 @@ import Select from "@/components/ui/select";
 import { DialogClose } from "@/components/ui/dialog";
 import { User, Mail, Briefcase, DollarSign, Phone } from "lucide-react";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-
-const employeeSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.email("Invalid email address"),
-  phone: z.string().min(10, "Phone number must be at least 10 digits"),
-  address: z.string().min(1, "Address is required"),
-  position: z.string().min(1, "Position is required"),
-  department: z.string().min(1, "Department is required"),
-  employmentType: z.enum(["Full-time", "Part-time", "Contract"]),
-  startDate: z.string().min(1, "Start date is required"),
-  salary: z.coerce.number("Salary must be a positive number"),
-  emergencyContact: z.string().optional(),
-  emergencyPhone: z.string().optional(),
-});
-
-type FormFields = z.infer<typeof employeeSchema>;
+import { employeeSchema, type EmployeeFormFields } from "@/lib/zodSchema";
 
 export default function Form() {
   const {
@@ -35,7 +18,7 @@ export default function Form() {
     resolver: zodResolver(employeeSchema),
   });
 
-  const onSubmit: SubmitHandler<FormFields> = async (data) => {
+  const onSubmit: SubmitHandler<EmployeeFormFields> = async (data) => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     console.log(data);
   };
@@ -50,10 +33,10 @@ export default function Form() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Input
-              {...register("firstName")}
+              register={register}
               label="First Name"
               type="text"
-              id="firstName"
+              name="firstName"
               required
               placeholder="John"
               error={errors.firstName?.message}
@@ -61,10 +44,10 @@ export default function Form() {
           </div>
           <div>
             <Input
-              {...register("lastName")}
+              register={register}
               label="Last Name"
               type="text"
-              id="lastName"
+              name="lastName"
               required
               placeholder="Doe"
               error={errors.lastName?.message}
@@ -82,10 +65,10 @@ export default function Form() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Input
-              {...register("email")}
+              register={register}
               label="Email Address"
               type="email"
-              id="email"
+              name="email"
               required
               placeholder="john.doe@company.com"
               error={errors.email?.message}
@@ -93,10 +76,10 @@ export default function Form() {
           </div>
           <div>
             <Input
-              {...register("phone")}
+              register={register}
               label="Phone Number"
               type="tel"
-              id="phone"
+              name="phone"
               required
               placeholder="+1 (555) 123-4567"
               error={errors.phone?.message}
@@ -104,10 +87,10 @@ export default function Form() {
           </div>
           <div className="md:col-span-2">
             <Input
-              {...register("address")}
+              register={register}
               label="Address"
               type="text"
-              id="address"
+              name="address"
               required
               placeholder="123 Main St, City, State 12345"
               error={errors.address?.message}
@@ -125,10 +108,10 @@ export default function Form() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Input
-              {...register("position")}
+              register={register}
               label="Position"
               type="text"
-              id="position"
+              name="position"
               required
               placeholder="Software Engineer"
               error={errors.position?.message}
@@ -138,7 +121,8 @@ export default function Form() {
             <Label required>Department</Label>
             <Select
               required
-              {...register("department")}
+              name="department"
+              register={register}
               error={errors.department?.message}
             >
               <option value="">Select Department</option>
@@ -155,7 +139,8 @@ export default function Form() {
             <Label required>Employment</Label>
             <Select
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              {...register("employmentType")}
+              register={register}
+              name="employmentType"
               required
               error={errors.employmentType?.message}
             >
@@ -166,10 +151,10 @@ export default function Form() {
           </div>
           <div>
             <Input
-              {...register("startDate")}
+              register={register}
               label="Start Date"
               type="date"
-              id="startDate"
+              name="startDate"
               required
               error={errors.startDate?.message}
             />
@@ -180,8 +165,8 @@ export default function Form() {
               <Input
                 label="Annual Salary"
                 type="number"
-                {...register("salary")}
-                id="salary"
+                register={register}
+                name="salary"
                 required
                 className="pl-10"
                 placeholder="75000"
@@ -201,20 +186,20 @@ export default function Form() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Input
-              {...register("emergencyContact")}
+              register={register}
               label="Contact Name"
               type="text"
-              id="emergencyContact"
+              name="emergencyContact"
               placeholder="Jane Doe"
               error={errors.emergencyContact?.message}
             />
           </div>
           <div>
             <Input
-              {...register("emergencyPhone")}
+              register={register}
               label="Contact Phone"
               type="tel"
-              id="emergencyPhone"
+              name="emergencyPhone"
               placeholder="+1 (555) 987-6543"
               error={errors.emergencyPhone?.message}
             />
@@ -238,7 +223,7 @@ export default function Form() {
           hoverBgColor="hover:bg-blue-700"
           disabled={isSubmitting}
         >
-          Add Employee
+          {isSubmitting ? "Loading..." : "Add Employee"}
         </Button>
       </DialogFooter>
     </form>
