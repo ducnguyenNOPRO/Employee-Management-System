@@ -8,7 +8,7 @@ import {
 import { mockEmployees } from "@/lib/mockData";
 import { useState } from "react";
 import UserCharacters from "@/components/ui/characters";
-import { Search } from "lucide-react";
+import { Download, Plus, Search } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -18,6 +18,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import AddEmployeeModal from "@/components/modals/Employee/AddEmployeeModal";
 
 const columns: ColumnDef<Employee>[] = [
   {
@@ -35,6 +37,7 @@ const columns: ColumnDef<Employee>[] = [
             <p className="text-sm font-medium text-gray-900 hover:text-blue-500">
               {employee.firstName} {employee.lastName}
             </p>
+            <p>ID: {employee.id}</p>
           </Link>
         </div>
       );
@@ -86,6 +89,7 @@ const columns: ColumnDef<Employee>[] = [
 const departments = Array.from(new Set(mockEmployees.map((e) => e.department)));
 export default function Employees() {
   const [data, setData] = useState<Employee[]>(mockEmployees);
+  const [openModal, setOpenModal] = useState(false);
   const [department, setDepartment] = useState("");
   const [status, setStatus] = useState("");
   const table = useReactTable({
@@ -95,13 +99,34 @@ export default function Employees() {
   });
 
   return (
-    <div className="space-y-6 px-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="h-16 mt-10 flex flex-col justify-center">
-        <h1 className="text-2xl text-gray-900 font-bold">Employees</h1>
-        <p className="text-md text-gray-700">
-          Manage your team members and their information
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl text-gray-900 font-bold">Employees</h1>
+          <p className="text-md text-gray-700">
+            Manage your team members and their information
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Button
+            bgColor="bg-white"
+            textColor="text-black"
+            hoverBgColor="hover:bg-gray-100"
+            icon={<Download className="h-4 w-4" />}
+          >
+            Export
+          </Button>
+          <Button
+            bgColor="bg-blue-500"
+            textColor="text-white"
+            hoverBgColor="hover:bg-blue-700"
+            icon={<Plus className="h-4 w-4" />}
+            onClick={() => setOpenModal(true)}
+          >
+            Add Employee
+          </Button>
+        </div>
       </div>
 
       {/* Search Bar */}
@@ -184,6 +209,8 @@ export default function Employees() {
           </TableBody>
         </Table>
       </div>
+
+      <AddEmployeeModal isOpen={openModal} setOpenModal={setOpenModal} />
     </div>
   );
 }

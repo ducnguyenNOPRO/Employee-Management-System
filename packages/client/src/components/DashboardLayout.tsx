@@ -81,7 +81,7 @@ export default function DashboardLayout() {
                   }`
                 }
               >
-                <item.icon size={24} className="flex-shrink-0" />
+                <item.icon size={24} />
                 {!collapsed && (
                   <span className="whitespace-nowrap">{item.name}</span>
                 )}
@@ -91,7 +91,7 @@ export default function DashboardLayout() {
         </nav>
 
         <div className="mt-auto p-3 flex gap-3 h-16 items-center border-t-2">
-          <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
             A
           </div>
           {!collapsed && (
@@ -107,10 +107,9 @@ export default function DashboardLayout() {
 
       {/* Main content */}
       <div
-        className={`
-        flex-1
+        className={`w-full
         transition-all duration-300
-        ${isMobile ? "ml-15" : collapsed ? "ml-[60px]" : "ml-[200px]"}
+        ${isMobile ? "ml-15" : collapsed ? "ml-15" : "ml-50"}
       `}
       >
         {/* Your main content here */}
