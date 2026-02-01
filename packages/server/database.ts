@@ -7,13 +7,4 @@ const pool = new Pool({
   port: 5432,
 });
 
-pool
-  .query("CREATE DATABASE ems")
-  .then((Response) => {
-    console.log("DB Created");
-  })
-  .catch((err) => {
-    console.log(err);
-  });
-
 export default pool;

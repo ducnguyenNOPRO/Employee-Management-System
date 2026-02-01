@@ -5,18 +5,28 @@
   "private": true,
   "scripts": {
     "start": "bun run index.ts",
-    "dev": "bun --watch run index.ts"
+    "dev": "bun --watch run index.ts",
+    "pull": "bunx prisma db pull"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/express": "^5.0.6",
-    "@types/pg": "^8.16.0"
+    "@types/pg": "^8.16.0",
+    "dotenv": "^17.2.3"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.3.0",
+    "@prisma/client": "^7.3.0",
+    "@types/bcrypt": "^6.0.0",
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
     "express": "^5.2.1",
-    "pg": "^8.18.0"
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.18.0",
+    "prisma": "^7.3.0",
+    "zod": "^4.3.6"
   }
 }
