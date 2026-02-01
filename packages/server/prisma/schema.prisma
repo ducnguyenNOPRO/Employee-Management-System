@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model user {
+  id            Int       @id @default(autoincrement())
+  email         String    @unique @db.VarChar(255)
+  password_hash String    @db.VarChar(255)
+  role          user_role @default(employee)
+  first_name    String    @db.VarChar(100)
+  last_name     String    @db.VarChar(100)
+  phone         String?   @unique @db.VarChar(20)
+  salary        Decimal?  @db.Decimal(10, 2)
+  department_id Int?
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @default(now()) @db.Timestamp(6)
+
+  session      session?
+}
+
+model session {
+  userId        Int       @id
+  user          user      @relation(fields: [userId], references: [id])
+  refresh_token  String   @unique @db.VarChar(255)
+  expires_at     DateTime @unique @db.Timestamp()
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @default(now()) @db.Timestamp(6)
+  
+}
+
+enum user_role {
+  admin
+  employee
+}

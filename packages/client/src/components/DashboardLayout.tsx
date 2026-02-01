@@ -9,7 +9,7 @@ import {
 import { useEffect, useState } from "react";
 
 const navigation = [
-  { name: "Dashboard", path: "/", icon: LayoutDashboard },
+  { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { name: "Employees", path: "/employees", icon: Users },
   { name: "Departments", path: "/departments", icon: Building2 },
   { name: "Leave Requests", path: "/leaves", icon: Calendar },

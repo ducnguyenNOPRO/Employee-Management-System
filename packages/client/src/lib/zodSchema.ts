@@ -1,5 +1,27 @@
 import { z } from "zod";
 
+// User (both admind and employee)
+export const userSchema = z
+  .object({
+    firstName: z.string().trim().min(1, "First name is required"),
+    lastName: z.string().trim().min(1, "Last name is required"),
+    email: z.email("Invalid email address"),
+    password: z
+      .string()
+      .trim()
+      .min(10, "Password legnth must be at least 10 characters")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+      .regex(/[0-9]/, "Password must contain at least one number"),
+    passwordConfirm: z.string().trim(),
+  })
+  .refine((data) => data.password === data.passwordConfirm, {
+    message: "Passwords don't match",
+    path: ["passwordConfirm"], // This sets which field gets the error
+  });
+
+export type UserFormFields = z.infer<typeof userSchema>;
+
 // Employee
 export const employeeSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required"),
