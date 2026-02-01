@@ -6,11 +6,15 @@
   "scripts": {
     "start": "bun run index.ts",
     "dev": "bun --watch run index.ts",
-    "pull": "bunx prisma db pull"
+    "pull": "bunx prisma db pull",
+    "migrate": "bunx prisma migrate dev",
+    "generate": "bunx prisma generate"
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.16.0",
     "dotenv": "^17.2.3"
   },

@@ -7,7 +7,7 @@ datasource db {
   provider = "postgresql"
 }
 
-model users {
+model user {
   id            Int       @id @default(autoincrement())
   email         String    @unique @db.VarChar(255)
   password_hash String    @db.VarChar(255)
@@ -19,6 +19,18 @@ model users {
   department_id Int?
   created_at    DateTime? @default(now()) @db.Timestamp(6)
   updated_at    DateTime? @default(now()) @db.Timestamp(6)
+
+  session      session?
+}
+
+model session {
+  userId        Int       @id
+  user          user      @relation(fields: [userId], references: [id])
+  refresh_token  String   @unique @db.VarChar(255)
+  expires_at     DateTime @unique @db.Timestamp()
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @default(now()) @db.Timestamp(6)
+  
 }
 
 enum user_role {
