@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-// User (both admind and employee)
-export const userSchema = z
+// Register
+export const registerSchema = z
   .object({
     firstName: z.string().trim().min(1, "First name is required"),
     lastName: z.string().trim().min(1, "Last name is required"),
@@ -14,13 +14,21 @@ export const userSchema = z
       .regex(/[a-z]/, "Password must contain at least one lowercase letter")
       .regex(/[0-9]/, "Password must contain at least one number"),
     passwordConfirm: z.string().trim(),
+    role: z.enum(["admin", "employee"]),
   })
   .refine((data) => data.password === data.passwordConfirm, {
     message: "Passwords don't match",
     path: ["passwordConfirm"], // This sets which field gets the error
   });
 
-export type UserFormFields = z.infer<typeof userSchema>;
+export type RegisterFormFields = z.infer<typeof registerSchema>;
+
+// Log In
+export const signInSchema = z.object({
+  email: z.email("Email is required"),
+  password: z.string().trim().min(1, "Password is required"),
+});
+export type SignInFormFields = z.infer<typeof signInSchema>;
 
 // Employee
 export const employeeSchema = z.object({

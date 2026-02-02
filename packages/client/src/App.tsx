@@ -12,6 +12,7 @@ import LeaveRequests from "./pages/leaveRequests";
 import EmployeeDetail from "./pages/employeeDetail";
 import Login from "./pages/login";
 import Register from "./pages/register";
+import ProtectedRoute from "./components/protectedRoutes";
 
 const router = createBrowserRouter([
   // Public routes
@@ -30,14 +31,19 @@ const router = createBrowserRouter([
 
   // Admin Routes
   {
-    path: "/",
-    element: <DashboardLayout />,
+    element: <ProtectedRoute />,
     children: [
-      { path: "dashboard", element: <Dashboard /> },
-      { path: "employees", element: <Employees /> },
-      { path: "employee/:id", element: <EmployeeDetail /> },
-      { path: "departments", element: <Departments /> },
-      { path: "leaves", element: <LeaveRequests /> },
+      {
+        path: "/",
+        element: <DashboardLayout />,
+        children: [
+          { path: "dashboard", element: <Dashboard /> },
+          { path: "employees", element: <Employees /> },
+          { path: "employee/:id", element: <EmployeeDetail /> },
+          { path: "departments", element: <Departments /> },
+          { path: "leaves", element: <LeaveRequests /> },
+        ],
+      },
     ],
   },
 ]);

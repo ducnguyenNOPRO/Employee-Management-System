@@ -12,11 +12,9 @@ const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000; // 14 days in ms
 export async function signUp(req: Request, res: Response) {
   const result = signUpSchema.safeParse(req.body);
   if (!result.success) {
-    return res
-      .status(400)
-      .json({
-        error: `Error validation ${z.treeifyError(result.error).properties}`,
-      });
+    return res.status(400).json({
+      message: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
   }
 
   try {
@@ -56,11 +54,9 @@ export async function signIn(req: Request, res: Response) {
   const result = signInSchema.safeParse(req.body);
   if (!result.success) {
     console.log(z.treeifyError(result.error).properties);
-    return res
-      .status(400)
-      .json({
-        error: `Error validation ${z.treeifyError(result.error).properties}`,
-      });
+    return res.status(400).json({
+      error: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
   }
   try {
     const secret = process.env.ACCESS_TOKEN_SECRET;
@@ -113,12 +109,10 @@ export async function signIn(req: Request, res: Response) {
       maxAge: REFRESH_TOKEN_TTL,
     });
 
-    return res
-      .status(200)
-      .json({
-        message: `User ${user.first_name} ${user.last_name} logged in!`,
-        accessToken,
-      });
+    return res.status(200).json({
+      message: `User ${user.first_name} ${user.last_name} logged in!`,
+      accessToken,
+    });
   } catch (error) {
     console.log("Sign in error", error);
     res.status(500).json({ message: "Server error" });

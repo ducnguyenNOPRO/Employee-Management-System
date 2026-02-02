@@ -8,8 +8,9 @@ import {
   mockLeaveRequests,
 } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import UserCharacters from "@/components/ui/characters";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 const stats = [
   {
@@ -49,13 +50,17 @@ const recentEmployee = mockEmployees
   .slice(0, 5);
 
 export default function Dashboard() {
+  // Only get the user state
+  // when other state change, component won't re-render
+  const user = useAuthStore((s) => s.user);
   return (
     <>
       <div className="space-y-6 p-6">
         <div className="flex flex-col justify-center">
           <h1 className="text-2xl text-gray-900 font-bold">Dahsboard</h1>
           <p className="text-md text-gray-700">
-            Welcome back! Here's what's happening with your team
+            Welcome back {user!.firstName} {user!.lastName}! Here's what's
+            happening with your team
           </p>
         </div>
 
