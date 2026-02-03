@@ -197,21 +197,9 @@ export default function LeaveRequestForm() {
       {/* Footer */}
       <DialogFooter>
         <DialogClose asChild>
-          <Button
-            bgColor="bg-white"
-            textColor="text-black"
-            hoverBgColor="hover:bg-gray-200"
-          >
-            Cancle
-          </Button>
+          <Button>Cancle</Button>
         </DialogClose>
-        <Button
-          type="submit"
-          bgColor="bg-blue-500"
-          textColor="text-white"
-          hoverBgColor="hover:bg-blue-700"
-          disabled={isSubmitting}
-        >
+        <Button type="submit" variant="add" disabled={isSubmitting}>
           {isSubmitting ? "Loading..." : "New Request"}
         </Button>
       </DialogFooter>

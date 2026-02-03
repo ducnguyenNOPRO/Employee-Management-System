@@ -36,6 +36,7 @@ export default function Form() {
               register={register}
               label="First Name"
               type="text"
+              id="firstName"
               name="firstName"
               required
               placeholder="John"
@@ -47,6 +48,7 @@ export default function Form() {
               register={register}
               label="Last Name"
               type="text"
+              id="lastName"
               name="lastName"
               required
               placeholder="Doe"
@@ -68,6 +70,7 @@ export default function Form() {
               register={register}
               label="Email Address"
               type="email"
+              id="email"
               name="email"
               required
               placeholder="john.doe@company.com"
@@ -79,6 +82,7 @@ export default function Form() {
               register={register}
               label="Phone Number"
               type="tel"
+              id="phone"
               name="phone"
               required
               placeholder="+1 (555) 123-4567"
@@ -90,6 +94,7 @@ export default function Form() {
               register={register}
               label="Address"
               type="text"
+              id="address"
               name="address"
               required
               placeholder="123 Main St, City, State 12345"
@@ -111,6 +116,7 @@ export default function Form() {
               register={register}
               label="Position"
               type="text"
+              id="position"
               name="position"
               required
               placeholder="Software Engineer"
@@ -121,6 +127,7 @@ export default function Form() {
             <Label required>Department</Label>
             <Select
               required
+              id="department"
               name="department"
               register={register}
               error={errors.department?.message}
@@ -136,17 +143,18 @@ export default function Form() {
             </Select>
           </div>
           <div>
-            <Label required>Employment</Label>
+            <Label required>Employment Type</Label>
             <Select
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               register={register}
+              id="employmentType"
               name="employmentType"
               required
               error={errors.employmentType?.message}
             >
-              <option value="Full-time">Full-time</option>
-              <option value="Part-time">Part-time</option>
-              <option value="Contract">Contract</option>
+              <option value="full-time">Full-time</option>
+              <option value="part-time">Part-time</option>
+              <option value="contract">Contract</option>
             </Select>
           </div>
           <div>
@@ -154,6 +162,7 @@ export default function Form() {
               register={register}
               label="Start Date"
               type="date"
+              id="startDate"
               name="startDate"
               required
               error={errors.startDate?.message}
@@ -166,6 +175,7 @@ export default function Form() {
                 label="Annual Salary"
                 type="number"
                 register={register}
+                id="salary"
                 name="salary"
                 required
                 className="pl-10"
@@ -189,6 +199,7 @@ export default function Form() {
               register={register}
               label="Contact Name"
               type="text"
+              id="emergencyContact"
               name="emergencyContact"
               placeholder="Jane Doe"
               error={errors.emergencyContact?.message}
@@ -199,6 +210,7 @@ export default function Form() {
               register={register}
               label="Contact Phone"
               type="tel"
+              id="emergencyPhone"
               name="emergencyPhone"
               placeholder="+1 (555) 987-6543"
               error={errors.emergencyPhone?.message}
@@ -208,21 +220,9 @@ export default function Form() {
       </div>
       <DialogFooter>
         <DialogClose asChild>
-          <Button
-            bgColor="bg-white"
-            textColor="text-black"
-            hoverBgColor="hover:bg-gray-200"
-          >
-            Cancle
-          </Button>
+          <Button>Cancel</Button>
         </DialogClose>
-        <Button
-          type="submit"
-          bgColor="bg-blue-500"
-          textColor="text-white"
-          hoverBgColor="hover:bg-blue-700"
-          disabled={isSubmitting}
-        >
+        <Button type="submit" variant="add" disabled={isSubmitting}>
           {isSubmitting ? "Loading..." : "Add Employee"}
         </Button>
       </DialogFooter>

@@ -22,20 +22,32 @@ const router = createBrowserRouter([
   },
 
   // Admin Routes
+  // {
+  //   element: <ProtectedRoute />,
+  //   children: [
+  //     {
+  //       path: "/",
+  //       element: <DashboardLayout />,
+  //       children: [
+  //         { index: true, element: <Dashboard /> },
+  //         { path: "employees", element: <Employees /> },
+  //         { path: "employee/:id", element: <EmployeeDetail /> },
+  //         { path: "departments", element: <Departments /> },
+  //         { path: "leaves", element: <LeaveRequests /> },
+  //       ],
+  //     },
+  //   ],
+  // },
+  // Dev mode
   {
-    element: <ProtectedRoute />,
+    path: "/",
+    element: <DashboardLayout />,
     children: [
-      {
-        path: "/",
-        element: <DashboardLayout />,
-        children: [
-          { index: true, element: <Dashboard /> },
-          { path: "employees", element: <Employees /> },
-          { path: "employee/:id", element: <EmployeeDetail /> },
-          { path: "departments", element: <Departments /> },
-          { path: "leaves", element: <LeaveRequests /> },
-        ],
-      },
+      { index: true, element: <Dashboard /> },
+      { path: "employees", element: <Employees /> },
+      { path: "employee/:id", element: <EmployeeDetail /> },
+      { path: "departments", element: <Departments /> },
+      { path: "leaves", element: <LeaveRequests /> },
     ],
   },
 ]);

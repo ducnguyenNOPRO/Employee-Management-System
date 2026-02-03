@@ -59,7 +59,7 @@ export default function Dashboard() {
         <div className="flex flex-col justify-center">
           <h1 className="text-2xl text-gray-900 font-bold">Dahsboard</h1>
           <p className="text-md text-gray-700">
-            Welcome back {user!.firstName} {user!.lastName}! Here's what's
+            Welcome back {user?.firstName} {user?.lastName}! Here's what's
             happening with your team
           </p>
         </div>
@@ -164,15 +164,9 @@ export default function Dashboard() {
                           {startDate} • {endDate}
                         </p>
                       </div>
-                      <div className="flex gap-1">
-                        <Button>Approve</Button>
-                        <Button
-                          bgColor="bg-red-50"
-                          textColor="text-red-700"
-                          hoverBgColor="hover:bg-red-100"
-                        >
-                          Reject
-                        </Button>
+                      <div className="flex gap-3">
+                        <Button variant="approve">Approve</Button>
+                        <Button variant="delete">Reject</Button>
                       </div>
                     </div>
                   );

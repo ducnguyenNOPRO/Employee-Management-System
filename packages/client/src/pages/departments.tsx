@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { mockDepartments, mockEmployees } from "@/lib/mockData";
+import { mockDepartments } from "@/lib/mockData";
 import { Building2, DollarSign, Edit, Plus, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 
@@ -25,9 +25,7 @@ export default function Departments() {
           </p>
         </div>
         <Button
-          bgColor="bg-blue-500"
-          textColor="text-white"
-          hoverBgColor="hover:bg-blue-700"
+          variant="add"
           icon={<Plus />}
           className="self-start"
           onClick={() => setOpenModal(true)}

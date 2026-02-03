@@ -28,19 +28,19 @@ const stats = [
   },
   {
     label: "Pending",
-    value: mockLeaveRequests.filter((l) => l.status === "Pending").length,
+    value: mockLeaveRequests.filter((l) => l.status === "pending").length,
     icon: Clock,
     color: "bg-yellow-500",
   },
   {
     label: "Approved",
-    value: mockLeaveRequests.filter((l) => l.status === "Approved").length,
+    value: mockLeaveRequests.filter((l) => l.status === "approved").length,
     icon: Check,
     color: "bg-green-500",
   },
   {
     label: "Rejected",
-    value: mockLeaveRequests.filter((l) => l.status === "Rejected").length,
+    value: mockLeaveRequests.filter((l) => l.status === "rejected").length,
     icon: X,
     color: "bg-red-500",
   },
@@ -133,7 +133,7 @@ const columns: ColumnDef<LeaveRequest>[] = [
       const status = row.original.status;
       return (
         <>
-          {status === "Pending" && (
+          {status === "pending" && (
             <div className="flex gap-2">
               <button
                 title="Accept"
@@ -149,7 +149,7 @@ const columns: ColumnDef<LeaveRequest>[] = [
               </button>
             </div>
           )}
-          {status !== "Pending" && (
+          {status !== "pending" && (
             <span className="text-sm text-gray-400">-</span>
           )}
         </>
@@ -181,10 +181,8 @@ export default function LeaveRequests() {
           </p>
         </div>
         <Button
-          bgColor="bg-blue-500"
-          textColor="text-white"
-          hoverBgColor="hover:bg-blue-700"
-          icon={<Plus className="h-4 w-4" />}
+          variant="add"
+          icon={<Plus />}
           className="self-start"
           onClick={() => setOpenModal(true)}
         >
