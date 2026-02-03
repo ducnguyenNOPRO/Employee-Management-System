@@ -141,7 +141,7 @@ export default function Dashboard() {
             </div>
             <div className="space-y-4 p-6">
               {mockLeaveRequests
-                .filter((l) => l.status === "Pending")
+                .filter((l) => l.status === "pending")
                 .map((leave) => {
                   const startDate = new Date(
                     leave.startDate

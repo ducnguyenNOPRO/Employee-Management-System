@@ -9,6 +9,7 @@ import EmployeeDetail from "./pages/employeeDetail";
 import Login from "./pages/login";
 import Register from "./pages/register";
 import ProtectedRoute from "./components/protectedRoutes";
+import DepartmentDetail from "./pages/departmentDetail";
 
 const router = createBrowserRouter([
   // Public routes
@@ -45,8 +46,9 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Dashboard /> },
       { path: "employees", element: <Employees /> },
-      { path: "employee/:id", element: <EmployeeDetail /> },
+      { path: "employees/:id", element: <EmployeeDetail /> },
       { path: "departments", element: <Departments /> },
+      { path: "departments/:id", element: <DepartmentDetail /> },
       { path: "leaves", element: <LeaveRequests /> },
     ],
   },

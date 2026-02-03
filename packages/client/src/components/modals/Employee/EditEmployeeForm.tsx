@@ -66,7 +66,7 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
         </div>
         <div className="flex gap-3">
           <Button type="button" icon={<Edit />} onClick={toggle}>
-            Cancle
+            Cancel
           </Button>
           <Button
             type="submit"

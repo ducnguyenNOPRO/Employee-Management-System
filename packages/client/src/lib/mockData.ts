@@ -10,6 +10,7 @@ export interface Employee {
   startDate: string;
   salary: number;
   status: "active" | "on leave" | "inactive";
+
   address: string;
   emergencyContact: string;
   emergencyPhone: string;

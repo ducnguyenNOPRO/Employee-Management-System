@@ -11,6 +11,7 @@ import {
 import { mockDepartments } from "@/lib/mockData";
 import { Building2, DollarSign, Edit, Plus, Trash2, Users } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function Departments() {
   const [openModal, setOpenModal] = useState(false);
@@ -98,10 +99,13 @@ export default function Departments() {
                 </div>
               </div>
 
-              <div className="mt-6 pt-4 border-t">
-                <button className="w-full px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+              <div className=" mt-6 pt-4 border-t">
+                <Link
+                  to={`/departments/${department.id}`}
+                  className="block w-full text-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                >
                   View Details
-                </button>
+                </Link>
               </div>
             </div>
           </div>

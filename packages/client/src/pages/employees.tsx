@@ -33,7 +33,7 @@ const columns: ColumnDef<Employee>[] = [
             firstName={employee.firstName}
             lastName={employee.lastName}
           />
-          <Link to={`/employee/${employee.id}`}>
+          <Link to={`/employees/${employee.id}`}>
             <p className="text-sm font-medium text-gray-900 hover:text-blue-500">
               {employee.firstName} {employee.lastName}
             </p>
