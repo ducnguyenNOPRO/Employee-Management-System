@@ -2,12 +2,14 @@ import express, { type Request, type Response } from "express";
 import { authRouter, defaultRouter, userRouter } from "./routes";
 import cookieParser from "cookie-parser";
 import { adminRoute } from "./middlewares/auth.middlewares";
+import cors from "cors";
 
 const app = express();
 
 // middleware
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 
 app.use(defaultRouter);
 

@@ -6,17 +6,15 @@ import z from "zod";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
-const ACCESS_TOKEN_TTL = "30m";
+const ACCESS_TOKEN_TTL = "1s";
 const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000; // 14 days in ms
 
 export async function signUp(req: Request, res: Response) {
   const result = signUpSchema.safeParse(req.body);
   if (!result.success) {
-    return res
-      .status(400)
-      .json({
-        error: `Error validation ${z.treeifyError(result.error).properties}`,
-      });
+    return res.status(400).json({
+      message: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
   }
 
   try {
@@ -56,11 +54,9 @@ export async function signIn(req: Request, res: Response) {
   const result = signInSchema.safeParse(req.body);
   if (!result.success) {
     console.log(z.treeifyError(result.error).properties);
-    return res
-      .status(400)
-      .json({
-        error: `Error validation ${z.treeifyError(result.error).properties}`,
-      });
+    return res.status(400).json({
+      error: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
   }
   try {
     const secret = process.env.ACCESS_TOKEN_SECRET;
@@ -99,7 +95,7 @@ export async function signIn(req: Request, res: Response) {
     const refreshToken = crypto.randomBytes(64).toString("hex");
     await prisma.session.create({
       data: {
-        userId: user.id,
+        user_id: user.id,
         refresh_token: refreshToken,
         expires_at: new Date(Date.now() + REFRESH_TOKEN_TTL),
       },
@@ -113,12 +109,10 @@ export async function signIn(req: Request, res: Response) {
       maxAge: REFRESH_TOKEN_TTL,
     });
 
-    return res
-      .status(200)
-      .json({
-        message: `User ${user.first_name} ${user.last_name} logged in!`,
-        accessToken,
-      });
+    return res.status(200).json({
+      message: `User ${user.first_name} ${user.last_name} logged in!`,
+      accessToken,
+    });
   } catch (error) {
     console.log("Sign in error", error);
     res.status(500).json({ message: "Server error" });
@@ -143,5 +137,42 @@ export async function signOut(req: Request, res: Response) {
   } catch (error) {
     console.log("Sign out error", error);
     res.status(500).json({ message: "Server error" });
+  }
+}
+
+export async function refreshToken(req: Request, res: Response) {
+  const refreshToken = req.cookies?.refreshToken;
+
+  if (!refreshToken) {
+    res.status(401).json({ message: "No refresh token found" });
+  }
+
+  try {
+    const secret = process.env.ACCESS_TOKEN_SECRET;
+    if (!secret) {
+      throw new Error("ACCESS_TOKEN_SECRET is not defined");
+    }
+    // Find session
+    const session = await prisma.session.findUnique({
+      where: { refresh_token: refreshToken },
+    });
+
+    if (!session) {
+      return res.status(403).json({ message: "No session found" });
+    }
+
+    if (session.expires_at < new Date()) {
+      return res.status(403).json({ message: "Refresh token is expired" });
+    }
+
+    // Create accessToken with JWT
+    const accessToken = jwt.sign({ userId: session.user_id }, secret, {
+      expiresIn: ACCESS_TOKEN_TTL,
+    });
+
+    return res.status(200).json({ accessToken });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server Error" });
   }
 }

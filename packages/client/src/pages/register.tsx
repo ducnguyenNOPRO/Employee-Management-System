@@ -1,21 +1,28 @@
 import { Input } from "@/components/ui/input";
-import { userSchema, type UserFormFields } from "@/lib/zodSchema";
+import Label from "@/components/ui/label";
+import Select from "@/components/ui/select";
+import { registerSchema, type RegisterFormFields } from "@/lib/zodSchema";
+import { useAuthStore } from "@/stores/useAuthStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Register() {
+  const { signUp } = useAuthStore();
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<UserFormFields>({
-    resolver: zodResolver(userSchema),
+  } = useForm<RegisterFormFields>({
+    resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit: SubmitHandler<UserFormFields> = async (data) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log(data);
+  const onSubmit: SubmitHandler<RegisterFormFields> = async (
+    data: RegisterFormFields
+  ) => {
+    await signUp(data);
+    navigate("/login");
   };
 
   return (
@@ -52,6 +59,21 @@ export default function Register() {
             register={register}
             error={errors.email?.message}
           />
+          <div>
+            <Label className="mb-0" required>
+              Department
+            </Label>
+            <Select
+              name="role"
+              required
+              register={register}
+              error={errors.role?.message}
+            >
+              <option value="employee">Employee</option>
+              <option value="admin">Admin</option>
+            </Select>
+          </div>
+
           <Input
             label="Password"
             placeholder="Enter your password"

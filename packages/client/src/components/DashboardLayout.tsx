@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
@@ -7,17 +7,20 @@ import {
   Menu,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 const navigation = [
-  { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+  { name: "Dashboard", path: "/", icon: LayoutDashboard },
   { name: "Employees", path: "/employees", icon: Users },
   { name: "Departments", path: "/departments", icon: Building2 },
   { name: "Leave Requests", path: "/leaves", icon: Calendar },
 ];
 
 export default function DashboardLayout() {
+  const { signOut } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const navigate = useNavigate();
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 1280) {
@@ -33,6 +36,11 @@ export default function DashboardLayout() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/login");
+  };
 
   return (
     <div className="flex min-h-screen">
@@ -89,6 +97,14 @@ export default function DashboardLayout() {
             ))}
           </div>
         </nav>
+        <div className="p-3">
+          <button
+            onClick={handleSignOut}
+            className="w-full px-3 py-2 rounded-md bg-red-500 hover:bg-red-700 text-white"
+          >
+            Sign Out
+          </button>
+        </div>
 
         <div className="mt-auto p-3 flex gap-3 h-16 items-center border-t-2">
           <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
