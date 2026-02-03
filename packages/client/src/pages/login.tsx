@@ -21,8 +21,10 @@ export default function Login() {
   const onSubmit: SubmitHandler<SignInFormFields> = async (
     data: SignInFormFields
   ) => {
-    await signIn(data);
-    navigate("/dashboard");
+    try {
+      await signIn(data);
+      navigate("/");
+    } catch {} // only prevent navigation
   };
 
   return (

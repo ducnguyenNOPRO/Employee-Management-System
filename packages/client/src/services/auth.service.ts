@@ -15,11 +15,15 @@ export const authService = {
     return res.data; // accessToken && message
   },
   signOut: async () => {
-    return await api.post("auth/signout", {}, { withCredentials: true });
+    return await api.post("/auth/signout", {}, { withCredentials: true });
   },
 
   fetchMe: async () => {
-    const res = await api.get("users/me", { withCredentials: true });
+    const res = await api.get("/users/me", { withCredentials: true });
+    return res.data;
+  },
+  refreshToken: async () => {
+    const res = await api.post("/auth/refresh", {}, { withCredentials: true });
     return res.data;
   },
 };

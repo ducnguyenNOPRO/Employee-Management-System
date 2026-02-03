@@ -8,7 +8,7 @@ import {
   mockLeaveRequests,
 } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import UserCharacters from "@/components/ui/characters";
 import { useAuthStore } from "@/stores/useAuthStore";
 

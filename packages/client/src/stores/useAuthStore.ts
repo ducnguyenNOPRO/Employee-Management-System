@@ -10,13 +10,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   clearState: () => {
     set({ accessToken: null, user: null, loading: false });
   },
+  setAccessToken: (token) => {
+    set({ accessToken: token });
+  },
 
   signUp: async (payload) => {
     try {
       set({ loading: true });
       await authService.signUp(payload);
     } catch (error: any) {
-      console.error(error.response?.data?.message);
+      //console.error(error.response?.data?.message);
       alert("Unable to signup");
     } finally {
       set({ loading: false });
@@ -26,13 +29,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ loading: true });
       const { accessToken, message } = await authService.signIn(payload);
-      set({ accessToken });
+      get().setAccessToken(accessToken);
 
       await get().fetchMe();
       alert(message);
     } catch (error: any) {
-      console.error(error.response?.data?.message);
+      //console.error(error.response?.data?.message);
       alert("Unable to sign in");
+      throw error; // Throw error to outer catch to prevent navigation to /dashboard
     } finally {
       set({ loading: false });
     }
@@ -43,7 +47,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await authService.signOut();
       alert("Log Out successfully");
     } catch (error: any) {
-      console.error(error.response?.data?.message);
+      //console.error(error.response?.data?.message);
     }
   },
   fetchMe: async () => {
@@ -52,10 +56,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { user } = await authService.fetchMe();
       set({ user });
     } catch (error: any) {
-      console.error(error);
-      console.error(error.response?.data?.message);
+      //console.error(error.response?.data?.message);
       set({ user: null, accessToken: null });
       alert("Unable to get user information");
+    } finally {
+      set({ loading: false });
+    }
+  },
+  refresh: async () => {
+    try {
+      set({ loading: true });
+      const { user, fetchMe, setAccessToken } = get();
+      const { accessToken } = await authService.refreshToken();
+      setAccessToken(accessToken);
+
+      // Find user again
+      if (!user) {
+        await fetchMe();
+      }
+    } catch (error: any) {
+      //console.error(error.response?.data?.message);
+      get().clearState();
     } finally {
       set({ loading: false });
     }

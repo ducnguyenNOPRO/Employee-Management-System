@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "@/stores/useAuthStore";
 
 const navigation = [
-  { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+  { name: "Dashboard", path: "/", icon: LayoutDashboard },
   { name: "Employees", path: "/employees", icon: Users },
   { name: "Departments", path: "/departments", icon: Building2 },
   { name: "Leave Requests", path: "/leaves", icon: Calendar },
