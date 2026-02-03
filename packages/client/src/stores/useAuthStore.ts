@@ -76,7 +76,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     } catch (error: any) {
       //console.error(error.response?.data?.message);
-      get().clearState();
+      get().clearState(); // trigger protectedRoutes re render with accessToken == null, -> navigate to /login
     } finally {
       set({ loading: false });
     }
