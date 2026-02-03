@@ -26,7 +26,6 @@ api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const originalRequest = error.config;
-    console.log(originalRequest.url);
 
     if (
       originalRequest.url.includes("/auth/signin") ||
@@ -36,9 +35,23 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // Check for refreshToken in BE: auth.middlewaree.ts
+    // reject immediately without retry
+    if (error.response.data.code === "REFRESH_TOKEN_EXPIRED") {
+      console.log("reject before retry");
+      // trigger protectedRoute re render with accessToken  == null => go to /login
+      useAuthStore.getState().clearState();
+      return Promise.reject(error);
+    }
+
+    // Probably never need retryCount
+    // because if originalRequest fail
+    // retry refresh -> success refresh
+    // originalRequest run and fail again with same 403 (rare case)
+    // 403 for: accessToken/refreshToken expired or null -- mostly catch in auth.middleware.ts or /auth/refresh (handle above)
     originalRequest._retryCount = originalRequest._retryCount || 0;
 
-    // Call refresh api
+    // Call refresh api and run original request again
     if (error.response.status === 403 && originalRequest._retryCount < 4) {
       originalRequest._retryCount += 1;
       console.log("refresh", originalRequest._retryCount);
