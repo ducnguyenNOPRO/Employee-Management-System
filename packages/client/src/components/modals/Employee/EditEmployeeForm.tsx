@@ -79,7 +79,7 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Profile Card */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow p-6">

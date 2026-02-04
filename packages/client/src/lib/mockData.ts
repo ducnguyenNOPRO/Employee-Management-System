@@ -1,3 +1,5 @@
+import type { DepartmentFields } from "./zodSchema";
+
 export interface Employee {
   id: string;
   firstName: string;
@@ -14,14 +16,6 @@ export interface Employee {
   address: string;
   emergencyContact: string;
   emergencyPhone: string;
-}
-
-export interface Department {
-  id: string;
-  name: string;
-  manager: string;
-  employeeCount: number;
-  budget: number;
 }
 
 export interface LeaveRequest {
@@ -167,48 +161,98 @@ export const mockEmployees: Employee[] = [
   },
 ];
 
-export const mockDepartments: Department[] = [
+export const mockDepartments: DepartmentFields[] = [
   {
-    id: "1",
+    id: 1,
     name: "Engineering",
-    manager: "Sarah Johnson",
-    employeeCount: 45,
+    location: "San Francisco, CA",
+    established: "2015-03-15",
     budget: 5500000,
+    budgetUtilization: 78,
+    openPositions: 8,
+    employeeCount: 45,
+    managerId: "emp_001",
+    managerName: "Sarah Johnson",
+    managerEmail: "sarah.johnson@company.com",
+    managerPhone: "4155551234",
+    description:
+      "Responsible for developing and maintaining all software products, including web applications, mobile apps, and backend services. Focuses on innovation and technical excellence.",
   },
   {
-    id: "2",
+    id: 2,
     name: "Product",
-    manager: "Michael Chen",
-    employeeCount: 12,
+    location: "San Francisco, CA",
+    established: "2016-07-01",
     budget: 1600000,
+    budgetUtilization: 56,
+    openPositions: 3,
+    employeeCount: 12,
+    managerId: "emp_002",
+    managerName: "Michael Chen",
+    managerEmail: "michael.chen@company.com",
+    managerPhone: "4155555678",
+    description:
+      "Drives product strategy and roadmap, conducts market research, and ensures product-market fit. Works closely with engineering and design teams.",
   },
   {
-    id: "3",
+    id: 3,
     name: "Design",
-    manager: "Emily Rodriguez",
-    employeeCount: 8,
+    location: "New York, NY",
+    established: "2016-09-20",
     budget: 750000,
+    budgetUtilization: 0,
+    openPositions: 2,
+    employeeCount: 8,
+    description:
+      "Creates exceptional user experiences through user research, UI/UX design, and brand development. Ensures consistency across all touchpoints.",
   },
   {
-    id: "4",
+    id: 4,
     name: "Marketing",
-    manager: "David Kim",
-    employeeCount: 15,
+    location: "Austin, TX",
+    established: "2017-01-10",
     budget: 1650000,
+    budgetUtilization: 95,
+    openPositions: 5,
+    employeeCount: 15,
+    managerId: "emp_004",
+    managerName: "David Kim",
+    managerEmail: "david.kim@company.com",
+    managerPhone: "5125553456",
+    description:
+      "Develops and executes marketing campaigns, manages brand awareness, and generates demand through digital marketing, content creation, and events.",
   },
   {
-    id: "5",
+    id: 5,
     name: "Sales",
-    manager: "James Anderson",
-    employeeCount: 22,
+    location: "Chicago, IL",
+    established: "2015-06-01",
     budget: 1870000,
+    budgetUtilization: 23,
+    openPositions: 6,
+    employeeCount: 22,
+    managerId: "emp_005",
+    managerName: "James Anderson",
+    managerEmail: "james.anderson@company.com",
+    managerPhone: "3125557890",
+    description:
+      "Drives revenue growth through customer acquisition and account management. Builds strong relationships with clients and identifies new business opportunities.",
   },
   {
-    id: "6",
+    id: 6,
     name: "Human Resources",
-    manager: "Jessica Taylor",
-    employeeCount: 6,
+    location: "Seattle, WA",
+    established: "2015-02-01",
     budget: 450000,
+    budgetUtilization: 67,
+    openPositions: 1,
+    employeeCount: 6,
+    managerId: "emp_006",
+    managerName: "Jessica Taylor",
+    managerEmail: "jessica.taylor@company.com",
+    managerPhone: "2065552345",
+    description:
+      "Manages talent acquisition, employee relations, benefits administration, and organizational development. Fosters a positive company culture.",
   },
 ];
 

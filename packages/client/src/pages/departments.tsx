@@ -53,7 +53,7 @@ export default function Departments() {
                       {department.name}
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">
-                      ID: DEPT-{department.id.padStart(3, "0")}
+                      ID: DEPT-{department.id!.toString().padStart(3, "0")}
                     </p>
                   </div>
                 </div>
@@ -74,7 +74,7 @@ export default function Departments() {
                     <span className="text-sm text-gray-600">Manager</span>
                   </div>
                   <span className="text-sm font-medium text-gray-900">
-                    {department.manager}
+                    {department.managerName}
                   </span>
                 </div>
 
@@ -136,7 +136,7 @@ export default function Departments() {
                   <TableCell className="py-4 font-medium">
                     {dept.name}
                   </TableCell>
-                  <TableCell className="py-4">{dept.manager}</TableCell>
+                  <TableCell className="py-4">{dept.managerName}</TableCell>
                   <TableCell className="py-4">{dept.employeeCount}</TableCell>
                   <TableCell className="py-4">
                     ${(dept.budget / 1000000).toFixed(2)}M

@@ -6,11 +6,13 @@ import { useParams } from "react-router-dom";
 
 export default function DepartmentDetail() {
   const { id } = useParams<{ id: string }>();
+  const numId = Number(id);
+
   const [isEditing, setIsEditing] = useState(false);
-  const department = mockDepartments.find((d) => d.id === id);
+  const department = mockDepartments.find((d) => d.id === numId);
 
   if (!department) {
-    return <div>Employee not found</div>;
+    return <div>Department not found</div>;
   }
 
   const handleToggleMode = () => {

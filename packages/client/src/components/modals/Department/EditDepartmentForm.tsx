@@ -1,23 +1,21 @@
 import { Button } from "@/components/ui/button";
-import type { Department } from "@/lib/mockData";
+import { Input } from "@/components/ui/input";
+import { departmentSchema, type DepartmentFields } from "@/lib/zodSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
   Building2,
-  Edit,
   Users,
   DollarSign,
   TrendingUp,
-  MapPin,
-  Calendar,
-  Mail,
-  Phone,
   Save,
   X,
 } from "lucide-react";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 
 interface DepartmentProps {
-  department: Department;
+  department: DepartmentFields;
   toggle: () => void;
 }
 
@@ -27,18 +25,35 @@ export default function EditDepartmentForm({
 }: DepartmentProps) {
   const navigate = useNavigate();
   // Mock additional details for display
-  const mockDetails = {
-    managerEmail: "manager@company.com",
-    managerPhone: "+1 (555) 123-4567",
-    location: "Building A, Floor 3",
-    established: "January 2020",
-    openPositions: 3,
-    avgSalary: Math.round(department.budget / department.employeeCount),
-    quarterlyBudget: department.budget / 4,
-    budgetUtilization: 78,
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(departmentSchema),
+    defaultValues: {
+      name: department.name,
+      location: department.location,
+      budget: department.budget,
+      established: department.established,
+      description: department.description,
+      managerName: department.managerName,
+      openPositions: department.openPositions,
+      employeeCount: department.employeeCount,
+    },
+  });
+
+  const quarterlyBudget = department.budget / 4;
+  const avgSalary = department.budget / department.employeeCount;
+
+  const onSubmit: SubmitHandler<DepartmentFields> = async (data) => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    console.log("Department: ", data);
   };
+
   return (
-    <div className="space-y-6 p-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 p-6">
       {/* Header */}
       <section className="gap-3 flex items-center">
         <button onClick={() => navigate(-1)}>
@@ -53,7 +68,7 @@ export default function EditDepartmentForm({
               {department.name}
             </h2>
             <p className="text-sm text-gray-600 mt-1">
-              Department ID: DEPT-{department.id.padStart(3, "0")}
+              Department ID: DEPT-{department.id!.toString().padStart(3, "0")}
             </p>
           </div>
         </div>
@@ -62,8 +77,13 @@ export default function EditDepartmentForm({
           <Button type="button" icon={<X />} onClick={toggle}>
             Cancel
           </Button>
-          <Button variant="add" type="submit" icon={<Save />}>
-            Save
+          <Button
+            variant="add"
+            type="submit"
+            icon={<Save />}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Saving..." : "Save"}
           </Button>
         </div>
       </section>
@@ -80,7 +100,7 @@ export default function EditDepartmentForm({
               {department.employeeCount}
             </p>
             <p className="text-xs text-blue-700 mt-1">
-              {mockDetails.openPositions} open positions
+              {department.openPositions} open positions
             </p>
           </div>
 
@@ -93,7 +113,7 @@ export default function EditDepartmentForm({
               ${(department.budget / 1000000).toFixed(2)}M
             </p>
             <p className="text-xs text-green-700 mt-1">
-              ${(mockDetails.quarterlyBudget / 1000).toFixed(0)}K quarterly
+              ${(quarterlyBudget / 1000).toFixed(0)}K quarterly
             </p>
           </div>
 
@@ -103,7 +123,7 @@ export default function EditDepartmentForm({
               <span className="text-sm font-medium">Avg. Salary</span>
             </div>
             <p className="text-3xl font-bold text-purple-900">
-              ${(mockDetails.avgSalary / 1000).toFixed(0)}K
+              ${(avgSalary / 1000).toFixed(0)}K
             </p>
             <p className="text-xs text-purple-700 mt-1">per employee</p>
           </div>
@@ -114,14 +134,14 @@ export default function EditDepartmentForm({
               <span className="text-sm font-medium">Budget Used</span>
             </div>
             <p className="text-3xl font-bold text-orange-900">
-              {mockDetails.budgetUtilization}%
+              {department.budgetUtilization}%
             </p>
             <p className="text-xs text-orange-700 mt-1">of annual budget</p>
           </div>
         </div>
       </section>
 
-      {/*Detail Information */}
+      {/* Detail Informaiton */}
       <section className="outline-1 rounded-lg">
         <div className="bg-gray-50 px-6 py-4 border-b">
           <h3 className="text-lg font-semibold text-gray-900">
@@ -132,175 +152,137 @@ export default function EditDepartmentForm({
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">
-                  Department Name
-                </p>
-                <p className="text-base text-gray-900">{department.name}</p>
-              </div>
+              <Input
+                register={register}
+                label="Department Name"
+                type="text"
+                id="name"
+                name="name"
+                required
+                placeholder="Engineering"
+                error={errors.name?.message}
+              />
 
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">
-                  Location
-                </p>
-                <div className="flex items-center gap-2 text-gray-900">
-                  <MapPin className="h-4 w-4 text-gray-400" />
-                  <span>{mockDetails.location}</span>
-                </div>
-              </div>
+              <Input
+                register={register}
+                label="Location"
+                type="text"
+                id="location"
+                name="location"
+                required
+                placeholder="New York, NY"
+                error={errors.location?.message}
+              />
 
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">
-                  Established
-                </p>
-                <div className="flex items-center gap-2 text-gray-900">
-                  <Calendar className="h-4 w-4 text-gray-400" />
-                  <span>{mockDetails.established}</span>
-                </div>
-              </div>
+              <Input
+                register={register}
+                label="Established"
+                type="date"
+                id="established"
+                name="established"
+                required
+                placeholder="2020-01-15"
+                error={errors.established?.message}
+              />
             </div>
 
             <div className="space-y-4">
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">
-                  Total Employees
-                </p>
-                <p className="text-base text-gray-900">
-                  {department.employeeCount}
-                </p>
-              </div>
+              <Input
+                register={register}
+                label="Total Employees"
+                type="number"
+                id="employeeCount"
+                name="employeeCount"
+                required
+                placeholder="0"
+                error={errors.employeeCount?.message}
+              />
 
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">
-                  Annual Budget
-                </p>
-                <p className="text-base text-gray-900">
-                  ${(department.budget / 1000000).toFixed(2)}M
-                </p>
-              </div>
+              <Input
+                register={register}
+                label="Annual Budget"
+                type="number"
+                id="budget"
+                name="budget"
+                required
+                placeholder="0"
+                error={errors.budget?.message}
+              />
 
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">
-                  Open Positions
-                </p>
-                <p className="text-base text-gray-900">
-                  {mockDetails.openPositions}
-                </p>
-              </div>
+              <Input
+                register={register}
+                label="Open Positions"
+                type="number"
+                id="openPositions"
+                name="openPositions"
+                placeholder="0"
+                error={errors.openPositions?.message}
+              />
             </div>
 
             <div className="md:col-span-2">
-              <p className="text-sm font-medium text-gray-500 mb-2">
+              <label
+                htmlFor="description"
+                className="text-sm font-medium text-gray-500 mb-2 block"
+              >
                 Description
-              </p>
-              <p className="text-base text-gray-700 leading-relaxed">
-                This department is responsible for managing various aspects of
-                the organization, including project planning, team coordination,
-                and strategic initiatives that drive company success.
-              </p>
+              </label>
+              <textarea
+                {...register("description")}
+                id="description"
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="This department is responsible for..."
+              />
+              {errors.description && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.description.message}
+                </p>
+              )}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Manager Detail */}
-      <section className="outline-1 rounded-lg">
+      {/* Manager Information */}
+      <section className="flex flex-col outline-1 rounded-lg h-full">
         <div className="bg-gray-50 px-6 py-4 border-b">
           <h3 className="text-lg font-semibold text-gray-900">
             Department Manager
           </h3>
         </div>
-        <div className="flex items-start gap-4 p-6">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-linear-to-br from-blue-500 to-blue-600 text-white font-semibold text-xl shadow-lg">
-            {department.manager
-              .split(" ")
-              .map((n) => n[0])
-              .join("")}
-          </div>
-          <div className="flex-1">
-            <h4 className="text-lg font-semibold text-gray-900 mb-3">
-              {department.manager}
-            </h4>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-gray-600">
-                <Mail className="h-4 w-4 text-gray-400" />
-                <a
-                  href={`mailto:${mockDetails.managerEmail}`}
-                  className="hover:text-blue-600"
-                >
-                  {mockDetails.managerEmail}
-                </a>
-              </div>
-              <div className="flex items-center gap-2 text-gray-600">
-                <Phone className="h-4 w-4 text-gray-400" />
-                <a
-                  href={`tel:${mockDetails.managerPhone}`}
-                  className="hover:text-blue-600"
-                >
-                  {mockDetails.managerPhone}
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+        <div className="p-6">
+          <div className="space-y-4">
+            <Input
+              register={register}
+              label="Manager Name"
+              type="text"
+              id="managerName"
+              name="managerName"
+              placeholder="John Doe"
+              error={errors.managerName?.message}
+            />
 
-      {/* Budget Overview */}
-      <section className="outline-1 rounded-lg">
-        <div className="bg-gray-50 px-6 py-4 border-b">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Budget Overview
-          </h3>
-        </div>
-        <div className="p-6 space-y-6">
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <p className="text-gray-500">Budget Utilization</p>
-              <span className="text-semibold text-gray-900">
-                {mockDetails.budgetUtilization}%
-              </span>
-            </div>
-            <div className="outline-1 h-3 rounded-lg bg-gray-300">
-              <span
-                className="block bg-blue-500 h-3 rounded-lg"
-                style={{ width: `${mockDetails.budgetUtilization}%` }}
-              ></span>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-xs text-gray-600 mb-1">Annual Budget</p>
-              <p className="text-lg font-semibold text-gray-900">
-                ${(department.budget / 1000000).toFixed(2)}M
-              </p>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-xs text-gray-600 mb-1">Used</p>
-              <p className="text-lg font-semibold text-gray-900">
-                $
-                {(
-                  (department.budget * mockDetails.budgetUtilization) /
-                  100 /
-                  1000000
-                ).toFixed(2)}
-                M
-              </p>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-xs text-gray-600 mb-1">Remaining</p>
-              <p className="text-lg font-semibold text-gray-900">
-                $
-                {(
-                  (department.budget * (100 - mockDetails.budgetUtilization)) /
-                  100 /
-                  1000000
-                ).toFixed(2)}
-                M
-              </p>
-            </div>
+            <Input
+              label="Manager Email"
+              type="email"
+              name="managerEmail"
+              placeholder="john.doe@company.com"
+              className="bg-gray-100"
+              disabled
+            />
+
+            <Input
+              label="Manager Phone"
+              type="tel"
+              name="managerPhone"
+              placeholder="1234567890"
+              className="bg-gray-100"
+              disabled
+            />
           </div>
         </div>
       </section>
-    </div>
+    </form>
   );
 }

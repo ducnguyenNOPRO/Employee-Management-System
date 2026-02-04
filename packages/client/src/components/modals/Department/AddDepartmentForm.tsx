@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import Label from "@/components/ui/label";
 import { DialogClose } from "@/components/ui/dialog";
 import { Building2, User, DollarSign, Edit, Trash2, Users } from "lucide-react";
-import { departmentSchema, type DepartmentFormFields } from "@/lib/zodSchema";
+import { departmentSchema, type DepartmentFields } from "@/lib/zodSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, type SubmitHandler } from "react-hook-form";
 
@@ -17,7 +17,7 @@ export default function AddForm() {
     resolver: zodResolver(departmentSchema),
   });
 
-  const onSubmit: SubmitHandler<DepartmentFormFields> = async (data) => {
+  const onSubmit: SubmitHandler<DepartmentFields> = async (data) => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     console.log(data);
   };
@@ -35,12 +35,12 @@ export default function AddForm() {
             <Input
               label="Department Name"
               type="text"
-              name="departmentName"
+              name="name"
               register={register}
               required
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="e.g., Engineering, Marketing, Sales"
-              error={errors.departmentName?.message}
+              error={errors.name?.message}
             />
           </div>
 
