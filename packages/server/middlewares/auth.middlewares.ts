@@ -8,7 +8,11 @@ interface DecodedUser extends JwtPayload {
 }
 
 // authorization
-export function adminRoute(req: Request, res: Response, next: NextFunction) {
+export function AuthenticatedRoute(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const authHeader = req.headers["authorization"];
     // Authorization: Bearer  <accessToken>--string

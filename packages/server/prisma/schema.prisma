@@ -7,33 +7,69 @@ datasource db {
   provider = "postgresql"
 }
 
+model admin {
+  id            Int       @id @default(autoincrement())
+  first_name    String    @db.VarChar(100)
+  last_name     String    @db.VarChar(100)
+  email         String    @unique @db.VarChar(255)
+  password_hash String    @db.VarChar(255)   // need to activate
+  role          user_role @default(admin)
+  session       session[]   // admin 1 to many session
+}
+
 model user {
   id            Int       @id @default(autoincrement())
+  department_id Int
   email         String    @unique @db.VarChar(255)
-  password_hash String    @db.VarChar(255)
+  password_hash String    @db.VarChar(255)   // need to activate
+  address       String    @db.VarChar(255)
+  position      String    @db.VarChar(255)    
   role          user_role @default(employee)
   first_name    String    @db.VarChar(100)
   last_name     String    @db.VarChar(100)
-  phone         String?   @unique @db.VarChar(20)
-  salary        Decimal?  @db.Decimal(10, 2)
-  department_id Int?
-  created_at    DateTime? @default(now()) @db.Timestamp(6)
-  updated_at    DateTime? @default(now()) @db.Timestamp(6)
+  employement_type   employement_type  @default(full_time)
+  status        status    @default(in_active)
+  phone         String   @unique @db.VarChar(20)
+  salary        Decimal  @db.Decimal(10, 2)
+  emergency_contanct String? @db.VarChar(100)
+  emergency_phone  String? @db.VarChar(20)
+  start_date    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @updatedAt
 
-  session      session[]  // 1 to many
+  session      session[]   // user 1 to many session
 }
 
 model session {
-  id             Int      @id @default(autoincrement())
-  user_id        Int      
-  user           user      @relation(fields: [user_id], references: [id])
-  refresh_token  String   @unique @db.VarChar(255)
-  expires_at     DateTime @db.Timestamp()  // Multiple sessions can expire at the same time
-  created_at    DateTime? @default(now()) @db.Timestamp(6)
-  updated_at    DateTime? @default(now()) @db.Timestamp(6)
+  id             Int              @id @default(autoincrement())
+  owner_type     SessionOwnerType
+  user_id        Int?
+  admin_id       Int?
+  user           user?        @relation(fields: [user_id], references: [id])
+  admin          admin?           @relation(fields: [admin_id], references: [id])
+  refresh_token  String           @unique @db.VarChar(255)
+  expires_at     DateTime         @db.Timestamp()
+  created_at     DateTime?        @default(now()) @db.Timestamp(6)
+  updated_at     DateTime?        @updatedAt
 }
 
 enum user_role {
   admin
   employee
+}
+
+enum employement_type {
+  full_time
+  part_time
+  contract
+}
+
+enum status {
+  in_active
+  active
+  on_leave
+}
+
+enum SessionOwnerType {
+  employee
+  admin
 }

@@ -1,5 +1,6 @@
 import authRouter from "./auth.routes";
 import defaultRouter from "./default.routes";
-import userRouter from "./user.routes";
+import adminEmployeeRouter from "./admin-employee.routes";
+import userRouter from "./me.routes";
 
-export { authRouter, defaultRouter, userRouter };
+export { authRouter, defaultRouter, adminEmployeeRouter, userRouter };

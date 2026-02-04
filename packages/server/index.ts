@@ -1,7 +1,12 @@
-import express, { type Request, type Response } from "express";
-import { authRouter, defaultRouter, userRouter } from "./routes";
+import express from "express";
+import {
+  authRouter,
+  defaultRouter,
+  adminEmployeeRouter,
+  userRouter,
+} from "./routes";
 import cookieParser from "cookie-parser";
-import { adminRoute } from "./middlewares/auth.middlewares";
+import { AuthenticatedRoute } from "./middlewares/auth.middlewares";
 import cors from "cors";
 
 const app = express();
@@ -16,9 +21,10 @@ app.use(defaultRouter);
 // Public routes
 app.use("/api/auth", authRouter);
 
-// Private routes
-app.use(adminRoute);
+// Authuticated routes
+// app.use(AuthenticatedRoute);
 app.use("/api/users", userRouter);
+app.use("/api/admin/", adminEmployeeRouter);
 
 const port = process.env.PORT || 3000;
 
