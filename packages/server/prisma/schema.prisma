@@ -18,7 +18,7 @@ model user {
   salary        Decimal?  @db.Decimal(10, 2)
   department_id Int?
   created_at    DateTime? @default(now()) @db.Timestamp(6)
-  updated_at    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @updatedAt
 
   session      session[]  // 1 to many
 }
@@ -30,7 +30,7 @@ model session {
   refresh_token  String   @unique @db.VarChar(255)
   expires_at     DateTime @db.Timestamp()  // Multiple sessions can expire at the same time
   created_at    DateTime? @default(now()) @db.Timestamp(6)
-  updated_at    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @updatedAt
 }
 
 enum user_role {

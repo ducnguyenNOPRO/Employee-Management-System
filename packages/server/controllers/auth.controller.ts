@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import { signUpSchema, signInSchema } from "../models/zodSchema";
+import { signUpSchema, signInSchema } from "../lib/zodSchema";
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import z from "zod";
