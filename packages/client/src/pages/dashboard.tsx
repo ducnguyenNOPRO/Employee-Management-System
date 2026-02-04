@@ -199,7 +199,7 @@ export default function Dashboard() {
                         {dpt.name}
                       </p>
                       <p className="text-sm text-gray-500">
-                        Manager: {dpt.manager}
+                        Manager: {dpt.managerName}
                       </p>
                     </div>
                     <LuBuilding2 size={25} className="text-gray-500" />
