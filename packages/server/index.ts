@@ -24,7 +24,7 @@ app.use("/api/auth", authRouter);
 // Authuticated routes
 // app.use(AuthenticatedRoute);
 app.use("/api/users", userRouter);
-app.use("/api/admin/employee", adminEmployeeRouter);
+app.use("/api/admin/", adminEmployeeRouter);
 
 const port = process.env.PORT || 3000;
 

@@ -20,7 +20,7 @@ export async function signUp(req: Request, res: Response) {
   try {
     const { firstName, lastName, email, password, role } = result.data;
     // Check if email exist
-    const duplicate = await prisma.user.findUnique({
+    const duplicate = await prisma.admin.findUnique({
       where: {
         email,
       },
@@ -33,7 +33,7 @@ export async function signUp(req: Request, res: Response) {
     const hashedPassword = await bcrypt.hash(password, 10); // salt = 10
 
     // Create user
-    await prisma.user.create({
+    await prisma.admin.create({
       data: {
         first_name: firstName,
         last_name: lastName,
@@ -50,7 +50,77 @@ export async function signUp(req: Request, res: Response) {
   }
 }
 
-export async function signIn(req: Request, res: Response) {
+export async function adminSignIn(req: Request, res: Response) {
+  const result = signInSchema.safeParse(req.body);
+  if (!result.success) {
+    console.log(z.treeifyError(result.error).properties);
+    return res.status(400).json({
+      error: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
+  }
+  try {
+    const secret = process.env.ACCESS_TOKEN_SECRET;
+    if (!secret) {
+      throw new Error("ACCESS_TOKEN_SECRET is not defined");
+    }
+    const { email, password } = result.data;
+
+    // Check if email exist
+    const admin = await prisma.admin.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (!admin) {
+      return res
+        .status(401)
+        .json({ message: "Email or password is incorrect" });
+    }
+
+    // Check password
+    const passwordCorrect = await bcrypt.compare(password, admin.password_hash);
+    if (!passwordCorrect) {
+      return res
+        .status(401)
+        .json({ message: "Email or password is incorrect" });
+    }
+
+    // Create accessToken with JWT
+    const accessToken = jwt.sign({ userId: admin.id }, secret, {
+      expiresIn: ACCESS_TOKEN_TTL,
+    });
+
+    // Create and save refreshToken with JST
+    const refreshToken = crypto.randomBytes(64).toString("hex");
+    await prisma.session.create({
+      data: {
+        owner_type: "admin",
+        user_id: admin.id,
+        refresh_token: refreshToken,
+        expires_at: new Date(Date.now() + REFRESH_TOKEN_TTL),
+      },
+    });
+
+    // Return refresh token to cooki
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none", // FE, BE deployed seperately,
+      maxAge: REFRESH_TOKEN_TTL,
+    });
+
+    return res.status(200).json({
+      message: `User ${admin.first_name} ${admin.last_name} logged in!`,
+      accessToken,
+    });
+  } catch (error) {
+    console.log("Sign in error", error);
+    res.status(500).json({ message: "Server error" });
+  }
+}
+
+export async function userSignIn(req: Request, res: Response) {
   const result = signInSchema.safeParse(req.body);
   if (!result.success) {
     console.log(z.treeifyError(result.error).properties);
@@ -95,6 +165,7 @@ export async function signIn(req: Request, res: Response) {
     const refreshToken = crypto.randomBytes(64).toString("hex");
     await prisma.session.create({
       data: {
+        owner_type: user.role,
         user_id: user.id,
         refresh_token: refreshToken,
         expires_at: new Date(Date.now() + REFRESH_TOKEN_TTL),
@@ -176,3 +247,7 @@ export async function refreshToken(req: Request, res: Response) {
     res.status(500).json({ message: "Server Error" });
   }
 }
+
+export async function inviteEmployee(req: Request, res: Response) {}
+
+export async function activateEmployee(req: Request, res: Response) {}
