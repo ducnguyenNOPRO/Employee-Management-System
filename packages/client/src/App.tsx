@@ -9,6 +9,7 @@ import EmployeeDetail from "./pages/employeeDetail";
 import Login from "./pages/login";
 import Register from "./pages/register";
 import ProtectedRoute from "./components/protectedRoutes";
+import DepartmentDetail from "./pages/departmentDetail";
 
 const router = createBrowserRouter([
   // Public routes
@@ -22,20 +23,33 @@ const router = createBrowserRouter([
   },
 
   // Admin Routes
+  // {
+  //   element: <ProtectedRoute />,
+  //   children: [
+  //     {
+  //       path: "/",
+  //       element: <DashboardLayout />,
+  //       children: [
+  //         { index: true, element: <Dashboard /> },
+  //         { path: "employees", element: <Employees /> },
+  //         { path: "employee/:id", element: <EmployeeDetail /> },
+  //         { path: "departments", element: <Departments /> },
+  //         { path: "leaves", element: <LeaveRequests /> },
+  //       ],
+  //     },
+  //   ],
+  // },
+  // Dev mode
   {
-    element: <ProtectedRoute />,
+    path: "/",
+    element: <DashboardLayout />,
     children: [
-      {
-        path: "/",
-        element: <DashboardLayout />,
-        children: [
-          { index: true, element: <Dashboard /> },
-          { path: "employees", element: <Employees /> },
-          { path: "employee/:id", element: <EmployeeDetail /> },
-          { path: "departments", element: <Departments /> },
-          { path: "leaves", element: <LeaveRequests /> },
-        ],
-      },
+      { index: true, element: <Dashboard /> },
+      { path: "employees", element: <Employees /> },
+      { path: "employees/:id", element: <EmployeeDetail /> },
+      { path: "departments", element: <Departments /> },
+      { path: "departments/:id", element: <DepartmentDetail /> },
+      { path: "leaves", element: <LeaveRequests /> },
     ],
   },
 ]);

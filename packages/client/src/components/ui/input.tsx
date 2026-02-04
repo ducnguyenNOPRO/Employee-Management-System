@@ -24,11 +24,12 @@ export function Input<T extends FieldValues>({
   ...props
 }: InputProps<T>) {
   const registration = register && name ? register(name) : {};
+  const inputId = props.id || name;
   return (
     <div className="space-y-1">
       {label && (
         <label
-          htmlFor={props.id || name}
+          htmlFor={inputId}
           className="block text-sm font-medium text-gray-700 mb-1"
         >
           {label}

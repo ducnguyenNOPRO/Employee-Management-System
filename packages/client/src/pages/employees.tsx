@@ -33,7 +33,7 @@ const columns: ColumnDef<Employee>[] = [
             firstName={employee.firstName}
             lastName={employee.lastName}
           />
-          <Link to={`/employee/${employee.id}`}>
+          <Link to={`/employees/${employee.id}`}>
             <p className="text-sm font-medium text-gray-900 hover:text-blue-500">
               {employee.firstName} {employee.lastName}
             </p>
@@ -72,9 +72,9 @@ const columns: ColumnDef<Employee>[] = [
       return (
         <span
           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-            status === "Active"
+            status === "active"
               ? "bg-green-100 text-green-800"
-              : status === "On Leave"
+              : status === "on leave"
                 ? "bg-yellow-100 text-yellow-800"
                 : "bg-gray-100 text-gray-800"
           }`}
@@ -109,19 +109,10 @@ export default function Employees() {
           </p>
         </div>
         <div className="flex gap-3">
+          <Button icon={<Download />}>Export</Button>
           <Button
-            bgColor="bg-white"
-            textColor="text-black"
-            hoverBgColor="hover:bg-gray-100"
-            icon={<Download className="h-4 w-4" />}
-          >
-            Export
-          </Button>
-          <Button
-            bgColor="bg-blue-500"
-            textColor="text-white"
-            hoverBgColor="hover:bg-blue-700"
-            icon={<Plus className="h-4 w-4" />}
+            variant="add"
+            icon={<Plus />}
             onClick={() => setOpenModal(true)}
           >
             Add Employee
@@ -158,9 +149,9 @@ export default function Employees() {
           className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="all">All Status</option>
-          <option value="Active">Active</option>
-          <option value="On Leave">On Leave</option>
-          <option value="Inactive">Inactive</option>
+          <option value="active">Active</option>
+          <option value="on leave">On Leave</option>
+          <option value="inactive">Inactive</option>
         </select>
       </div>
 

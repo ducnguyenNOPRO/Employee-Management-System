@@ -32,14 +32,20 @@ export type SignInFormFields = z.infer<typeof signInSchema>;
 
 // Employee
 export const employeeSchema = z.object({
+  id: z.coerce.number().optional(), // non-editable
   firstName: z.string().trim().min(1, "First name is required"),
   lastName: z.string().trim().min(1, "Last name is required"),
   email: z.email("Invalid email address"),
-  phone: z.string().trim().min(10, "Phone number must be at least 10 digits"),
+  phone: z
+    .string()
+    .trim()
+    .min(10, "Phone number must be 10 digits")
+    .max(10, "Phone number must be 10 digits"),
   address: z.string().trim().min(1, "Address is required"),
   position: z.string().trim().min(1, "Position is required"),
   department: z.string().trim().min(1, "Department is required"),
-  employmentType: z.enum(["Full-time", "Part-time", "Contract"]),
+  employmentType: z.enum(["full-time", "part-time", "contract"]),
+  status: z.enum(["active", "on leave", "inactive"]).default("active"),
   startDate: z.string().trim().min(1, "Start date is required"),
   salary: z.coerce.number().min(0, "Salary must be a positive number"),
   emergencyContact: z.string().trim().optional(),
@@ -50,16 +56,37 @@ export type EmployeeFormFields = z.infer<typeof employeeSchema>;
 
 // Department
 export const departmentSchema = z.object({
-  departmentName: z.string().trim().min(1, "Department Name is required"),
-  managerName: z.string().trim().optional(),
-  budget: z.coerce.number().min(0, "Budget must be a positive number"),
+  id: z.coerce.number().optional(), // non-editable
+  name: z.string().trim().min(1, "Department Name is required"),
+  location: z.string().trim().min(1, "Location is required"),
+  established: z.string().trim().min(1, "Start date is required"),
+  budget: z.coerce
+    .number()
+    .min(0, "Budget must be a positive number")
+    .default(0),
+  budgetUtilization: z.coerce
+    .number()
+    .min(0, "Budget utilization must be a positive number")
+    .default(0),
+  openPositions: z.coerce.number().default(0),
   employeeCount: z.coerce
     .number()
-    .min(0, "Employee Count must be a positive numebr"),
-  description: z.string().trim().optional(),
+    .min(0, "Employee Count must be a positive numebr")
+    .default(0),
+  managerId: z.string().trim().min(1).optional(), // reference employee (role = "manager") table
+  managerName: z.string().trim().optional(), // remove after implement manager role
+  managerEmail: z.string().trim().optional(), // remove after implement manager role
+  managerPhone: z.string().trim().optional(), // remove after implement manager role
+  description: z
+    .string()
+    .trim()
+    .transform((v) => (v === "" ? undefined : v))
+    .optional(),
 });
 
-export type DepartmentFormFields = z.infer<typeof departmentSchema>;
+// Uncomment after implement manager role for employee table
+// export type DepartmentFields = z.infer<typeof departmentSchema & {managerName: string, managerEmail: string, managerPhone: string}>;
+export type DepartmentFields = z.infer<typeof departmentSchema>;
 
 // Leave Request
 export const leaveRequestSchema = z.object({

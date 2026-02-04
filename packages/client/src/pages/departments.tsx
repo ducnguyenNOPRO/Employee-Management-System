@@ -8,9 +8,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { mockDepartments, mockEmployees } from "@/lib/mockData";
+import { mockDepartments } from "@/lib/mockData";
 import { Building2, DollarSign, Edit, Plus, Trash2, Users } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function Departments() {
   const [openModal, setOpenModal] = useState(false);
@@ -25,9 +26,7 @@ export default function Departments() {
           </p>
         </div>
         <Button
-          bgColor="bg-blue-500"
-          textColor="text-white"
-          hoverBgColor="hover:bg-blue-700"
+          variant="add"
           icon={<Plus />}
           className="self-start"
           onClick={() => setOpenModal(true)}
@@ -54,7 +53,7 @@ export default function Departments() {
                       {department.name}
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">
-                      ID: DEPT-{department.id.padStart(3, "0")}
+                      ID: DEPT-{department.id!.toString().padStart(3, "0")}
                     </p>
                   </div>
                 </div>
@@ -75,7 +74,7 @@ export default function Departments() {
                     <span className="text-sm text-gray-600">Manager</span>
                   </div>
                   <span className="text-sm font-medium text-gray-900">
-                    {department.manager}
+                    {department.managerName}
                   </span>
                 </div>
 
@@ -100,10 +99,13 @@ export default function Departments() {
                 </div>
               </div>
 
-              <div className="mt-6 pt-4 border-t">
-                <button className="w-full px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+              <div className=" mt-6 pt-4 border-t">
+                <Link
+                  to={`/departments/${department.id}`}
+                  className="block w-full text-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                >
                   View Details
-                </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -134,7 +136,7 @@ export default function Departments() {
                   <TableCell className="py-4 font-medium">
                     {dept.name}
                   </TableCell>
-                  <TableCell className="py-4">{dept.manager}</TableCell>
+                  <TableCell className="py-4">{dept.managerName}</TableCell>
                   <TableCell className="py-4">{dept.employeeCount}</TableCell>
                   <TableCell className="py-4">
                     ${(dept.budget / 1000000).toFixed(2)}M
