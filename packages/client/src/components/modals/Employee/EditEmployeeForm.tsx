@@ -1,4 +1,3 @@
-import type { Employee } from "@/lib/mockData";
 import {
   ArrowLeft,
   Building2,
@@ -17,14 +16,22 @@ import Select from "@/components/ui/select";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { employeeSchema, type EmployeeFormFields } from "@/lib/zodSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { EmployeeDetail } from "@/types/employee";
+import { departmentService } from "@/services/department.service";
+import type { DepartmentOverview } from "@/types/department";
+import { useQuery } from "@tanstack/react-query";
 
 type EmployeeProps = {
-  employee: Employee;
+  employee: EmployeeDetail;
   toggle: () => void;
 };
 
 export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
   const navigate = useNavigate();
+  const { data: departments } = useQuery<DepartmentOverview[]>({
+    queryKey: ["departments"],
+    queryFn: departmentService.getDepartments,
+  });
   const {
     register,
     handleSubmit,
@@ -32,18 +39,18 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
   } = useForm({
     resolver: zodResolver(employeeSchema),
     defaultValues: {
-      firstName: employee.firstName,
-      lastName: employee.lastName,
+      firstName: employee.first_name,
+      lastName: employee.last_name,
       address: employee.address,
-      department: employee.department,
+      departmentId: employee.department.id,
       email: employee.email,
-      emergencyContact: employee.emergencyContact,
-      emergencyPhone: employee.emergencyPhone,
-      employmentType: employee.employmentType,
+      emergencyContact: employee.emergency_contact,
+      emergencyPhone: employee.emergency_phone,
+      employmentType: employee.employment_type,
       position: employee.position,
       phone: employee.phone,
       salary: employee.salary,
-      startDate: employee.startDate,
+      startDate: employee.start_date.split("T")[0], // BE return ISO format
     },
   });
 
@@ -60,7 +67,7 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
         </button>
         <div className="flex-1">
           <h1 className="text-2xl text-gray-900 font-bold">
-            {employee.firstName} {employee.lastName}
+            {employee.first_name} {employee.last_name}
           </h1>
           <p className="text-md text-gray-700">{employee.position}</p>
         </div>
@@ -85,18 +92,18 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex flex-col items-center">
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-blue-100 text-blue-700 text-3xl font-bold">
-                {employee.firstName[0]}
-                {employee.lastName[0]}
+                {employee.first_name[0]}
+                {employee.last_name[0]}
               </div>
               <h2 className="mt-4 text-xl font-semibold text-gray-900">
-                {employee.firstName} {employee.lastName}
+                {employee.first_name} {employee.last_name}
               </h2>
               <p className="text-gray-600">{employee.position}</p>
               <span
                 className={`mt-3 inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
                   employee.status === "active"
                     ? "bg-green-100 text-green-800"
-                    : employee.status === "on leave"
+                    : employee.status === "on_leave"
                       ? "bg-yellow-100 text-yellow-800"
                       : "bg-gray-100 text-gray-800"
                 }`}
@@ -130,7 +137,9 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Building2 className="h-5 w-5 text-gray-400" />
-                <span className="text-gray-700">{employee.department}</span>
+                <span className="text-gray-700">
+                  {employee.department.name}
+                </span>
               </div>
             </div>
           </div>
@@ -152,7 +161,7 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
                     Employee ID
                   </label>
                   <p className="mt-1 text-gray-900">
-                    EMP-{employee.id.padStart(4, "0")}
+                    EMP-{employee.id.toString().padStart(4, "0")}
                   </p>
                 </div>
                 <div>
@@ -171,18 +180,15 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
                   <Label required>Department</Label>
                   <Select
                     required
-                    name="department"
+                    name="departmentId"
                     register={register}
-                    error={errors.department?.message}
+                    error={errors.departmentId?.message}
                   >
-                    <option value="">Select Department</option>
-                    <option value="Engineering">Engineering</option>
-                    <option value="Product">Product</option>
-                    <option value="Design">Design</option>
-                    <option value="Marketing">Marketing</option>
-                    <option value="Sales">Sales</option>
-                    <option value="Human Resources">Human Resources</option>
-                    <option value="Analytics">Analytics</option>
+                    {departments?.map((dpt) => (
+                      <option key={dpt.id} value={dpt.id}>
+                        {dpt.name}
+                      </option>
+                    ))}
                   </Select>
                 </div>
                 <div>
@@ -194,8 +200,8 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
                     required
                     error={errors.employmentType?.message}
                   >
-                    <option value="full-time">Full-time</option>
-                    <option value="part-time">Part-time</option>
+                    <option value="full_time">Full-time</option>
+                    <option value="part_time">Part-time</option>
                     <option value="contract">Contract</option>
                   </Select>
                 </div>

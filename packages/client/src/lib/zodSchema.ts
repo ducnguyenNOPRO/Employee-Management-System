@@ -43,9 +43,9 @@ export const employeeSchema = z.object({
     .max(10, "Phone number must be 10 digits"),
   address: z.string().trim().min(1, "Address is required"),
   position: z.string().trim().min(1, "Position is required"),
-  department: z.string().trim().min(1, "Department is required"),
-  employmentType: z.enum(["full-time", "part-time", "contract"]),
-  status: z.enum(["active", "on leave", "inactive"]).default("active"),
+  departmentId: z.coerce.number("Department Id is required"),
+  employmentType: z.enum(["full_time", "part_time", "contract"]),
+  status: z.enum(["active", "on_leave", "inactive"]).default("active"),
   startDate: z.string().trim().min(1, "Start date is required"),
   salary: z.coerce.number().min(0, "Salary must be a positive number"),
   emergencyContact: z.string().trim().optional(),
@@ -73,10 +73,7 @@ export const departmentSchema = z.object({
     .number()
     .min(0, "Employee Count must be a positive numebr")
     .default(0),
-  managerId: z.string().trim().min(1).optional(), // reference employee (role = "manager") table
-  managerName: z.string().trim().optional(), // remove after implement manager role
-  managerEmail: z.string().trim().optional(), // remove after implement manager role
-  managerPhone: z.string().trim().optional(), // remove after implement manager role
+  managerId: z.coerce.number().optional(), // reference employee (role = "manager") table
   description: z
     .string()
     .trim()

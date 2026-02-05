@@ -8,13 +8,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { mockDepartments } from "@/lib/mockData";
+import { departmentService } from "@/services/department.service";
+import type { DepartmentOverview } from "@/types/department";
+import { useQuery } from "@tanstack/react-query";
 import { Building2, DollarSign, Edit, Plus, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function Departments() {
+  const { data: departments } = useQuery<DepartmentOverview[]>({
+    queryKey: ["departments"],
+    queryFn: departmentService.getDepartments,
+  });
   const [openModal, setOpenModal] = useState(false);
+
+  if (!departments) {
+    return <div>Loading</div>;
+  }
+
+  console.log(departments);
+
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -37,79 +50,84 @@ export default function Departments() {
 
       {/* Department Cards */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {mockDepartments.map((department) => (
-          <div
-            key={department.id}
-            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow"
-          >
-            <div className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-blue-100 rounded-lg">
-                    <Building2 className="h-6 w-6 text-blue-600" />
+        {departments.map((department) => {
+          const fullName = department.user
+            ? department.user.first_name + department.user.last_name
+            : "Unassigned";
+          return (
+            <div
+              key={department.id}
+              className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow"
+            >
+              <div className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-blue-100 rounded-lg">
+                      <Building2 className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {department.name}
+                      </h3>
+                      <p className="text-sm text-gray-500 mt-1">
+                        ID: DEPT-{department.id!.toString().padStart(3, "0")}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {department.name}
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      ID: DEPT-{department.id!.toString().padStart(3, "0")}
-                    </p>
+                  <div className="flex gap-1">
+                    <button className="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50">
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
-                </div>
-                <div className="flex gap-1">
-                  <button className="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50">
-                    <Edit className="h-4 w-4" />
-                  </button>
-                  <button className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-6 space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">Manager</span>
-                  </div>
-                  <span className="text-sm font-medium text-gray-900">
-                    {department.managerName}
-                  </span>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">Employees</span>
+                <div className="mt-6 space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm text-gray-600">Manager</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">
+                      {fullName}
+                    </span>
                   </div>
-                  <span className="text-sm font-medium text-gray-900">
-                    {department.employeeCount}
-                  </span>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm text-gray-600">Employees</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">
+                      {department.employee_count}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm text-gray-600">Budget</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">
+                      ${(department.budget / 1000000).toFixed(2)}M
+                    </span>
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">Budget</span>
-                  </div>
-                  <span className="text-sm font-medium text-gray-900">
-                    ${(department.budget / 1000000).toFixed(2)}M
-                  </span>
+                <div className=" mt-6 pt-4 border-t">
+                  <Link
+                    to={`/departments/${department.id}`}
+                    className="block w-full text-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                  >
+                    View Details
+                  </Link>
                 </div>
-              </div>
-
-              <div className=" mt-6 pt-4 border-t">
-                <Link
-                  to={`/departments/${department.id}`}
-                  className="block w-full text-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                >
-                  View Details
-                </Link>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="rounded-lg border shadow bg-white">
@@ -130,21 +148,25 @@ export default function Departments() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockDepartments.length > 0 ? (
-              mockDepartments.map((dept) => (
+            {departments.length > 0 ? (
+              departments.map((dept) => (
                 <TableRow key={dept.id}>
                   <TableCell className="py-4 font-medium">
                     {dept.name}
                   </TableCell>
-                  <TableCell className="py-4">{dept.managerName}</TableCell>
-                  <TableCell className="py-4">{dept.employeeCount}</TableCell>
+                  <TableCell className="py-4">
+                    {dept.user
+                      ? `${dept.user.first_name} ${dept.user.last_name}`
+                      : "Unassigned"}
+                  </TableCell>
+                  <TableCell className="py-4">{dept.employee_count}</TableCell>
                   <TableCell className="py-4">
                     ${(dept.budget / 1000000).toFixed(2)}M
                   </TableCell>
                   <TableCell className="py-4">
                     $
                     {Math.round(
-                      dept.budget / dept.employeeCount
+                      dept.budget / dept.employee_count
                     ).toLocaleString()}
                   </TableCell>
                 </TableRow>
@@ -161,14 +183,12 @@ export default function Departments() {
               <TableCell>-</TableCell>
 
               <TableCell className="p-4 font-medium">
-                {mockDepartments.reduce((sum, d) => sum + d.employeeCount, 0)}
+                {departments.reduce((sum, d) => sum + d.employee_count, 0)}
               </TableCell>
               <TableCell className="p-4 font-medium">
                 $
-                {(
-                  mockDepartments.reduce((sum, d) => sum + d.budget, 0) /
-                  1000000
-                ).toFixed(0)}
+                {departments.reduce((sum, d) => sum + Number(d.budget), 0) /
+                  1000000}
                 M
               </TableCell>
               <TableCell>-</TableCell>
