@@ -10,6 +10,8 @@ import Login from "./pages/login";
 import Register from "./pages/register";
 import ProtectedRoute from "./components/protectedRoutes";
 import DepartmentDetail from "./pages/departmentDetail";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "sonner";
 
 const router = createBrowserRouter([
   // Public routes
@@ -54,8 +56,23 @@ const router = createBrowserRouter([
   },
 ]);
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 5 * 1000, // 5 minute
+      retry: 1, // default 3
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Toaster richColors closeButton />
+      <RouterProvider router={router} />
+    </QueryClientProvider>
+  );
 }
 
 export default App;

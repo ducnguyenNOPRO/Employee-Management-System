@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { departmentSchema, type DepartmentFields } from "@/lib/zodSchema";
+import type { DepartmentDetail } from "@/types/department";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
@@ -15,7 +16,7 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 
 interface DepartmentProps {
-  department: DepartmentFields;
+  department: DepartmentDetail;
   toggle: () => void;
 }
 
@@ -36,16 +37,16 @@ export default function EditDepartmentForm({
       name: department.name,
       location: department.location,
       budget: department.budget,
-      established: department.established,
+      established: department.established.split("T")[0],
       description: department.description,
-      managerName: department.managerName,
-      openPositions: department.openPositions,
-      employeeCount: department.employeeCount,
+      managerId: department.user?.id,
+      openPositions: department.open_position,
+      employeeCount: department.employee_count,
     },
   });
 
   const quarterlyBudget = department.budget / 4;
-  const avgSalary = department.budget / department.employeeCount;
+  const avgSalary = department.budget / department.employee_count;
 
   const onSubmit: SubmitHandler<DepartmentFields> = async (data) => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -97,10 +98,10 @@ export default function EditDepartmentForm({
               <span className="text-sm font-medium">Total Employees</span>
             </div>
             <p className="text-3xl font-bold text-blue-900">
-              {department.employeeCount}
+              {department.employee_count}
             </p>
             <p className="text-xs text-blue-700 mt-1">
-              {department.openPositions} open positions
+              {department.open_position} open positions
             </p>
           </div>
 
@@ -134,7 +135,7 @@ export default function EditDepartmentForm({
               <span className="text-sm font-medium">Budget Used</span>
             </div>
             <p className="text-3xl font-bold text-orange-900">
-              {department.budgetUtilization}%
+              {department.budget_utilization}%
             </p>
             <p className="text-xs text-orange-700 mt-1">of annual budget</p>
           </div>
@@ -257,10 +258,10 @@ export default function EditDepartmentForm({
               register={register}
               label="Manager Name"
               type="text"
-              id="managerName"
-              name="managerName"
+              id="managerId"
+              name="managerId"
               placeholder="John Doe"
-              error={errors.managerName?.message}
+              error={errors.managerId?.message}
             />
 
             <Input

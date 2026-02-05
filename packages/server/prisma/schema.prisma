@@ -1,6 +1,7 @@
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {
@@ -19,7 +20,6 @@ model admin {
 
 model user {
   id            Int       @id @default(autoincrement())
-  department_id Int
   email         String    @unique @db.VarChar(255)
   password_hash String    @db.VarChar(255)   // need to activate
   address       String    @db.VarChar(255)
@@ -27,16 +27,20 @@ model user {
   role          user_role @default(employee)
   first_name    String    @db.VarChar(100)
   last_name     String    @db.VarChar(100)
-  employement_type   employement_type  @default(full_time)
+  employment_type   employement_type  @default(full_time)
   status        status    @default(in_active)
   phone         String   @unique @db.VarChar(20)
   salary        Decimal  @db.Decimal(10, 2)
-  emergency_contanct String? @db.VarChar(100)
+  emergency_contact String? @db.VarChar(100)
   emergency_phone  String? @db.VarChar(20)
   start_date    DateTime? @default(now()) @db.Timestamp(6)
   updated_at    DateTime? @updatedAt
 
-  session      session[]   // user 1 to many session
+  session      session[]   // A user may have multiple session
+  department_id Int
+  department   department @relation(fields: [department_id], references: [id])
+
+  @@index([start_date])
 }
 
 model session {
@@ -52,8 +56,23 @@ model session {
   updated_at     DateTime?        @updatedAt
 }
 
+model department {
+  id                      Int               @id @default(autoincrement())
+  name                    String            @unique @db.VarChar(50)
+  location                String            @db.VarChar(100)
+  budget                  Decimal           @db.Decimal(10, 2)
+  budget_utilization      Int     
+  open_position           Int                 
+  employee_count           Int  
+  description             String?           @db.VarChar(255)           
+  established             DateTime?         @default(now()) @db.Timestamp()
+  updated_at              DateTime?         @updatedAt
+  user                    user[]            // A department may have multiple users         
+}
+
 enum user_role {
   admin
+  manager
   employee
 }
 
@@ -71,5 +90,6 @@ enum status {
 
 enum SessionOwnerType {
   employee
+  manager
   admin
 }

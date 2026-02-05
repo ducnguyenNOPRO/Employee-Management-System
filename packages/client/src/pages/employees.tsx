@@ -1,4 +1,3 @@
-import type { Employee } from "@/lib/mockData";
 import {
   flexRender,
   getCoreRowModel,
@@ -20,8 +19,12 @@ import {
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import AddEmployeeModal from "@/components/modals/Employee/AddEmployeeModal";
+import { useQuery } from "@tanstack/react-query";
+import { employeeService } from "@/services/employee.service";
+import type { EmployeeOverview } from "@/types/employee";
+import { formatString } from "@/utils/formatString";
 
-const columns: ColumnDef<Employee>[] = [
+const columns: ColumnDef<EmployeeOverview>[] = [
   {
     accessorKey: "id",
     header: "EMPLOYEE",
@@ -30,12 +33,12 @@ const columns: ColumnDef<Employee>[] = [
       return (
         <div className="flex items-center gap-4">
           <UserCharacters
-            firstName={employee.firstName}
-            lastName={employee.lastName}
+            firstName={employee.first_name}
+            lastName={employee.last_name}
           />
           <Link to={`/employees/${employee.id}`}>
             <p className="text-sm font-medium text-gray-900 hover:text-blue-500">
-              {employee.firstName} {employee.lastName}
+              {employee.first_name} {employee.last_name}
             </p>
             <p>ID: {employee.id}</p>
           </Link>
@@ -48,10 +51,11 @@ const columns: ColumnDef<Employee>[] = [
     header: "POSITION",
     cell: ({ row }) => {
       const employee = row.original;
+      const employmentType = formatString(employee.employment_type);
       return (
         <div className="flex flex-col">
           <p>{employee.position}</p>
-          <p className="text-sm text-gray-500">{employee.employmentType}</p>
+          <p className="text-sm text-gray-500">{employmentType}</p>
         </div>
       );
     },
@@ -59,6 +63,15 @@ const columns: ColumnDef<Employee>[] = [
   {
     accessorKey: "department",
     header: "DEPARTMENT",
+    cell: ({ row }) => {
+      const department = row.original.department;
+      return (
+        <div className="flex flex-col">
+          <span className="font-semibold">{department.name}</span>
+          <span className="text-sm text-gray-500">Id: {department.id}</span>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "email",
@@ -68,13 +81,13 @@ const columns: ColumnDef<Employee>[] = [
     accessorKey: "status",
     header: "STATUS",
     cell: ({ row }) => {
-      const status = row.original.status;
+      const status = formatString(row.original.status);
       return (
         <span
           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
             status === "active"
               ? "bg-green-100 text-green-800"
-              : status === "on leave"
+              : status === "on_leave"
                 ? "bg-yellow-100 text-yellow-800"
                 : "bg-gray-100 text-gray-800"
           }`}
@@ -88,12 +101,16 @@ const columns: ColumnDef<Employee>[] = [
 
 const departments = Array.from(new Set(mockEmployees.map((e) => e.department)));
 export default function Employees() {
-  const [data, setData] = useState<Employee[]>(mockEmployees);
+  const { data } = useQuery({
+    queryKey: ["employees"],
+    queryFn: employeeService.getEmployees,
+  });
+
   const [openModal, setOpenModal] = useState(false);
   const [department, setDepartment] = useState("");
   const [status, setStatus] = useState("");
   const table = useReactTable({
-    data,
+    data: data ?? [],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -193,7 +210,7 @@ export default function Employees() {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results
+                  No Employees to show
                 </TableCell>
               </TableRow>
             )}

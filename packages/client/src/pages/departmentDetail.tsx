@@ -1,15 +1,23 @@
 import DepartmentReadOnly from "@/components/modals/Department/DepartmentReadOnly";
 import EditDepartmentForm from "@/components/modals/Department/EditDepartmentForm";
-import { mockDepartments } from "@/lib/mockData";
+import { departmentService } from "@/services/department.service";
+import { useQuery } from "@tanstack/react-query";
 import { Activity, useState } from "react";
 import { useParams } from "react-router-dom";
 
 export default function DepartmentDetail() {
   const { id } = useParams<{ id: string }>();
-  const numId = Number(id);
-
   const [isEditing, setIsEditing] = useState(false);
-  const department = mockDepartments.find((d) => d.id === numId);
+
+  const { data: department, isLoading } = useQuery({
+    queryKey: ["department", id],
+    queryFn: () => departmentService.getSelectedDepartment(id!),
+    enabled: !!id, // only run query if id exists
+  });
+
+  if (isLoading) {
+    return <div>Getting Department Detail...</div>;
+  }
 
   if (!department) {
     return <div>Department not found</div>;

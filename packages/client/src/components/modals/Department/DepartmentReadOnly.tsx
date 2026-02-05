@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import type { DepartmentFields } from "@/lib/zodSchema";
+import type { DepartmentDetail } from "@/types/department";
+import { formatString } from "@/utils/formatString";
 import {
   ArrowLeft,
   Building2,
@@ -15,7 +16,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 interface DepartmentProps {
-  department: DepartmentFields;
+  department: DepartmentDetail;
   toggle: () => void;
 }
 
@@ -26,7 +27,12 @@ export default function DepartmentReadOnly({
   const navigate = useNavigate();
 
   const quarterlyBudget = department.budget / 4;
-  const avgSalary = department.budget / department.employeeCount;
+  const avgSalary = department.budget / department.employee_count;
+  const budgetFormatted = (department.budget / 1000000).toFixed(2);
+  const managerFullName = department.user
+    ? `${department.user.first_name} ${department.user.last_name}`
+    : "Unassigned";
+  const dateFormatted = department.established.split("T")[0];
 
   // Mock additional details for display
   return (
@@ -66,10 +72,10 @@ export default function DepartmentReadOnly({
               <span className="text-sm font-medium">Total Employees</span>
             </div>
             <p className="text-3xl font-bold text-blue-900">
-              {department.employeeCount}
+              {department.employee_count}
             </p>
             <p className="text-xs text-blue-700 mt-1">
-              {department.openPositions} open positions
+              {department.open_position} open positions
             </p>
           </div>
 
@@ -79,7 +85,7 @@ export default function DepartmentReadOnly({
               <span className="text-sm font-medium">Annual Budget</span>
             </div>
             <p className="text-3xl font-bold text-green-900">
-              ${(department.budget / 1000000).toFixed(2)}M
+              {budgetFormatted}M
             </p>
             <p className="text-xs text-green-700 mt-1">
               ${(quarterlyBudget / 1000).toFixed(0)}K quarterly
@@ -103,7 +109,7 @@ export default function DepartmentReadOnly({
               <span className="text-sm font-medium">Budget Used</span>
             </div>
             <p className="text-3xl font-bold text-orange-900">
-              {department.budgetUtilization}%
+              {department.budget_utilization}%
             </p>
             <p className="text-xs text-orange-700 mt-1">of annual budget</p>
           </div>
@@ -144,7 +150,7 @@ export default function DepartmentReadOnly({
                 </p>
                 <div className="flex items-center gap-2 text-gray-900">
                   <Calendar className="h-4 w-4 text-gray-400" />
-                  <span>{department.established}</span>
+                  <span>{dateFormatted}</span>
                 </div>
               </div>
             </div>
@@ -155,7 +161,7 @@ export default function DepartmentReadOnly({
                   Total Employees
                 </p>
                 <p className="text-base text-gray-900">
-                  {department.employeeCount}
+                  {department.employee_count}
                 </p>
               </div>
 
@@ -163,9 +169,7 @@ export default function DepartmentReadOnly({
                 <p className="text-sm font-medium text-gray-500 mb-1">
                   Annual Budget
                 </p>
-                <p className="text-base text-gray-900">
-                  ${(department.budget / 1000000).toFixed(2)}M
-                </p>
+                <p className="text-base text-gray-900">{budgetFormatted}</p>
               </div>
 
               <div>
@@ -173,7 +177,7 @@ export default function DepartmentReadOnly({
                   Open Positions
                 </p>
                 <p className="text-base text-gray-900">
-                  {department.openPositions}
+                  {department.open_position}
                 </p>
               </div>
             </div>
@@ -201,35 +205,35 @@ export default function DepartmentReadOnly({
             </h3>
           </div>
           <div className="flex-1 flex items-center gap-4 p-6">
-            {department.managerId ? (
+            {department.user ? (
               <>
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-linear-to-br from-blue-500 to-blue-600 text-white font-semibold text-xl shadow-lg">
-                  {department
-                    .managerName!.split(" ")
+                  {managerFullName
+                    .split(" ")
                     .map((n) => n[0])
                     .join("")}
                 </div>
                 <div className="flex-1">
                   <h4 className="text-lg font-semibold text-gray-900 mb-3">
-                    {department.managerName}
+                    {managerFullName}
                   </h4>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-gray-600">
                       <Mail className="h-4 w-4 text-gray-400" />
                       <a
-                        href={`mailto:${department.managerEmail}`}
+                        href={`mailto:${department.user.email}`}
                         className="hover:text-blue-600"
                       >
-                        {department.managerEmail}
+                        {department.user.email}
                       </a>
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
                       <Phone className="h-4 w-4 text-gray-400" />
                       <a
-                        href={`tel:${department.managerPhone}`}
+                        href={`tel:${department.user.phone}`}
                         className="hover:text-blue-600"
                       >
-                        {department.managerPhone}
+                        {department.user.phone}
                       </a>
                     </div>
                   </div>
@@ -272,13 +276,13 @@ export default function DepartmentReadOnly({
               <div className="flex justify-between">
                 <p className="text-gray-500">Budget Utilization</p>
                 <span className="text-semibold text-gray-900">
-                  {department.budgetUtilization}%
+                  {department.budget_utilization}%
                 </span>
               </div>
               <div className="outline-1 h-3 rounded-lg bg-gray-300">
                 <span
                   className="block bg-blue-500 h-3 rounded-lg"
-                  style={{ width: `${department.budgetUtilization}%` }}
+                  style={{ width: `${department.budget_utilization}%` }}
                 ></span>
               </div>
             </div>
@@ -286,7 +290,7 @@ export default function DepartmentReadOnly({
               <div className="p-4 bg-gray-50 rounded-lg">
                 <p className="text-xs text-gray-600 mb-1">Annual Budget</p>
                 <p className="text-lg font-semibold text-gray-900">
-                  ${(department.budget / 1000000).toFixed(2)}M
+                  {budgetFormatted}
                 </p>
               </div>
               <div className="p-4 bg-gray-50 rounded-lg">
@@ -294,7 +298,7 @@ export default function DepartmentReadOnly({
                 <p className="text-lg font-semibold text-gray-900">
                   $
                   {(
-                    (department.budget * department.budgetUtilization) /
+                    (department.budget * department.budget_utilization) /
                     100 /
                     1000000
                   ).toFixed(2)}
@@ -306,7 +310,8 @@ export default function DepartmentReadOnly({
                 <p className="text-lg font-semibold text-gray-900">
                   $
                   {(
-                    (department.budget * (100 - department.budgetUtilization)) /
+                    (department.budget *
+                      (100 - department.budget_utilization)) /
                     100 /
                     1000000
                   ).toFixed(2)}
