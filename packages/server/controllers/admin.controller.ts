@@ -1,8 +1,36 @@
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
+import { email } from "zod";
 
 export async function getEmployees(req: Request, res: Response) {
+  const { role } = req.query;
   try {
+    if (role == "manager") {
+      const managers = await prisma.user.findMany({
+        orderBy: {
+          start_date: "desc",
+        },
+        select: {
+          id: true,
+          first_name: true,
+          last_name: true,
+          email: true,
+          phone: true,
+          department: {
+            select: {
+              manager_id: true,
+              name: true,
+              id: true,
+            },
+          },
+        },
+        where: {
+          role,
+        },
+      });
+
+      return res.status(200).json({ managers });
+    }
     const employees = await prisma.user.findMany({
       orderBy: {
         start_date: "asc",
@@ -105,25 +133,16 @@ export async function getDepartments(req: Request, res: Response) {
         name: true,
         budget: true,
         employee_count: true,
-        user: {
+        manager: {
           select: {
             first_name: true,
             last_name: true,
           },
-          where: {
-            role: "manager",
-          },
-          take: 1,
         },
       },
     });
-    // Map to get single object instead of array:
-    const departmentsFormatted = departments.map((dept) => ({
-      ...dept,
-      user: dept.user[0] || undefined, // Extract first manager or undefined
-    }));
 
-    return res.status(200).json({ departments: departmentsFormatted });
+    return res.status(200).json({ departments });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -151,16 +170,13 @@ export async function getDepartment(req: Request, res: Response) {
         id,
       },
       include: {
-        user: {
+        manager: {
           select: {
             id: true,
             first_name: true,
             last_name: true,
             email: true,
             phone: true,
-          },
-          where: {
-            role: "manager",
           },
         },
       },
@@ -170,12 +186,7 @@ export async function getDepartment(req: Request, res: Response) {
       res.status(404).json({ message: `Department witjh ${id} not found` });
     }
 
-    const departmentsFormatted = {
-      ...department,
-      budget: Number(department!.budget),
-      user: department!.user[0] || undefined,
-    };
-    return res.status(200).json({ department: departmentsFormatted });
+    return res.status(200).json({ department });
   } catch (error) {
     console.log(error);
     return res.status(500).json({

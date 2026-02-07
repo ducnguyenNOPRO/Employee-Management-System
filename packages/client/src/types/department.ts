@@ -1,9 +1,11 @@
-export interface ManagerOverview {
+interface DepartmentsManagerOverview {
   first_name: string;
   last_name: string;
+}
+
+export interface DepartmentManagerDetail extends DepartmentsManagerOverview {
   email: string;
   phone: string;
-  id: number;
 }
 
 export interface BaseDepartment {
@@ -11,15 +13,18 @@ export interface BaseDepartment {
   name: string;
   budget: number; // use decimal in DB which return a string
   employee_count: number;
-  user?: ManagerOverview;
 }
 
-export interface DepartmentOverview extends BaseDepartment {}
+export interface DepartmentOverview extends BaseDepartment {
+  manager?: DepartmentsManagerOverview;
+}
 
 export interface DepartmentDetail extends BaseDepartment {
+  manager_id?: number;
   budget_utilization: number;
   open_position: number;
   description?: string;
   established: string;
   location: string;
+  manager?: DepartmentManagerDetail;
 }

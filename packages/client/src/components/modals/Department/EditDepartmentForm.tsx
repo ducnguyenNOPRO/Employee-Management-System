@@ -1,8 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Label from "@/components/ui/label";
+import Select from "@/components/ui/select";
 import { departmentSchema, type DepartmentFields } from "@/lib/zodSchema";
+import { employeeService } from "@/services/employee.service";
 import type { DepartmentDetail } from "@/types/department";
+import type { ManagerOverview } from "@/types/employee";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Building2,
@@ -12,7 +17,7 @@ import {
   Save,
   X,
 } from "lucide-react";
-import { useForm, type SubmitHandler } from "react-hook-form";
+import { useForm, useWatch, type SubmitHandler } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 
 interface DepartmentProps {
@@ -25,11 +30,16 @@ export default function EditDepartmentForm({
   toggle,
 }: DepartmentProps) {
   const navigate = useNavigate();
-  // Mock additional details for display
+  const { data: managers } = useQuery<ManagerOverview[]>({
+    queryKey: ["managers"],
+    queryFn: employeeService.getManagers,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(departmentSchema),
@@ -39,11 +49,22 @@ export default function EditDepartmentForm({
       budget: department.budget,
       established: department.established.split("T")[0],
       description: department.description,
-      managerId: department.user?.id,
+      managerId: department.manager_id?.toString() ?? "",
       openPositions: department.open_position,
       employeeCount: department.employee_count,
     },
   });
+
+  // Watch for changes in managerId
+  // Re-render the changes in phone and email input field
+  const selectedManagerId = useWatch({
+    control,
+    name: "managerId",
+  });
+
+  const selectedManager = managers?.find(
+    (m) => m.id === Number(selectedManagerId)
+  );
 
   const quarterlyBudget = department.budget / 4;
   const avgSalary = department.budget / department.employee_count;
@@ -52,6 +73,10 @@ export default function EditDepartmentForm({
     await new Promise((resolve) => setTimeout(resolve, 1000));
     console.log("Department: ", data);
   };
+
+  if (!managers) {
+    return <></>;
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 p-6">
@@ -254,31 +279,31 @@ export default function EditDepartmentForm({
         </div>
         <div className="p-6">
           <div className="space-y-4">
-            <Input
+            <Label>Manager Name</Label>
+            <Select
               register={register}
-              label="Manager Name"
-              type="text"
-              id="managerId"
               name="managerId"
-              placeholder="John Doe"
               error={errors.managerId?.message}
-            />
+            >
+              <option value="">Select a manager</option>
+              {managers?.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.first_name} {m.last_name}
+                </option>
+              ))}
+            </Select>
 
             <Input
               label="Manager Email"
-              type="email"
-              name="managerEmail"
-              placeholder="john.doe@company.com"
+              value={selectedManager?.email || ""}
               className="bg-gray-100"
               disabled
             />
 
             <Input
               label="Manager Phone"
-              type="tel"
-              name="managerPhone"
-              placeholder="1234567890"
               className="bg-gray-100"
+              value={selectedManager?.phone || ""}
               disabled
             />
           </div>

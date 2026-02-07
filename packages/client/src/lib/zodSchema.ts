@@ -73,7 +73,11 @@ export const departmentSchema = z.object({
     .number()
     .min(0, "Employee Count must be a positive numebr")
     .default(0),
-  managerId: z.coerce.number().optional(), // reference employee (role = "manager") table
+  managerId: z
+    .string()
+    .trim()
+    .transform((v) => (v === "" ? undefined : v))
+    .optional(), // reference employee (role = "manager") table
   description: z
     .string()
     .trim()
