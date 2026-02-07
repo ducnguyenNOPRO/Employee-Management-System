@@ -1,20 +1,16 @@
 import { Router } from "express";
 import {
   signUp,
-  userSignIn,
   signOut,
   refreshToken,
   inviteEmployee,
-  adminSignIn,
+  signIn,
 } from "../controllers/auth.controller";
 
 const authRouter = Router();
 
-// admin signIn
-authRouter.post("/admin/signin", adminSignIn);
-
-// employee/manager signIn
-authRouter.post("/signin", userSignIn);
+// signIn for both employee and admin
+authRouter.post("/signin", signIn);
 
 authRouter.post("/signup", signUp);
 authRouter.post("/signout", signOut);

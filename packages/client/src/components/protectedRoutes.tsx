@@ -2,7 +2,7 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 
-export default function ProtectedRoute() {
+export default function ProtectedRoute({ role }: { role: string }) {
   const { accessToken, user, loading, refresh, fetchMe } = useAuthStore();
   const [starting, setStarting] = useState(true);
 
@@ -30,6 +30,10 @@ export default function ProtectedRoute() {
         Loading....
       </div>
     );
+  }
+
+  if (user?.role !== role) {
+    return <Navigate to="/unauthorized" />;
   }
 
   if (!accessToken) {

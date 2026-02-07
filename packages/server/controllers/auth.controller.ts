@@ -6,7 +6,7 @@ import z from "zod";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
-const ACCESS_TOKEN_TTL = "15m";
+const ACCESS_TOKEN_TTL = "5s";
 const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000; // 14 days in ms
 
 export async function signUp(req: Request, res: Response) {
@@ -50,7 +50,7 @@ export async function signUp(req: Request, res: Response) {
   }
 }
 
-export async function adminSignIn(req: Request, res: Response) {
+export async function signIn(req: Request, res: Response) {
   const result = signInSchema.safeParse(req.body);
   if (!result.success) {
     console.log(z.treeifyError(result.error).properties);
@@ -65,87 +65,25 @@ export async function adminSignIn(req: Request, res: Response) {
     }
     const { email, password } = result.data;
 
-    // Check if email exist
-    const admin = await prisma.admin.findUnique({
+    // Check if this is admin signIN
+    let user = await prisma.admin.findUnique({
       where: {
         email,
       },
     });
 
-    if (!admin) {
-      return res
-        .status(401)
-        .json({ message: "Email or password is incorrect" });
-    }
-
-    // Check password
-    const passwordCorrect = await bcrypt.compare(password, admin.password_hash);
-    if (!passwordCorrect) {
-      return res
-        .status(401)
-        .json({ message: "Email or password is incorrect" });
-    }
-
-    // Create accessToken with JWT
-    const accessToken = jwt.sign({ userId: admin.id }, secret, {
-      expiresIn: ACCESS_TOKEN_TTL,
-    });
-
-    // Create and save refreshToken with JST
-    const refreshToken = crypto.randomBytes(64).toString("hex");
-    await prisma.session.create({
-      data: {
-        owner_type: "admin",
-        user_id: admin.id,
-        refresh_token: refreshToken,
-        expires_at: new Date(Date.now() + REFRESH_TOKEN_TTL),
-      },
-    });
-
-    // Return refresh token to cooki
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none", // FE, BE deployed seperately,
-      maxAge: REFRESH_TOKEN_TTL,
-    });
-
-    return res.status(200).json({
-      message: `User ${admin.first_name} ${admin.last_name} logged in!`,
-      accessToken,
-    });
-  } catch (error) {
-    console.log("Sign in error", error);
-    res.status(500).json({ message: "Server error" });
-  }
-}
-
-export async function userSignIn(req: Request, res: Response) {
-  const result = signInSchema.safeParse(req.body);
-  if (!result.success) {
-    console.log(z.treeifyError(result.error).properties);
-    return res.status(400).json({
-      error: `Error validation ${z.treeifyError(result.error).properties}`,
-    });
-  }
-  try {
-    const secret = process.env.ACCESS_TOKEN_SECRET;
-    if (!secret) {
-      throw new Error("ACCESS_TOKEN_SECRET is not defined");
-    }
-    const { email, password } = result.data;
-
-    // Check if email exist
-    const user = await prisma.user.findUnique({
-      where: {
-        email,
-      },
-    });
-
+    // Not admin ? Check employee Table
     if (!user) {
-      return res
-        .status(401)
-        .json({ message: "Email or password is incorrect" });
+      user = await prisma.user.findUnique({
+        where: {
+          email,
+        },
+      });
+      if (!user) {
+        return res
+          .status(401)
+          .json({ message: "Email or password is incorrect" });
+      }
     }
 
     // Check password
@@ -157,20 +95,35 @@ export async function userSignIn(req: Request, res: Response) {
     }
 
     // Create accessToken with JWT
-    const accessToken = jwt.sign({ userId: user.id }, secret, {
-      expiresIn: ACCESS_TOKEN_TTL,
-    });
+    const accessToken = jwt.sign(
+      { userId: user.id, userRole: user.role },
+      secret,
+      {
+        expiresIn: ACCESS_TOKEN_TTL,
+      }
+    );
 
     // Create and save refreshToken with JST
     const refreshToken = crypto.randomBytes(64).toString("hex");
-    await prisma.session.create({
-      data: {
-        owner_type: user.role,
-        user_id: user.id,
-        refresh_token: refreshToken,
-        expires_at: new Date(Date.now() + REFRESH_TOKEN_TTL),
-      },
-    });
+    if (user.role === "admin") {
+      await prisma.session.create({
+        data: {
+          owner_type: "admin",
+          admin_id: user.id,
+          refresh_token: refreshToken,
+          expires_at: new Date(Date.now() + REFRESH_TOKEN_TTL),
+        },
+      });
+    } else if (["employee", "manager"].includes(user.role)) {
+      await prisma.session.create({
+        data: {
+          owner_type: user.role,
+          user_id: user.id,
+          refresh_token: refreshToken,
+          expires_at: new Date(Date.now() + REFRESH_TOKEN_TTL),
+        },
+      });
+    }
 
     // Return refresh token to cooki
     res.cookie("refreshToken", refreshToken, {
@@ -236,10 +189,14 @@ export async function refreshToken(req: Request, res: Response) {
       return res.status(403).json({ message: "Refresh token is expired" });
     }
 
+    const id =
+      session.owner_type === "admin" ? session.admin_id : session.user_id;
     // Create accessToken with JWT
-    const accessToken = jwt.sign({ userId: session.user_id }, secret, {
-      expiresIn: ACCESS_TOKEN_TTL,
-    });
+    const accessToken = jwt.sign(
+      { userId: id, userRole: session.owner_type },
+      secret,
+      { expiresIn: ACCESS_TOKEN_TTL }
+    );
 
     return res.status(200).json({ accessToken });
   } catch (error) {

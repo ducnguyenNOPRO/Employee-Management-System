@@ -2,8 +2,11 @@ import type { NextFunction, Request, Response } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
 
+type Role = "admin" | "employee" | "manager";
+
 interface DecodedUser extends JwtPayload {
-  id: number;
+  userId: number;
+  userRole: Role;
   // add other properties from your token payload
 }
 
@@ -55,12 +58,21 @@ export function AuthenticatedRoute(
             message: "Refresh Token is expired or session not found",
           });
         }
+        let userWithPassword;
 
-        const userWithPassword = await prisma.user.findUnique({
-          where: {
-            id: decodedUser.userId,
-          },
-        });
+        if (decodedUser.userRole === "admin") {
+          userWithPassword = await prisma.admin.findUnique({
+            where: {
+              id: decodedUser.userId,
+            },
+          });
+        } else if (decodedUser.userRole === "employee") {
+          userWithPassword = await prisma.user.findUnique({
+            where: {
+              id: decodedUser.userId,
+            },
+          });
+        }
 
         if (!userWithPassword) {
           return res.status(404).json({ message: "User does not exist" });
@@ -76,4 +88,15 @@ export function AuthenticatedRoute(
     console.log("Error validation JWT in auth middleware", error);
     return res.status(500).json({ message: "System error" });
   }
+}
+
+// Function to restrict access based on role
+// Guarantee a user if went through Authenticated Routes
+export function allowRoles(roles: Role[]) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!roles.includes(req.user!.role)) {
+      return res.status(403).send("Access denied");
+    }
+    next();
+  };
 }

@@ -1,7 +1,7 @@
 import express from "express";
 import { authRouter, defaultRouter, adminRouter, userRouter } from "./routes";
 import cookieParser from "cookie-parser";
-import { AuthenticatedRoute } from "./middlewares/auth.middlewares";
+import { allowRoles, AuthenticatedRoute } from "./middlewares/auth.middlewares";
 import cors from "cors";
 import mockDataRouter from "./routes/mockData-create.routes";
 
@@ -21,9 +21,12 @@ app.use("/api/auth", authRouter);
 app.use("/api/mock", mockDataRouter);
 
 // Authuticated routes
-// app.use(AuthenticatedRoute);
-app.use("/api/users", userRouter);
-app.use("/api/admin", adminRouter);
+// app.use(AuthenticatedRoute);  // Check for accessToken and refreshToken
+app.use(
+  "/api/users" /*, allowRoles(["employee", "manager", "admin"])*/,
+  userRouter
+);
+app.use("/api/admin" /*, allowRoles(["admin"])*/, adminRouter);
 
 const port = process.env.PORT || 3000;
 

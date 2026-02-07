@@ -1,9 +1,8 @@
 import type { SignInPayload, SignUpPayload } from "./auth";
-import type { User } from "./user";
 
-export interface AuthState {
+export interface AuthState<AuthUser> {
   accessToken: string | null;
-  user: User | null;
+  user: AuthUser | null; // Either Admin or User type
   loading: boolean;
 
   clearState: () => void;
