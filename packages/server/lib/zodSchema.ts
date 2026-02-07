@@ -42,3 +42,27 @@ export const sessionSchema = z.object({
   refreshToken: z.string().trim(),
   expiresAt: z.date(),
 });
+
+// Base schema with all fields
+const departmentSchema = z.object({
+  id: z.number().int().positive(),
+  manager_id: z.number().int().positive().nullable(),
+  name: z.string().min(1).max(50),
+  location: z.string().min(1).max(100),
+  budget: z.number().positive(), // or z.string() if you're handling Decimal as string
+  budget_utilization: z.number().int().min(0).max(100), // assuming it's a percentage
+  open_position: z.number().int().min(0),
+  employee_count: z.number().int().min(0),
+  description: z.string().max(255).nullable(),
+  established: z.date().nullable(),
+  updated_at: z.date().nullable(),
+});
+
+// PATCH Department
+const editDepartmentSchema = departmentSchema
+  .omit({
+    id: true,
+    established: true,
+    updated_at: true,
+  })
+  .partial();

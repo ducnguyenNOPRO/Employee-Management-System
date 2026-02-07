@@ -74,10 +74,6 @@ export default function EditDepartmentForm({
     console.log("Department: ", data);
   };
 
-  if (!managers) {
-    return <></>;
-  }
-
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 p-6">
       {/* Header */}
@@ -280,18 +276,20 @@ export default function EditDepartmentForm({
         <div className="p-6">
           <div className="space-y-4">
             <Label>Manager Name</Label>
-            <Select
-              register={register}
-              name="managerId"
-              error={errors.managerId?.message}
-            >
-              <option value="">Select a manager</option>
-              {managers?.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.first_name} {m.last_name}
-                </option>
-              ))}
-            </Select>
+            {managers && (
+              <Select
+                register={register}
+                name="managerId"
+                error={errors.managerId?.message}
+              >
+                <option value="">Select a manager</option>
+                {managers.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.first_name} {m.last_name}
+                  </option>
+                ))}
+              </Select>
+            )}
 
             <Input
               label="Manager Email"

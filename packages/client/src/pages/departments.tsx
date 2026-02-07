@@ -26,6 +26,8 @@ export default function Departments() {
     return <div>Loading</div>;
   }
 
+  console.log(departments);
+
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -184,10 +186,7 @@ export default function Departments() {
                 {departments.reduce((sum, d) => sum + d.employee_count, 0)}
               </TableCell>
               <TableCell className="p-4 font-medium">
-                $
-                {departments.reduce((sum, d) => sum + Number(d.budget), 0) /
-                  1000000}
-                M
+                ${departments.reduce((sum, d) => sum + d.budget, 0) / 1000000}M
               </TableCell>
               <TableCell>-</TableCell>
             </TableRow>

@@ -1,6 +1,5 @@
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
-import { email } from "zod";
 
 export async function getEmployees(req: Request, res: Response) {
   const { role } = req.query;
@@ -121,7 +120,6 @@ export function partialUpdateEmployee(req: Request, res: Response) {
 }
 
 // Department Management
-
 export async function getDepartments(req: Request, res: Response) {
   try {
     const departments = await prisma.department.findMany({
@@ -142,7 +140,12 @@ export async function getDepartments(req: Request, res: Response) {
       },
     });
 
-    return res.status(200).json({ departments });
+    const departmentsFormatted = departments.map((d) => ({
+      ...d,
+      budget: Number(d.budget),
+    }));
+
+    return res.status(200).json({ departments: departmentsFormatted });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -186,7 +189,19 @@ export async function getDepartment(req: Request, res: Response) {
       res.status(404).json({ message: `Department witjh ${id} not found` });
     }
 
-    return res.status(200).json({ department });
+    const departmentFormatted = { ...department, budget: department?.budget };
+
+    return res.status(200).json({ department: departmentFormatted });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+}
+
+export async function partialUpdateDepartment(req: Request, res: Response) {
+  try {
   } catch (error) {
     console.log(error);
     return res.status(500).json({
