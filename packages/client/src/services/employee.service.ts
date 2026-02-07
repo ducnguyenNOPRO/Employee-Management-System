@@ -22,4 +22,15 @@ export const employeeService = {
       throw error; // tell react query this failed
     }
   },
+  getManagers: async () => {
+    try {
+      const res = await api.get("/admin/employees", {
+        params: { role: "manager" },
+        withCredentials: true,
+      });
+      return res.data.managers;
+    } catch (error: any) {
+      throw error; // tell react query this failed
+    }
+  },
 };

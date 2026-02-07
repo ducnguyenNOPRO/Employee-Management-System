@@ -37,8 +37,9 @@ model user {
   updated_at    DateTime? @updatedAt
 
   session      session[]   // A user may have multiple session
-  department_id Int
-  department   department @relation(fields: [department_id], references: [id])
+  department_id        Int
+  department           department @relation("DepartmentEmployees",fields: [department_id], references: [id])
+  managed_department   department?  @relation("DepartmentManager")
 
   @@index([start_date])
 }
@@ -58,6 +59,7 @@ model session {
 
 model department {
   id                      Int               @id @default(autoincrement())
+  manager_id              Int?              @unique
   name                    String            @unique @db.VarChar(50)
   location                String            @db.VarChar(100)
   budget                  Decimal           @db.Decimal(10, 2)
@@ -67,7 +69,8 @@ model department {
   description             String?           @db.VarChar(255)           
   established             DateTime?         @default(now()) @db.Timestamp()
   updated_at              DateTime?         @updatedAt
-  user                    user[]            // A department may have multiple users         
+  user                    user[]            @relation("DepartmentEmployees")// A department may have multiple users     
+  manager                 user?             @relation("DepartmentManager", fields: [manager_id], references: [id])
 }
 
 enum user_role {

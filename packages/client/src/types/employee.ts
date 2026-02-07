@@ -3,6 +3,10 @@ export interface EmployeeDepartmentOverview {
   name: string;
 }
 
+export interface ManagerDepartmentOverview extends EmployeeDepartmentOverview {
+  manager_id: number;
+}
+
 // Shared fields
 interface BaseEmployee {
   id: number;
@@ -27,4 +31,13 @@ export interface EmployeeDetail extends BaseEmployee {
   emergency_contact?: string;
   emergency_phone?: string;
   start_date: string;
+}
+
+export interface ManagerOverview {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  department: ManagerDepartmentOverview;
 }

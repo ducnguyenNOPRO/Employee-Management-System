@@ -1,8 +1,9 @@
 import { authService } from "@/services/auth.service";
 import type { AuthState } from "@/types/store";
+import type { AuthUser } from "@/types/user";
 import { create } from "zustand";
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useAuthStore = create<AuthState<AuthUser>>((set, get) => ({
   accessToken: null,
   user: null,
   loading: false,

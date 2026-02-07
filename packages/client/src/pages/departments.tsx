@@ -26,8 +26,6 @@ export default function Departments() {
     return <div>Loading</div>;
   }
 
-  console.log(departments);
-
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -51,8 +49,8 @@ export default function Departments() {
       {/* Department Cards */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {departments.map((department) => {
-          const fullName = department.user
-            ? department.user.first_name + department.user.last_name
+          const fullName = department.manager
+            ? department.manager.first_name + " " + department.manager.last_name
             : "Unassigned";
           return (
             <div
@@ -88,7 +86,7 @@ export default function Departments() {
                   <div className="flex items-center justify-between pb-3 border-b">
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm text-gray-600">Manager</span>
+                      <span className="text-sm text-gray-600">user</span>
                     </div>
                     <span className="text-sm font-medium text-gray-900">
                       {fullName}
@@ -141,7 +139,7 @@ export default function Departments() {
           <TableHeader>
             <TableRow>
               <TableHead>DEPARMENT</TableHead>
-              <TableHead>MANAGER</TableHead>
+              <TableHead>user</TableHead>
               <TableHead>EMPLOYEES</TableHead>
               <TableHead>BUDGET</TableHead>
               <TableHead>Budget/Employee</TableHead>
@@ -155,8 +153,8 @@ export default function Departments() {
                     {dept.name}
                   </TableCell>
                   <TableCell className="py-4">
-                    {dept.user
-                      ? `${dept.user.first_name} ${dept.user.last_name}`
+                    {dept.manager
+                      ? `${dept.manager.first_name} ${dept.manager.last_name}`
                       : "Unassigned"}
                   </TableCell>
                   <TableCell className="py-4">{dept.employee_count}</TableCell>

@@ -10,7 +10,7 @@ interface SelectProps<T extends FieldValues> extends Omit<
   register?: UseFormRegister<T>;
 }
 
-export default function Label<T extends FieldValues>({
+export default function Select<T extends FieldValues>({
   name,
   register,
   error,

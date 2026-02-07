@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import type { DepartmentDetail } from "@/types/department";
-import { formatString } from "@/utils/formatString";
 import {
   ArrowLeft,
   Building2,
@@ -29,8 +28,8 @@ export default function DepartmentReadOnly({
   const quarterlyBudget = department.budget / 4;
   const avgSalary = department.budget / department.employee_count;
   const budgetFormatted = (department.budget / 1000000).toFixed(2);
-  const managerFullName = department.user
-    ? `${department.user.first_name} ${department.user.last_name}`
+  const managerFullName = department.manager
+    ? `${department.manager.first_name} ${department.manager.last_name}`
     : "Unassigned";
   const dateFormatted = department.established.split("T")[0];
 
@@ -197,15 +196,15 @@ export default function DepartmentReadOnly({
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Manager Detail */}
+        {/* manager Detail */}
         <section className="flex flex-col outline-1 rounded-lg h-full">
           <div className="bg-gray-50 px-6 py-4 border-b">
             <h3 className="text-lg font-semibold text-gray-900">
-              Department Manager
+              Department manager
             </h3>
           </div>
           <div className="flex-1 flex items-center gap-4 p-6">
-            {department.user ? (
+            {department.manager ? (
               <>
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-linear-to-br from-blue-500 to-blue-600 text-white font-semibold text-xl shadow-lg">
                   {managerFullName
@@ -221,19 +220,19 @@ export default function DepartmentReadOnly({
                     <div className="flex items-center gap-2 text-gray-600">
                       <Mail className="h-4 w-4 text-gray-400" />
                       <a
-                        href={`mailto:${department.user.email}`}
+                        href={`mailto:${department.manager.email}`}
                         className="hover:text-blue-600"
                       >
-                        {department.user.email}
+                        {department.manager.email}
                       </a>
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
                       <Phone className="h-4 w-4 text-gray-400" />
                       <a
-                        href={`tel:${department.user.phone}`}
+                        href={`tel:${department.manager.phone}`}
                         className="hover:text-blue-600"
                       >
-                        {department.user.phone}
+                        {department.manager.phone}
                       </a>
                     </div>
                   </div>

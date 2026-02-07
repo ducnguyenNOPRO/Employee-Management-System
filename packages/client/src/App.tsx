@@ -12,6 +12,7 @@ import ProtectedRoute from "./components/protectedRoutes";
 import DepartmentDetail from "./pages/departmentDetail";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
+import Forbidden from "./pages/404";
 
 const router = createBrowserRouter([
   // Public routes
@@ -24,9 +25,11 @@ const router = createBrowserRouter([
     element: <Register />,
   },
 
+  { path: "/Forbidden", element: <Forbidden /> },
+
   // Admin Routes
   // {
-  //   element: <ProtectedRoute />,
+  //   element: <ProtectedRoute role="admin" />,
   //   children: [
   //     {
   //       path: "/",
@@ -34,8 +37,9 @@ const router = createBrowserRouter([
   //       children: [
   //         { index: true, element: <Dashboard /> },
   //         { path: "employees", element: <Employees /> },
-  //         { path: "employee/:id", element: <EmployeeDetail /> },
+  //         { path: "employees/:id", element: <EmployeeDetail /> },
   //         { path: "departments", element: <Departments /> },
+  //         { path: "departments/:id", element: <DepartmentDetail /> },
   //         { path: "leaves", element: <LeaveRequests /> },
   //       ],
   //     },
