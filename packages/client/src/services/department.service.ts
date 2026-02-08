@@ -1,5 +1,5 @@
 import api from "@/lib/axios";
-import type { EditDepartmentSubmit } from "@/lib/zodSchema";
+import type { EditDepartmentPayload } from "@/lib/zodSchema";
 
 import { toast } from "sonner";
 
@@ -25,7 +25,7 @@ export const departmentService = {
       throw error; // tell react query this failed
     }
   },
-  patchDepartment: async (id: string, payload: EditDepartmentSubmit) => {
+  patchDepartment: async (id: string, payload: EditDepartmentPayload) => {
     try {
       const res = await api.patch(`/admin/departments/${id}`, payload, {
         withCredentials: true,

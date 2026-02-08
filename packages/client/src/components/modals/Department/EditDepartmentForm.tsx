@@ -4,7 +4,7 @@ import Label from "@/components/ui/label";
 import Select from "@/components/ui/select";
 import {
   editDepartmentSchema,
-  type EditDepartmentSubmit,
+  type EditDepartmentPayload,
 } from "@/lib/zodSchema";
 import { departmentService } from "@/services/department.service";
 import { employeeService } from "@/services/employee.service";
@@ -74,7 +74,7 @@ export default function EditDepartmentForm({
   const avgSalary = department.budget / department.employee_count;
 
   // Handle submission and manaually set cache data
-  const onSubmit: SubmitHandler<EditDepartmentSubmit> = async (data) => {
+  const onSubmit: SubmitHandler<EditDepartmentPayload> = async (data) => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const changedOnly = (

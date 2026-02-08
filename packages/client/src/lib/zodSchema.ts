@@ -22,14 +22,14 @@ export const registerSchema = z
     path: ["passwordConfirm"], // This sets which field gets the error
   });
 
-export type RegisterFormFields = z.infer<typeof registerSchema>;
+export type RegisterPayload = z.infer<typeof registerSchema>;
 
 // Log In
 export const signInSchema = z.object({
   email: z.email("Email is required"),
   password: z.string().trim().min(1, "Password is required"),
 });
-export type SignInFormFields = z.infer<typeof signInSchema>;
+export type SignInPayload = z.infer<typeof signInSchema>;
 
 /*** Authentication Schemas  ***/
 
@@ -96,7 +96,7 @@ export const departmentSchema = z.object({
 
 // PATCH Department
 export const editDepartmentSchema = departmentSchema.partial();
-export type EditDepartmentSubmit = z.infer<typeof editDepartmentSchema>;
+export type EditDepartmentPayload = z.infer<typeof editDepartmentSchema>;
 
 // Leave Request
 export const leaveRequestSchema = z.object({

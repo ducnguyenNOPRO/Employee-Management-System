@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
 import Label from "@/components/ui/label";
 import Select from "@/components/ui/select";
-import { registerSchema, type RegisterFormFields } from "@/lib/zodSchema";
+import { registerSchema, type RegisterPayload } from "@/lib/zodSchema";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, type SubmitHandler } from "react-hook-form";
@@ -14,12 +14,12 @@ export default function Register() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<RegisterFormFields>({
+  } = useForm<RegisterPayload>({
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit: SubmitHandler<RegisterFormFields> = async (
-    data: RegisterFormFields
+  const onSubmit: SubmitHandler<RegisterPayload> = async (
+    data: RegisterPayload
   ) => {
     await signUp(data);
     navigate("/login");
