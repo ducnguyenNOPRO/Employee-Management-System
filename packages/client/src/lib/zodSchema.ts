@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+/*** Authentication Schemas  ***/
 // Register
 export const registerSchema = z
   .object({
@@ -30,7 +31,10 @@ export const signInSchema = z.object({
 });
 export type SignInFormFields = z.infer<typeof signInSchema>;
 
-// Employee
+/*** Authentication Schemas  ***/
+
+/*** Employees Schemas  ***/
+// Employee Schemas
 export const employeeSchema = z.object({
   id: z.coerce.number().optional(), // non-editable
   firstName: z.string().trim().min(1, "First name is required"),
@@ -53,41 +57,46 @@ export const employeeSchema = z.object({
 });
 
 export type EmployeeFormFields = z.infer<typeof employeeSchema>;
+/*** Employees Schemas  ***/
 
-// Department
+/*** Department Schemas ***/
+
+// Base schema with all fields
 export const departmentSchema = z.object({
-  id: z.coerce.number().optional(), // non-editable
-  name: z.string().trim().min(1, "Department Name is required"),
-  location: z.string().trim().min(1, "Location is required"),
-  established: z.string().trim().min(1, "Start date is required"),
-  budget: z.coerce
+  manager_id: z.coerce
     .number()
-    .min(0, "Budget must be a positive number")
-    .default(0),
-  budgetUtilization: z.coerce
-    .number()
-    .min(0, "Budget utilization must be a positive number")
-    .default(0),
-  openPositions: z.coerce.number().default(0),
-  employeeCount: z.coerce
-    .number()
-    .min(0, "Employee Count must be a positive numebr")
-    .default(0),
-  managerId: z
+    .int("Must be a positive integer")
+    .positive()
+    .nullable(),
+  name: z
     .string()
-    .trim()
-    .transform((v) => (v === "" ? undefined : v))
-    .optional(), // reference employee (role = "manager") table
-  description: z
+    .min(1, "Name must has a length between 1 and 50 characters")
+    .max(50, "Must has a length between 1 and 50 characters"),
+  location: z
     .string()
-    .trim()
-    .transform((v) => (v === "" ? undefined : v))
-    .optional(),
+    .min(1, "Must has a length between 1 and 100 characters")
+    .max(100, "Must has a length between 1 and 100 characters"),
+  budget: z.coerce.number().min(0, "Must be a positive value > 0"), // or z.string() if you're handling Decimal as string
+  budget_utilization: z
+    .number()
+    .int()
+    .min(0, "Must be a number between 0 and 100")
+    .max(100, "Must be a number between 0 and 100"),
+  open_position: z.coerce
+    .number()
+    .int("Must be a positive integer")
+    .min(0, "Must have a value > 0"),
+  employee_count: z.coerce
+    .number()
+    .int("Must be a positive integer")
+    .min(0, "Must have a value > 0"),
+  description: z.string().max(255, "Maximum 255 characters").nullable(),
+  established: z.iso.date().nullable(), // Non-editable
 });
 
-// Uncomment after implement manager role for employee table
-// export type DepartmentFields = z.infer<typeof departmentSchema & {managerName: string, managerEmail: string, managerPhone: string}>;
-export type DepartmentFields = z.infer<typeof departmentSchema>;
+// PATCH Department
+export const editDepartmentSchema = departmentSchema.partial();
+export type EditDepartmentSubmit = z.infer<typeof editDepartmentSchema>;
 
 // Leave Request
 export const leaveRequestSchema = z.object({

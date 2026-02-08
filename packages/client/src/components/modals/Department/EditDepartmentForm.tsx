@@ -2,12 +2,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Label from "@/components/ui/label";
 import Select from "@/components/ui/select";
-import { departmentSchema, type DepartmentFields } from "@/lib/zodSchema";
+import {
+  editDepartmentSchema,
+  type EditDepartmentSubmit,
+} from "@/lib/zodSchema";
+import { departmentService } from "@/services/department.service";
 import { employeeService } from "@/services/employee.service";
-import type { DepartmentDetail } from "@/types/department";
+import type { DepartmentDetail, DepartmentOverview } from "@/types/department";
 import type { ManagerOverview } from "@/types/employee";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Building2,
@@ -30,6 +34,7 @@ export default function EditDepartmentForm({
   toggle,
 }: DepartmentProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: managers } = useQuery<ManagerOverview[]>({
     queryKey: ["managers"],
     queryFn: employeeService.getManagers,
@@ -40,28 +45,27 @@ export default function EditDepartmentForm({
     register,
     handleSubmit,
     control,
-    formState: { errors, isSubmitting },
+    formState: { dirtyFields, errors, isSubmitting },
   } = useForm({
-    resolver: zodResolver(departmentSchema),
+    resolver: zodResolver(editDepartmentSchema),
     defaultValues: {
       name: department.name,
       location: department.location,
       budget: department.budget,
       established: department.established.split("T")[0],
       description: department.description,
-      managerId: department.manager_id?.toString() ?? "",
-      openPositions: department.open_position,
-      employeeCount: department.employee_count,
+      manager_id: department.manager_id,
+      open_position: department.open_position,
+      employee_count: department.employee_count,
     },
   });
 
-  // Watch for changes in managerId
+  // Watch for changes in manager_id
   // Re-render the changes in phone and email input field
   const selectedManagerId = useWatch({
     control,
-    name: "managerId",
+    name: "manager_id",
   });
-
   const selectedManager = managers?.find(
     (m) => m.id === Number(selectedManagerId)
   );
@@ -69,9 +73,44 @@ export default function EditDepartmentForm({
   const quarterlyBudget = department.budget / 4;
   const avgSalary = department.budget / department.employee_count;
 
-  const onSubmit: SubmitHandler<DepartmentFields> = async (data) => {
+  // Handle submission and manaually set cache data
+  const onSubmit: SubmitHandler<EditDepartmentSubmit> = async (data) => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log("Department: ", data);
+
+    const changedOnly = (
+      Object.keys(dirtyFields) as Array<keyof typeof data>
+    ).reduce(
+      (acc, key) => ({
+        ...acc,
+        [key]: data[key],
+      }),
+      {} as Partial<typeof data>
+    );
+
+    const { department: updatedDepartment } =
+      await departmentService.patchDepartment(
+        department.id.toString(),
+        changedOnly
+      );
+
+    manualUpdateQueryData(updatedDepartment);
+    toggle(); // Go back to ReadOnlyComponent
+  };
+
+  // update cache data for selected department and the list of all departments
+  const manualUpdateQueryData = (updatedDepartment: DepartmentDetail) => {
+    queryClient.setQueryData(
+      // Selected Department
+      ["department", department.id.toString()],
+      updatedDepartment
+    );
+    queryClient.setQueryData<DepartmentOverview[]>(["departments"], (old) => {
+      // List of departments
+      if (!old) return old; // undefined case
+      return old.map((dpt: DepartmentOverview) =>
+        dpt.id === updatedDepartment.id ? updatedDepartment : dpt
+      );
+    });
   };
 
   return (
@@ -202,7 +241,8 @@ export default function EditDepartmentForm({
                 type="date"
                 id="established"
                 name="established"
-                required
+                disabled
+                className="bg-gray-100"
                 placeholder="2020-01-15"
                 error={errors.established?.message}
               />
@@ -213,11 +253,11 @@ export default function EditDepartmentForm({
                 register={register}
                 label="Total Employees"
                 type="number"
-                id="employeeCount"
-                name="employeeCount"
+                id="employee_count"
+                name="employee_count"
                 required
                 placeholder="0"
-                error={errors.employeeCount?.message}
+                error={errors.employee_count?.message}
               />
 
               <Input
@@ -235,10 +275,10 @@ export default function EditDepartmentForm({
                 register={register}
                 label="Open Positions"
                 type="number"
-                id="openPositions"
-                name="openPositions"
+                id="open_position"
+                name="open_position"
                 placeholder="0"
-                error={errors.openPositions?.message}
+                error={errors.open_position?.message}
               />
             </div>
 
@@ -279,8 +319,8 @@ export default function EditDepartmentForm({
             {managers && (
               <Select
                 register={register}
-                name="managerId"
-                error={errors.managerId?.message}
+                name="manager_id"
+                error={errors.manager_id?.message}
               >
                 <option value="">Select a manager</option>
                 {managers.map((m) => (

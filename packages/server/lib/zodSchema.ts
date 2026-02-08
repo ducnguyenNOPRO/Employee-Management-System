@@ -45,7 +45,6 @@ export const sessionSchema = z.object({
 
 // Base schema with all fields
 const departmentSchema = z.object({
-  id: z.number().int().positive(),
   manager_id: z.number().int().positive().nullable(),
   name: z.string().min(1).max(50),
   location: z.string().min(1).max(100),
@@ -54,15 +53,12 @@ const departmentSchema = z.object({
   open_position: z.number().int().min(0),
   employee_count: z.number().int().min(0),
   description: z.string().max(255).nullable(),
-  established: z.date().nullable(),
-  updated_at: z.date().nullable(),
+  established: z.iso.date().nullable(),
 });
 
 // PATCH Department
-const editDepartmentSchema = departmentSchema
+export const editDepartmentSchema = departmentSchema
   .omit({
-    id: true,
     established: true,
-    updated_at: true,
   })
   .partial();

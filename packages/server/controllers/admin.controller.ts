@@ -1,5 +1,7 @@
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
+import { editDepartmentSchema } from "../lib/zodSchema";
+import z from "zod";
 
 export async function getEmployees(req: Request, res: Response) {
   const { role } = req.query;
@@ -186,10 +188,13 @@ export async function getDepartment(req: Request, res: Response) {
     });
 
     if (!department) {
-      res.status(404).json({ message: `Department witjh ${id} not found` });
+      res.status(404).json({ message: `Department with ${id} not found` });
     }
 
-    const departmentFormatted = { ...department, budget: department?.budget };
+    const departmentFormatted = {
+      ...department,
+      budget: Number(department?.budget),
+    };
 
     return res.status(200).json({ department: departmentFormatted });
   } catch (error) {
@@ -201,9 +206,38 @@ export async function getDepartment(req: Request, res: Response) {
 }
 
 export async function partialUpdateDepartment(req: Request, res: Response) {
+  const id = parseInt(req.params.id as string);
+  console.log(id);
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ message: "Department Id is missing" });
+  }
+  const result = editDepartmentSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({
+      message: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
+  }
   try {
-  } catch (error) {
+    const department = await prisma.department.update({
+      where: {
+        id,
+      },
+      data: result.data,
+    });
+
+    const departmentFormatted = {
+      ...department,
+      budget: Number(department.budget),
+    };
+    return res.status(200).json({ department: departmentFormatted });
+  } catch (error: any) {
     console.log(error);
+    // 4. Handle Prisma "not found" error
+    if (error.code === "P2025") {
+      return res.status(404).json({
+        message: `Department with id ${id} not found`,
+      });
+    }
     return res.status(500).json({
       message: "Internal server error",
     });
