@@ -50,8 +50,8 @@ const departmentSchema = z.object({
   location: z.string().min(1).max(100),
   budget: z.number().positive(), // or z.string() if you're handling Decimal as string
   budget_utilization: z.number().int().min(0).max(100), // assuming it's a percentage
-  open_position: z.number().int().min(0),
-  employee_count: z.number().int().min(0),
+  open_position: z.number().int().min(0).max(20),
+  employee_count: z.number().int().min(0).max(50),
   description: z.string().max(255).nullable(),
   established: z.iso.date().nullable(),
 });

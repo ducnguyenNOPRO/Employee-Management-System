@@ -63,11 +63,10 @@ export type EmployeeFormFields = z.infer<typeof employeeSchema>;
 
 // Base schema with all fields
 export const departmentSchema = z.object({
-  manager_id: z.coerce
-    .number()
-    .int("Must be a positive integer")
-    .positive()
-    .nullable(),
+  manager_id: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? null : val),
+    z.coerce.number().int("Must be a positive integer").min(1).nullable()
+  ),
   name: z
     .string()
     .min(1, "Name must has a length between 1 and 50 characters")
@@ -85,11 +84,13 @@ export const departmentSchema = z.object({
   open_position: z.coerce
     .number()
     .int("Must be a positive integer")
-    .min(0, "Must have a value > 0"),
+    .min(0, "Must have a value > 0")
+    .max(20, "Maximum value is 20 "),
   employee_count: z.coerce
     .number()
     .int("Must be a positive integer")
-    .min(0, "Must have a value > 0"),
+    .min(0, "Must have a value > 0")
+    .max(50, "Maximum value is 50"),
   description: z.string().max(255, "Maximum 255 characters").nullable(),
   established: z.iso.date().nullable(), // Non-editable
 });

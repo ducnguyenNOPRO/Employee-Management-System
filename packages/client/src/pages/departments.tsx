@@ -26,8 +26,6 @@ export default function Departments() {
     return <div>Loading</div>;
   }
 
-  console.log(departments);
-
   return (
     <div className="space-y-6 p-6">
       {/* Header */}

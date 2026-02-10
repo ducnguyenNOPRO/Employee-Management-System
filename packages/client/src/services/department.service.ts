@@ -30,7 +30,7 @@ export const departmentService = {
       const res = await api.patch(`/admin/departments/${id}`, payload, {
         withCredentials: true,
       });
-      return res.data;
+      toast(res.data.message);
     } catch (error: any) {
       toast.error(error.response?.data?.message);
     }

@@ -2,6 +2,12 @@ import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { editDepartmentSchema } from "../lib/zodSchema";
 import z from "zod";
+import {
+  removeManager,
+  transferManagerFromAnotherDepartment,
+  transferManagerAndAssign,
+  updatedDepartment,
+} from "../lib/helper";
 
 export async function getEmployees(req: Request, res: Response) {
   const { role } = req.query;
@@ -207,7 +213,6 @@ export async function getDepartment(req: Request, res: Response) {
 
 export async function partialUpdateDepartment(req: Request, res: Response) {
   const id = parseInt(req.params.id as string);
-  console.log(id);
   if (!id || isNaN(id)) {
     return res.status(400).json({ message: "Department Id is missing" });
   }
@@ -218,18 +223,74 @@ export async function partialUpdateDepartment(req: Request, res: Response) {
     });
   }
   try {
-    const department = await prisma.department.update({
-      where: {
-        id,
-      },
-      data: result.data,
-    });
+    const manager_id = result.data.manager_id;
+    // Handle updating department if manager changes
+    if (manager_id !== undefined) {
+      // Case 1: Removing manager (got set to null in FE)
+      if (manager_id === null) {
+        await removeManager(id, result.data);
+        console.log("Case 1");
+      }
+      // Case 2: Assigning a new manager
+      else {
+        // Find and check if the new manager is existing and managing a department
+        const newManager = await prisma.user.findUnique({
+          where: { id: manager_id },
+          include: {
+            managed_department: true,
+          },
+        });
 
-    const departmentFormatted = {
-      ...department,
-      budget: Number(department.budget),
-    };
-    return res.status(200).json({ department: departmentFormatted });
+        if (!newManager) {
+          return res.status(400).json({
+            message: `Manager with id ${manager_id} not found`,
+          });
+        }
+
+        // Get current department info
+        const currentDepartment = await prisma.department.findUnique({
+          where: { id },
+          select: { manager_id: true },
+        });
+
+        if (!currentDepartment) {
+          return res.status(404).json({
+            message: `Department with id ${id} not found`,
+          });
+        }
+
+        // Case 2.1: Manager is already managing a different department
+        if (
+          newManager.managed_department &&
+          newManager.managed_department.id !== id
+        ) {
+          // Perform transfer
+          await transferManagerFromAnotherDepartment(
+            newManager.id,
+            result.data,
+            id
+          );
+          console.log("Case 2.1");
+        }
+        // Case 2.2: New manager is not managing any department and not belong to this department
+        else if (newManager.department_id !== id) {
+          await transferManagerAndAssign(newManager.id, result.data, id);
+          console.log("Case 2.2");
+        }
+        // Case 2.3: New manager is not managing any department but belong to this department
+        else if (newManager.department_id === id) {
+          await updatedDepartment(result.data, id);
+          console.log("Case 2.3");
+        }
+      }
+    }
+    // Case 3: No manager_id change, just regular department update
+    else {
+      await updatedDepartment(result.data, id);
+      console.log("Case 3");
+    }
+
+    return res.status(200).json({ message: "Department Updated successfully" });
   } catch (error: any) {
     console.log(error);
     // 4. Handle Prisma "not found" error
