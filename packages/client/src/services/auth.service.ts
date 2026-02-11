@@ -1,8 +1,8 @@
 import api from "@/lib/axios";
-import type { SignUpPayload, SignInPayload } from "@/types/auth";
+import type { RegisterPayload, SignInPayload } from "../lib/zodSchema";
 
 export const authService = {
-  signUp: async (payload: SignUpPayload) => {
+  signUp: async (payload: RegisterPayload) => {
     const res = await api.post("/auth/signup", payload, {
       withCredentials: true,
     });

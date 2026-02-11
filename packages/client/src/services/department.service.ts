@@ -1,4 +1,5 @@
 import api from "@/lib/axios";
+import type { EditDepartmentPayload } from "@/lib/zodSchema";
 
 import { toast } from "sonner";
 
@@ -22,6 +23,16 @@ export const departmentService = {
     } catch (error: any) {
       toast.error(error.response?.data?.message);
       throw error; // tell react query this failed
+    }
+  },
+  patchDepartment: async (id: string, payload: EditDepartmentPayload) => {
+    try {
+      const res = await api.patch(`/admin/departments/${id}`, payload, {
+        withCredentials: true,
+      });
+      toast(res.data.message);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message);
     }
   },
 };

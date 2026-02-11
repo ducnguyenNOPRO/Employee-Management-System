@@ -184,10 +184,7 @@ export default function Departments() {
                 {departments.reduce((sum, d) => sum + d.employee_count, 0)}
               </TableCell>
               <TableCell className="p-4 font-medium">
-                $
-                {departments.reduce((sum, d) => sum + Number(d.budget), 0) /
-                  1000000}
-                M
+                ${departments.reduce((sum, d) => sum + d.budget, 0) / 1000000}M
               </TableCell>
               <TableCell>-</TableCell>
             </TableRow>

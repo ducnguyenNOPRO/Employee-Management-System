@@ -1,5 +1,5 @@
 import { Input } from "@/components/ui/input";
-import { signInSchema, type SignInFormFields } from "@/lib/zodSchema";
+import { signInSchema, type SignInPayload } from "@/lib/zodSchema";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
@@ -14,12 +14,12 @@ export default function Login() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<SignInFormFields>({
+  } = useForm<SignInPayload>({
     resolver: zodResolver(signInSchema),
   });
 
-  const onSubmit: SubmitHandler<SignInFormFields> = async (
-    data: SignInFormFields
+  const onSubmit: SubmitHandler<SignInPayload> = async (
+    data: SignInPayload
   ) => {
     try {
       await signIn(data);

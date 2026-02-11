@@ -18,7 +18,6 @@ type EmployeeProps = {
 
 export default function EmployeeReadOnly({ employee, toggle }: EmployeeProps) {
   const navigate = useNavigate();
-  console.log(employee);
   return (
     <div className="space-y-6 p-6">
       {/* Header */}

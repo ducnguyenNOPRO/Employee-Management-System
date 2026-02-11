@@ -84,7 +84,7 @@ export default function DepartmentReadOnly({
               <span className="text-sm font-medium">Annual Budget</span>
             </div>
             <p className="text-3xl font-bold text-green-900">
-              {budgetFormatted}M
+              ${budgetFormatted}M
             </p>
             <p className="text-xs text-green-700 mt-1">
               ${(quarterlyBudget / 1000).toFixed(0)}K quarterly
@@ -289,7 +289,7 @@ export default function DepartmentReadOnly({
               <div className="p-4 bg-gray-50 rounded-lg">
                 <p className="text-xs text-gray-600 mb-1">Annual Budget</p>
                 <p className="text-lg font-semibold text-gray-900">
-                  {budgetFormatted}
+                  ${budgetFormatted}M
                 </p>
               </div>
               <div className="p-4 bg-gray-50 rounded-lg">
