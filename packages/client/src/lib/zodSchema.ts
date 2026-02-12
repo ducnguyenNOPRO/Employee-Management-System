@@ -4,8 +4,8 @@ import { z } from "zod";
 // Register
 export const registerSchema = z
   .object({
-    firstName: z.string().trim().min(1, "First name is required"),
-    lastName: z.string().trim().min(1, "Last name is required"),
+    first_name: z.string().trim().min(1, "First name is required"),
+    last_name: z.string().trim().min(1, "Last name is required"),
     email: z.email("Invalid email address"),
     password: z
       .string()
@@ -14,10 +14,10 @@ export const registerSchema = z
       .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
       .regex(/[a-z]/, "Password must contain at least one lowercase letter")
       .regex(/[0-9]/, "Password must contain at least one number"),
-    passwordConfirm: z.string().trim(),
+    password_confirm: z.string().trim(),
     role: z.enum(["admin", "employee"]),
   })
-  .refine((data) => data.password === data.passwordConfirm, {
+  .refine((data) => data.password === data.password_confirm, {
     message: "Passwords don't match",
     path: ["passwordConfirm"], // This sets which field gets the error
   });
@@ -65,7 +65,7 @@ export type EmployeeFormFields = z.infer<typeof employeeSchema>;
 export const departmentSchema = z.object({
   manager_id: z.preprocess(
     (val) => (val === "" || val === null || val === undefined ? null : val),
-    z.coerce.number().int("Must be a positive integer").min(1).nullable()
+    z.cuid("Invalid ID format").nullable()
   ),
   name: z
     .string()

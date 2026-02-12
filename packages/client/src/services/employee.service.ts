@@ -25,7 +25,7 @@ export const employeeService = {
   getManagers: async () => {
     try {
       const res = await api.get("/admin/employees", {
-        params: { role: "manager" },
+        params: { role: "MANAGER" },
         withCredentials: true,
       });
       return res.data.managers;

@@ -9,57 +9,60 @@ datasource db {
 }
 
 model admin {
-  id            Int       @id @default(autoincrement())
+  id            String       @id @default(cuid())
   first_name    String    @db.VarChar(100)
   last_name     String    @db.VarChar(100)
   email         String    @unique @db.VarChar(255)
   password_hash String    @db.VarChar(255)   // need to activate
-  role          user_role @default(admin)
+  role          user_role @default(ADMIN)
   session       session[]   // admin 1 to many session
 }
 
 model user {
-  id            Int       @id @default(autoincrement())
+  id            String       @id @default(cuid())
   email         String    @unique @db.VarChar(255)
   password_hash String    @db.VarChar(255)   // need to activate
   address       String    @db.VarChar(255)
   position      String    @db.VarChar(255)    
-  role          user_role @default(employee)
+  role          user_role @default(EMPLOYEE)
   first_name    String    @db.VarChar(100)
   last_name     String    @db.VarChar(100)
-  employment_type   employement_type  @default(full_time)
-  status        status    @default(in_active)
+  employment_type   employement_type  @default(FULL_TIME)
+  status        status    @default(IN_ACTIVE)
   phone         String   @unique @db.VarChar(20)
   salary        Decimal  @db.Decimal(10, 2)
   emergency_contact String? @db.VarChar(100)
   emergency_phone  String? @db.VarChar(20)
-  start_date    DateTime? @default(now()) @db.Timestamp(6)
+  start_date    DateTime? @default(now())
   updated_at    DateTime? @updatedAt
 
   session      session[]   // A user may have multiple session
-  department_id        Int
-  department           department @relation("DepartmentEmployees",fields: [department_id], references: [id])
+  department_id        String?
+  department           department? @relation("DepartmentEmployees",fields: [department_id], references: [id], onDelete: SetNull)
   managed_department   department?  @relation("DepartmentManager")
+
+  leave_request        leave_request[] @relation("Requester")
+  approve_request      leave_request[] @relation("Approver")
 
   @@index([start_date])
 }
 
 model session {
-  id             Int              @id @default(autoincrement())
+  id             String              @id @default(cuid())
   owner_type     SessionOwnerType
-  user_id        Int?
-  admin_id       Int?
+  user_id        String?
+  admin_id       String?
   user           user?        @relation(fields: [user_id], references: [id])
   admin          admin?           @relation(fields: [admin_id], references: [id])
   refresh_token  String           @unique @db.VarChar(255)
-  expires_at     DateTime         @db.Timestamp()
-  created_at     DateTime?        @default(now()) @db.Timestamp(6)
+  expires_at     DateTime         
+  created_at     DateTime?        @default(now())
   updated_at     DateTime?        @updatedAt
 }
 
 model department {
-  id                      Int               @id @default(autoincrement())
-  manager_id              Int?              @unique
+  id                      String               @id @default(cuid())
+  manager_id              String?              @unique
   name                    String            @unique @db.VarChar(50)
   location                String            @db.VarChar(100)
   budget                  Decimal           @db.Decimal(10, 2)
@@ -67,32 +70,72 @@ model department {
   open_position           Int                 
   employee_count           Int  
   description             String?           @db.VarChar(255)           
-  established             DateTime?         @default(now()) @db.Timestamp()
+  established             DateTime?         @default(now())
   updated_at              DateTime?         @updatedAt
   user                    user[]            @relation("DepartmentEmployees")// A department may have multiple users     
-  manager                 user?             @relation("DepartmentManager", fields: [manager_id], references: [id])
+  manager                 user?             @relation("DepartmentManager", fields: [manager_id], references: [id], onDelete: SetNull)
+}
+
+model leave_request {
+  id            String              @id @default(cuid())
+  requester_id  String           
+  approver_id   String?           
+  type          LeaveType
+  start_date    DateTime          
+  end_date      DateTime          
+  hours         Float               // Total hours requested
+  reason        String?             @db.VarChar(255)
+  status        LeaveRequestStatus  @default(PENDING)
+  
+  // Audit fields
+  created_at    DateTime            @default(now())
+  updated_at    DateTime            @updatedAt
+  reviewed_at   DateTime?            // When approved/rejected
+  
+  // Relations
+  requester user @relation("Requester", fields: [requester_id], references: [id], onDelete: Cascade)
+  approver  user? @relation("Approver", fields: [approver_id], references: [id], onDelete: SetNull)
+
+  @@index([requester_id])
+  @@index([approver_id])
+  @@index([status])
+  @@index([start_date])
 }
 
 enum user_role {
-  admin
-  manager
-  employee
+  ADMIN
+  MANAGER
+  EMPLOYEE
 }
 
 enum employement_type {
-  full_time
-  part_time
-  contract
+  FULL_TIME
+  PART_TIME
+  CONTRACT
 }
 
 enum status {
-  in_active
-  active
-  on_leave
+  IN_ACTIVE
+  ACTIVE
+  ON_LEAVE
 }
 
 enum SessionOwnerType {
-  employee
-  manager
-  admin
+  EMPLOYEE
+  MANAGER
+  ADMIN
+}
+
+enum LeaveType {
+  VACATION
+  SICK_LEAVE
+  UNPAID
+  OTHER
+}
+
+enum LeaveRequestStatus {
+ PENDING
+ APPROVED
+ REJECTED
+ CANCELLED
 }

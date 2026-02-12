@@ -53,7 +53,7 @@ export default function DepartmentReadOnly({
               {department.name}
             </h2>
             <p className="text-sm text-gray-600 mt-1">
-              Department ID: DEPT-{department.id!.toString().padStart(3, "0")}
+              Department ID: DEPT-{department.id!}
             </p>
           </div>
         </div>

@@ -9,7 +9,7 @@ export interface DepartmentManagerDetail extends DepartmentsManagerOverview {
 }
 
 export interface BaseDepartment {
-  id: number;
+  id: string;
   name: string;
   budget: number; // use decimal in DB which return a string
   employee_count: number;
@@ -20,7 +20,7 @@ export interface DepartmentOverview extends BaseDepartment {
 }
 
 export interface DepartmentDetail extends BaseDepartment {
-  manager_id?: number;
+  manager_id?: string;
   budget_utilization: number;
   open_position: number;
   description?: string;

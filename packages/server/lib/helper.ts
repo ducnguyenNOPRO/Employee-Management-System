@@ -7,9 +7,9 @@ import { prisma } from "../lib/prisma";
  * - Update department and assign this new manager
  */
 export async function transferManagerFromAnotherDepartment(
-  newManagerId: number,
+  newManagerId: string,
   departmentData: any,
-  newDepartmentId: number
+  newDepartmentId: string
 ) {
   await prisma.$transaction(async (tx) => {
     // 1. Find the old department this manager is currently managing
@@ -44,9 +44,9 @@ export async function transferManagerFromAnotherDepartment(
  * - Update department data and Assign as manager
  */
 export async function transferManagerAndAssign(
-  newManagerId: number,
+  newManagerId: string,
   departmentData: any,
-  departmentId: number
+  departmentId: string
 ) {
   await prisma.$transaction(async (tx) => {
     // 1. Transfer to this department
@@ -69,7 +69,7 @@ export async function transferManagerAndAssign(
  */
 export async function updateDepartment(
   departmentData: any,
-  newDepartmentId: number
+  newDepartmentId: string
 ) {
   await prisma.department.update({
     where: { id: newDepartmentId },
@@ -78,7 +78,7 @@ export async function updateDepartment(
 }
 
 // Update department and removing the manager from that department
-export async function removeManager(departmentId: number, departmentData: any) {
+export async function removeManager(departmentId: string, departmentData: any) {
   await prisma.department.update({
     where: { id: departmentId },
     data: { ...departmentData, manager_id: null },

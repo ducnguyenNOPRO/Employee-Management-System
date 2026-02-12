@@ -61,6 +61,7 @@ export default function EditDepartmentForm({
       employee_count: department.employee_count,
     },
   });
+  console.log(department);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingFormData, setPendingFormData] =
     useState<Partial<EditDepartmentPayload> | null>(null);
@@ -74,9 +75,9 @@ export default function EditDepartmentForm({
     control,
     name: "manager_id",
   });
-  const selectedManager = managers?.find(
-    (m) => m.id === Number(selectedManagerId)
-  );
+
+  console.log(selectedManagerId);
+  const selectedManager = managers?.find((m) => m.id === selectedManagerId);
 
   const quarterlyBudget = department.budget / 4;
   const avgSalary =
@@ -128,7 +129,7 @@ export default function EditDepartmentForm({
 
   // Handle actuall form submission and manaually set cache data
   const submitForm = async (data: Partial<EditDepartmentPayload>) => {
-    await departmentService.patchDepartment(department.id.toString(), data);
+    await departmentService.patchDepartment(department.id, data);
 
     invalidateQuery();
     toggle(); // Go back to ReadOnlyComponent
@@ -152,7 +153,8 @@ export default function EditDepartmentForm({
 
   // Invalidat related queries
   const invalidateQuery = () => {
-    queryClient.invalidateQueries(["department", department.id.toString()]);
+    queryClient.invalidateQueries(["department"]);
+    queryClient.invalidateQueries(["managers"]);
     queryClient.invalidateQueries(["departments"]);
   };
 
@@ -173,7 +175,7 @@ export default function EditDepartmentForm({
                 {department.name}
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                Department ID: DEPT-{department.id!.toString().padStart(3, "0")}
+                Department ID: DEPT-{department.id!}
               </p>
             </div>
           </div>

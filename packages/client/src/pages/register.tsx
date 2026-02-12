@@ -35,20 +35,20 @@ export default function Register() {
           <Input
             label="First Name"
             placeholder="John"
-            id="firstName"
-            name="firstName"
+            id="first_name"
+            name="first_name"
             required
             register={register}
-            error={errors.firstName?.message}
+            error={errors.first_name?.message}
           />
           <Input
             label="Last Name"
             placeholder="Doe"
-            id="lastName"
-            name="lastName"
+            id="last_name"
+            name="last_name"
             required
             register={register}
-            error={errors.lastName?.message}
+            error={errors.last_name?.message}
           />
           <Input
             label="Email"
@@ -88,11 +88,11 @@ export default function Register() {
             label="Confirm Password"
             placeholder="Enter your password again"
             type="password"
-            id="passwordConfirm"
-            name="passwordConfirm"
+            id="password_confirm"
+            name="password_confirm"
             required
             register={register}
-            error={errors.passwordConfirm?.message}
+            error={errors.password_confirm?.message}
           />
 
           {errors.root && (
