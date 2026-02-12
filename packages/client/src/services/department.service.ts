@@ -1,6 +1,6 @@
 import api from "@/lib/axios";
 import type {
-  addDepartmentPayload,
+  AddDepartmentPayload,
   EditDepartmentPayload,
 } from "@/lib/zodSchema";
 
@@ -28,7 +28,7 @@ export const departmentService = {
       throw error; // tell react query this failed
     }
   },
-  createDepartment: async (payload: addDepartmentPayload) => {
+  createDepartment: async (payload: AddDepartmentPayload) => {
     try {
       const res = await api.post("/admin/departments", payload, {
         withCredentials: true,

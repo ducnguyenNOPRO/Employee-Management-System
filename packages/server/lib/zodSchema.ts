@@ -1,20 +1,9 @@
 import z from "zod";
-// User (both admind and employee)
-export const userSchema = z.object({
-  firstName: z.string().trim().min(1, "First name is required"),
-  lastName: z.string().trim().min(1, "Last name is required"),
-  email: z.email(),
-  password: z.string().trim(),
-  role: z.enum(["admin", "employee"]),
-  departmentId: z.coerce.number("Department ID must be a number").optional(),
-  phone: z.string().trim().min(1).max(20).optional(), // maybe required in future if no employee table
-  salary: z.coerce.number("Salaray must be a number").optional(), // for admin
-});
 
 export const signUpSchema = z
   .object({
-    firstName: z.string().trim().min(1, "First name is required"),
-    lastName: z.string().trim().min(1, "Last name is required"),
+    first_name: z.string().trim().min(1, "First name is required"),
+    last_name: z.string().trim().min(1, "Last name is required"),
     email: z.email("Invalid email address"),
     password: z
       .string()
@@ -23,10 +12,10 @@ export const signUpSchema = z
       .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
       .regex(/[a-z]/, "Password must contain at least one lowercase letter")
       .regex(/[0-9]/, "Password must contain at least one number"),
-    passwordConfirm: z.string().trim(),
+    password_confirm: z.string().trim(),
     role: z.enum(["admin", "employee"]),
   })
-  .refine((data) => data.password === data.passwordConfirm, {
+  .refine((data) => data.password === data.password_confirm, {
     message: "Passwords don't match",
     path: ["passwordConfirm"], // This sets which field gets the error
   });
@@ -38,18 +27,24 @@ export const signInSchema = z.object({
 
 // Session
 export const sessionSchema = z.object({
-  userId: z.number(),
-  refreshToken: z.string().trim(),
-  expiresAt: z.date(),
+  user_id: z.cuid("Invalid "),
+  refresh_token: z.string().trim(),
+  expires_at: z.date(),
+});
+
+// EMPLOYEE SCHEMAS
+const employeeSchema = z.object({
+  id: z.cuid("Invalid ID forma"),
+});
+
+export const getEmployeeSchema = employeeSchema.pick({
+  id: true,
 });
 
 // DEPARTMENT SCHEMAS
 const departmentSchema = z.object({
-  manager_id: z
-    .number()
-    .int()
-    .positive("Must be a positive integer")
-    .nullable(),
+  id: z.cuid("Invalid ID format"),
+  manager_id: z.cuid("Invalid ID format").nullable(),
   name: z
     .string()
     .trim()
@@ -83,8 +78,13 @@ const departmentSchema = z.object({
 export const editDepartmentSchema = departmentSchema
   .omit({
     established: true,
+    id: true,
   })
   .partial();
 export const addDepartmentSchema = departmentSchema.omit({
   established: true,
+  id: true,
+});
+export const getDepartmentSchema = departmentSchema.pick({
+  id: true,
 });

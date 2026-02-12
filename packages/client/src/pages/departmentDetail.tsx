@@ -30,12 +30,11 @@ export default function DepartmentDetail() {
 
   return (
     <>
-      <Activity mode={isEditing ? "hidden" : "visible"}>
+      {!isEditing ? (
         <DepartmentReadOnly department={department} toggle={handleToggleMode} />
-      </Activity>
-      <Activity mode={isEditing ? "visible" : "hidden"}>
+      ) : (
         <EditDepartmentForm department={department} toggle={handleToggleMode} />
-      </Activity>
+      )}
     </>
   );
 }

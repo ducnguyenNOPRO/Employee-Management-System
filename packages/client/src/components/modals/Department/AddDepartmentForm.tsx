@@ -48,9 +48,9 @@ export default function AddForm({ onSuccess }: AddFormProps) {
   const [departmentName, managerId, employeeCount, budget] = useWatch({
     control,
     name: ["name", "manager_id", "employee_count", "budget"],
-  }) as [string, number | null, number, number];
+  }) as [string, string | null, number, number];
 
-  const selectedManager = managers?.find((m) => m.id === Number(managerId));
+  const selectedManager = managers?.find((m) => m.id === managerId);
 
   const checkManagerConflict = () => {
     const isAssignedManager =

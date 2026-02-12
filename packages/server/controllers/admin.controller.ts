@@ -1,6 +1,11 @@
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
-import { addDepartmentSchema, editDepartmentSchema } from "../lib/zodSchema";
+import {
+  addDepartmentSchema,
+  editDepartmentSchema,
+  getDepartmentSchema,
+  getEmployeeSchema,
+} from "../lib/zodSchema";
 import z from "zod";
 import {
   removeManager,
@@ -12,7 +17,7 @@ import {
 export async function getEmployees(req: Request, res: Response) {
   const { role } = req.query;
   try {
-    if (role == "manager") {
+    if (role == "MANAGER") {
       const managers = await prisma.user.findMany({
         orderBy: {
           start_date: "desc",
@@ -68,19 +73,15 @@ export async function getEmployees(req: Request, res: Response) {
 }
 
 export async function getEmployee(req: Request, res: Response) {
+  const result = getEmployeeSchema.safeParse(req.params.id);
+  if (!result.success) {
+    console.log(z.treeifyError(result.error).properties);
+    res.status(400).json({ message: "Missing or Invalid ID format" });
+  }
   try {
-    const id = parseInt(req.params.id as string);
-    if (!id) {
-      return res.status(400).json({ message: "Employee Id is missing" });
-    }
-
-    if (isNaN(id)) {
-      return res.status(400).json({ message: "Invalid ID format" });
-    }
-
     const employee = await prisma.user.findUnique({
       where: {
-        id,
+        id: result.data?.id,
       },
       omit: {
         password_hash: true,
@@ -100,7 +101,7 @@ export async function getEmployee(req: Request, res: Response) {
     if (!employee) {
       return res
         .status(404)
-        .json({ message: `Employee with id: ${id} not found` });
+        .json({ message: `Employee with id: ${result.data?.id} not found` });
     }
 
     return res.status(200).json({ employee });
@@ -163,22 +164,19 @@ export async function getDepartments(req: Request, res: Response) {
 }
 
 export async function getDepartment(req: Request, res: Response) {
+  const result = getDepartmentSchema.safeParse({ id: req.params.id });
+  if (!result.success) {
+    console.log(z.treeifyError(result.error).properties);
+    res.status(400).json({ message: "Missing or Invalid ID format" });
+  }
+
   try {
-    const id = parseInt(req.params.id as string);
-    if (!id) {
-      return res.status(400).json({ message: "Department Id is missing" });
-    }
-
-    if (isNaN(id)) {
-      return res.status(400).json({ message: "Invalid ID format" });
-    }
-
     const department = await prisma.department.findUnique({
       omit: {
         updated_at: true,
       },
       where: {
-        id,
+        id: result.data?.id,
       },
       include: {
         manager: {
@@ -194,7 +192,9 @@ export async function getDepartment(req: Request, res: Response) {
     });
 
     if (!department) {
-      res.status(404).json({ message: `Department with ${id} not found` });
+      res
+        .status(404)
+        .json({ message: `Department with ${result.data?.id} not found` });
     }
 
     const departmentFormatted = {
@@ -260,11 +260,9 @@ export async function createDepartment(req: Request, res: Response) {
       res.status(400).json({ message: "Department name is already existed" });
     }
     if (error.code === "P2003") {
-      res
-        .status(400)
-        .json({
-          message: `Manager with id ${result.data.manager_id} not found`,
-        });
+      res.status(400).json({
+        message: `Manager with id ${result.data.manager_id} not found`,
+      });
     }
     return res.status(500).json({
       message: "Internal server error",
@@ -273,9 +271,11 @@ export async function createDepartment(req: Request, res: Response) {
 }
 
 export async function partialUpdateDepartment(req: Request, res: Response) {
-  const id = parseInt(req.params.id as string);
-  if (!id || isNaN(id)) {
-    return res.status(400).json({ message: "Department Id is missing" });
+  const idCheck = getDepartmentSchema.safeParse({ id: req.params.id });
+  if (!idCheck.success) {
+    return res.status(400).json({
+      message: `Missing or Invalid ID format`,
+    });
   }
   const result = editDepartmentSchema.safeParse(req.body);
   if (!result.success) {
@@ -283,6 +283,7 @@ export async function partialUpdateDepartment(req: Request, res: Response) {
       message: `Error validation ${z.treeifyError(result.error).properties}`,
     });
   }
+  const id = idCheck.data.id;
   try {
     const manager_id = result.data.manager_id;
     // Handle updating department if manager changes

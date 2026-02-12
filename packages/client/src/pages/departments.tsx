@@ -68,7 +68,7 @@ export default function Departments() {
                         {department.name}
                       </h3>
                       <p className="text-sm text-gray-500 mt-1">
-                        ID: DEPT-{department.id!.toString().padStart(3, "0")}
+                        ID: DEPT-{department.id!}
                       </p>
                     </div>
                   </div>

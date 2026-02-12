@@ -1,25 +1,25 @@
-type Role = "admin" | "employee" | "manager";
+type Role = "ADMIN" | "EMPLOYEE" | "MANAGER";
 
 interface BaseAuth {
-  id: number;
+  id: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   role: Role;
 }
 
 interface UserAuth extends BaseAuth {
-  role: "employee" | "manager";
+  role: "EMPLOYEE" | "MANAGER";
   phone?: string;
   salary?: number;
-  departmentId?: number;
-  createdAt?: string;
-  updatedAt?: string;
+  department_id?: String;
+  created_at?: string;
+  updated_at?: string;
 }
 interface AdminAuth {
   id: string;
   email: string;
-  role: "admin";
+  role: "ADMIN";
 }
 
 export type AuthUser = AdminAuth | UserAuth;
