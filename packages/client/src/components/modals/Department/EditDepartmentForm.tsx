@@ -79,7 +79,10 @@ export default function EditDepartmentForm({
   );
 
   const quarterlyBudget = department.budget / 4;
-  const avgSalary = department.budget / department.employee_count;
+  const avgSalary =
+    department.employee_count == 0
+      ? 0
+      : department.budget / department.employee_count;
 
   const checkManagerConflict = () => {
     const isAssignedManager =

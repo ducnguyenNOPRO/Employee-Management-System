@@ -86,7 +86,7 @@ export default function Departments() {
                   <div className="flex items-center justify-between pb-3 border-b">
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm text-gray-600">user</span>
+                      <span className="text-sm text-gray-600">Manager</span>
                     </div>
                     <span className="text-sm font-medium text-gray-900">
                       {fullName}

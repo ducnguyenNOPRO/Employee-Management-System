@@ -1,12 +1,12 @@
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
-import { editDepartmentSchema } from "../lib/zodSchema";
+import { addDepartmentSchema, editDepartmentSchema } from "../lib/zodSchema";
 import z from "zod";
 import {
   removeManager,
   transferManagerFromAnotherDepartment,
   transferManagerAndAssign,
-  updatedDepartment,
+  updateDepartment,
 } from "../lib/helper";
 
 export async function getEmployees(req: Request, res: Response) {
@@ -211,6 +211,67 @@ export async function getDepartment(req: Request, res: Response) {
   }
 }
 
+export async function createDepartment(req: Request, res: Response) {
+  const result = addDepartmentSchema.safeParse(req.body);
+  if (!result.success) {
+    console.log(z.treeifyError(result.error).properties);
+    return res.status(400).json({
+      message: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
+  }
+  try {
+    const manager_id = result.data.manager_id;
+    // Perform transfering manager if a manager is choosen during department creation
+    if (manager_id !== null) {
+      await prisma.$transaction(async (tx) => {
+        const existingManagerDept = await tx.department.findUnique({
+          where: {
+            manager_id,
+          },
+        });
+        // Remove manager from this if this manager is managing another department
+        if (existingManagerDept) {
+          await tx.department.update({
+            where: { id: existingManagerDept.id },
+            data: { manager_id: null },
+          });
+        }
+
+        const newDepartment = await tx.department.create({
+          data: result.data,
+        });
+
+        // Update manager dept id
+        await tx.user.update({
+          where: { id: manager_id },
+          data: { department_id: newDepartment.id },
+        });
+      });
+    } else {
+      await prisma.department.create({
+        data: result.data,
+      });
+    }
+    return res.status(201).json({ message: "Department created successfully" });
+  } catch (error: any) {
+    console.log(error);
+    // Unique Constraint on name or manager_id but manager_id will be transfered so no need to check
+    if (error.code === "P2002") {
+      res.status(400).json({ message: "Department name is already existed" });
+    }
+    if (error.code === "P2003") {
+      res
+        .status(400)
+        .json({
+          message: `Manager with id ${result.data.manager_id} not found`,
+        });
+    }
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+}
+
 export async function partialUpdateDepartment(req: Request, res: Response) {
   const id = parseInt(req.params.id as string);
   if (!id || isNaN(id)) {
@@ -279,14 +340,14 @@ export async function partialUpdateDepartment(req: Request, res: Response) {
         }
         // Case 2.3: New manager is not managing any department but belong to this department
         else if (newManager.department_id === id) {
-          await updatedDepartment(result.data, id);
+          await updateDepartment(result.data, id);
           console.log("Case 2.3");
         }
       }
     }
     // Case 3: No manager_id change, just regular department update
     else {
-      await updatedDepartment(result.data, id);
+      await updateDepartment(result.data, id);
       console.log("Case 3");
     }
 

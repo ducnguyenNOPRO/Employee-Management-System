@@ -32,7 +32,7 @@ export async function transferManagerFromAnotherDepartment(
     });
 
     // 4. Update the new department with new manager_id and other data
-    const updatedDepartment = await tx.department.update({
+    await tx.department.update({
       where: { id: newDepartmentId },
       data: departmentData,
     });
@@ -67,7 +67,7 @@ export async function transferManagerAndAssign(
  * - Manager already belong to this deaprtment but not managing it
  * - Only 1 manager can manage per department
  */
-export async function updatedDepartment(
+export async function updateDepartment(
   departmentData: any,
   newDepartmentId: number
 ) {

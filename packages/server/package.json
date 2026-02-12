@@ -8,7 +8,8 @@
     "dev": "bun --watch run index.ts",
     "pull": "bunx prisma db pull",
     "migrate": "bunx prisma migrate dev",
-    "generate": "bunx prisma generate"
+    "generate": "bunx prisma generate",
+    "studio": "bunx prisma studio"
   },
   "devDependencies": {
     "@types/bun": "latest",
