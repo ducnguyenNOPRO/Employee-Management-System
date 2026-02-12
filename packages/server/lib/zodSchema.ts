@@ -43,22 +43,48 @@ export const sessionSchema = z.object({
   expiresAt: z.date(),
 });
 
-// Base schema with all fields
+// DEPARTMENT SCHEMAS
 const departmentSchema = z.object({
-  manager_id: z.number().int().positive().nullable(),
-  name: z.string().min(1).max(50),
-  location: z.string().min(1).max(100),
-  budget: z.number().positive(), // or z.string() if you're handling Decimal as string
-  budget_utilization: z.number().int().min(0).max(100), // assuming it's a percentage
-  open_position: z.number().int().min(0).max(20),
-  employee_count: z.number().int().min(0).max(50),
-  description: z.string().max(255).nullable(),
-  established: z.iso.date().nullable(),
+  manager_id: z
+    .number()
+    .int()
+    .positive("Must be a positive integer")
+    .nullable(),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Must has a length between 1 and 50 characters")
+    .max(50, "Must has a length between 1 and 50 characters"),
+  location: z
+    .string()
+    .trim()
+    .min(1, "Must has a length between 1 and 100 characters")
+    .max(100, "Must has a length between 1 and 100 characters"),
+  budget: z.number().min(0, "Must be a positive value > 0"), // or z.string() if you're handling Decimal as string
+  budget_utilization: z // percentage
+    .number()
+    .int("Must be a positive integer")
+    .min(0, "Must be a number between 0 and 100")
+    .max(100, "Must be a number between 0 and 100"),
+  open_position: z.coerce
+    .number()
+    .int("Must be a positive integer")
+    .min(0, "Must have a value > 0")
+    .max(20, "Maximum value is 20 "),
+  employee_count: z
+    .number()
+    .int("Must be a positive integer")
+    .min(0, "Must have a value > 0")
+    .max(50, "Maximum value is 50"),
+  description: z.string().trim().max(255, "Maximum 255 characters").nullable(),
+  established: z.iso.date().nullable(), // Non-editable
 });
 
-// PATCH Department
 export const editDepartmentSchema = departmentSchema
   .omit({
     established: true,
   })
   .partial();
+export const addDepartmentSchema = departmentSchema.omit({
+  established: true,
+});

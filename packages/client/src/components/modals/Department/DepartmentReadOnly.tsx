@@ -26,7 +26,10 @@ export default function DepartmentReadOnly({
   const navigate = useNavigate();
 
   const quarterlyBudget = department.budget / 4;
-  const avgSalary = department.budget / department.employee_count;
+  const avgSalary =
+    department.employee_count == 0
+      ? 0
+      : department.budget / department.employee_count;
   const budgetFormatted = (department.budget / 1000000).toFixed(2);
   const managerFullName = department.manager
     ? `${department.manager.first_name} ${department.manager.last_name}`

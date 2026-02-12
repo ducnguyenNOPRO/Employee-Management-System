@@ -8,6 +8,7 @@ import {
   getDepartments,
   getDepartment,
   partialUpdateDepartment,
+  createDepartment,
 } from "../controllers/admin.controller";
 
 const adminRouter = Router();
@@ -23,6 +24,7 @@ adminRouter.patch("/employees/:id", partialUpdateEmployee); // Partially update 
 // department
 adminRouter.get("/departments", getDepartments); // Get all departments paginated
 adminRouter.get("/departments/:id", getDepartment); // Get 1 department
+adminRouter.post("/departments", createDepartment); // Create a new department
 adminRouter.patch("/departments/:id", partialUpdateDepartment); // Partially update department, dynamically handle field changes in FE
 
 export default adminRouter;

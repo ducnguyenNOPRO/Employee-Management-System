@@ -69,16 +69,18 @@ export const departmentSchema = z.object({
   ),
   name: z
     .string()
+    .trim()
     .min(1, "Name must has a length between 1 and 50 characters")
     .max(50, "Must has a length between 1 and 50 characters"),
   location: z
     .string()
+    .trim()
     .min(1, "Must has a length between 1 and 100 characters")
     .max(100, "Must has a length between 1 and 100 characters"),
   budget: z.coerce.number().min(0, "Must be a positive value > 0"), // or z.string() if you're handling Decimal as string
-  budget_utilization: z
+  budget_utilization: z.coerce
     .number()
-    .int()
+    .int("Must be a positive integer")
     .min(0, "Must be a number between 0 and 100")
     .max(100, "Must be a number between 0 and 100"),
   open_position: z.coerce
@@ -91,13 +93,34 @@ export const departmentSchema = z.object({
     .int("Must be a positive integer")
     .min(0, "Must have a value > 0")
     .max(50, "Maximum value is 50"),
-  description: z.string().max(255, "Maximum 255 characters").nullable(),
+  description: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? null : val),
+    z.string().trim().max(255, "Maximum 255 characters").nullable()
+  ),
   established: z.iso.date().nullable(), // Non-editable
 });
 
 // PATCH Department
 export const editDepartmentSchema = departmentSchema.partial();
+export const addDepartmentSchema = departmentSchema
+  .omit({
+    established: true,
+  })
+  .partial()
+  .extend({
+    location: z
+      .string()
+      .trim()
+      .min(1, "Must has a length between 1 and 100 characters")
+      .max(100, "Must has a length between 1 and 100 characters"),
+    name: z
+      .string()
+      .trim()
+      .min(1, "Name must has a length between 1 and 50 characters")
+      .max(50, "Must has a length between 1 and 50 characters"),
+  });
 export type EditDepartmentPayload = z.infer<typeof editDepartmentSchema>;
+export type AddDepartmentPayload = z.infer<typeof addDepartmentSchema>;
 
 // Leave Request
 export const leaveRequestSchema = z.object({
