@@ -67,8 +67,9 @@ const columns: ColumnDef<EmployeeOverview>[] = [
       const department = row.original.department;
       return (
         <div className="flex flex-col">
-          <span className="font-semibold">{department.name}</span>
-          <span className="text-sm text-gray-500">Id: {department.id}</span>
+          <span className="font-semibold">
+            {department ? department.name : "Unassigned"}
+          </span>
         </div>
       );
     },
