@@ -9,6 +9,10 @@ import {
   getDepartment,
   partialUpdateDepartment,
   createDepartment,
+  getRequests,
+  createRequest,
+  updateRequest,
+  getRequestStats,
 } from "../controllers/admin.controller";
 
 const adminRouter = Router();
@@ -26,5 +30,11 @@ adminRouter.get("/departments", getDepartments); // Get all departments paginate
 adminRouter.get("/departments/:id", getDepartment); // Get 1 department
 adminRouter.post("/departments", createDepartment); // Create a new department
 adminRouter.patch("/departments/:id", partialUpdateDepartment); // Partially update department, dynamically handle field changes in FE
+
+// leave request
+adminRouter.get("/leaves", getRequests); // Get all leave request paginated
+adminRouter.get("/leaves/stats", getRequestStats); // Get request count per status
+adminRouter.post("/leaves", createRequest); // Create a new request
+adminRouter.patch("/leaves/:id", updateRequest); // Update the status Approved or Rejected
 
 export default adminRouter;

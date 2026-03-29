@@ -86,6 +86,7 @@ model leave_request {
   hours         Float               // Total hours requested
   reason        String?             @db.VarChar(255)
   status        LeaveRequestStatus  @default(PENDING)
+  status_priority Int               @default(1)
   
   // Audit fields
   created_at    DateTime            @default(now())

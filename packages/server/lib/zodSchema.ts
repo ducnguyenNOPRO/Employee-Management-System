@@ -88,3 +88,16 @@ export const addDepartmentSchema = departmentSchema.omit({
 export const getDepartmentSchema = departmentSchema.pick({
   id: true,
 });
+
+// LEAVE REQUEST SCHEMAS
+export const leaveSchema = z.object({
+  requester_id: z.cuid("Invalid ID format"),
+  type: z.enum(["VACATION", "SICK_LEAVE", "UNPAID", "OTHER"]),
+  hours: z
+    .number()
+    .min(0, "Must be a positive value > 0")
+    .max(160, "Max 4 weeks or 160 hours"),
+  start_date: z.iso.date(),
+  end_date: z.iso.date(),
+  reason: z.string().trim().max(40, "Maximum 40 characters").nullable(),
+});

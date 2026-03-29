@@ -1,4 +1,5 @@
 import AddLeaveRequestModal from "@/components/modals/LeaveRequest/AddLeaveRequestModal";
+import StatCard from "@/components/modals/LeaveRequest/StatCard";
 import { Button } from "@/components/ui/button";
 import UserCharacters from "@/components/ui/characters";
 import {
@@ -9,60 +10,37 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import { mockLeaveRequests, type LeaveRequest } from "@/lib/mockData";
 import { getLeaveRequestStatus, getTypeColor } from "@/lib/utils";
+import { leaveService } from "@/services/leave.service";
+import type { BaseRequest } from "@/types/leave";
+import { formatString } from "@/utils/formatString";
+import { useQuery } from "@tanstack/react-query";
 import {
   flexRender,
   getCoreRowModel,
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
-import { Calendar, Check, Clock, Filter, Plus, X } from "lucide-react";
+import { Check, Filter, Plus, X } from "lucide-react";
 import { useState } from "react";
-const stats = [
-  {
-    label: "Total Requests",
-    value: mockLeaveRequests.length,
-    icon: Calendar,
-    color: "bg-blue-500",
-  },
-  {
-    label: "Pending",
-    value: mockLeaveRequests.filter((l) => l.status === "pending").length,
-    icon: Clock,
-    color: "bg-yellow-500",
-  },
-  {
-    label: "Approved",
-    value: mockLeaveRequests.filter((l) => l.status === "approved").length,
-    icon: Check,
-    color: "bg-green-500",
-  },
-  {
-    label: "Rejected",
-    value: mockLeaveRequests.filter((l) => l.status === "rejected").length,
-    icon: X,
-    color: "bg-red-500",
-  },
-];
 
-const columns: ColumnDef<LeaveRequest>[] = [
+const columns: ColumnDef<BaseRequest>[] = [
   {
     accessorKey: "id",
     header: "EMPLOYEE",
     cell: ({ row }) => {
-      const leave = row.original;
+      const requester = row.original.requester;
       return (
         <div className="flex items-center gap-4">
           <UserCharacters
-            firstName={leave.employeeName[0]}
-            lastName={leave.employeeName.split(" ")[1]}
+            firstName={requester.first_name[0]}
+            lastName={requester.last_name[0]}
           />
           <div>
             <p className="text-sm font-medium text-gray-900 hover:text-blue-500">
-              {leave.employeeName}
+              {requester.first_name + " " + requester.last_name}
             </p>
-            <p className="text-sm text-gray-500">ID: {leave.id}</p>
+            <p className="text-sm text-gray-500">ID: {requester.id}</p>
           </div>
         </div>
       );
@@ -79,29 +57,29 @@ const columns: ColumnDef<LeaveRequest>[] = [
             type
           )}`}
         >
-          {type}
+          {formatString(type)}
         </span>
       );
     },
   },
   {
-    accessorKey: "days",
+    accessorKey: "hours",
     header: "DURATION",
     cell: ({ row }) => {
-      const days = row.original.days;
-      return <p>{days} days</p>;
+      const hours = row.original.hours;
+      return <p>{hours} days</p>;
     },
   },
   {
-    accessorKey: "startDate",
+    accessorKey: "start_date",
     header: "DATE",
     cell: ({ row }) => {
       const leave = row.original;
       return (
         <div>
-          <p>{leave.startDate}</p>
+          <p>{leave.start_date.split("T")[0]}</p>
           <p className="text-gray-500">to</p>
-          <p>{leave.endDate}</p>
+          <p>{leave.end_date.split("T")[0]}</p>
         </div>
       );
     },
@@ -133,7 +111,7 @@ const columns: ColumnDef<LeaveRequest>[] = [
       const status = row.original.status;
       return (
         <>
-          {status === "pending" && (
+          {status === "PENDING" && (
             <div className="flex gap-2">
               <button
                 title="Accept"
@@ -149,8 +127,24 @@ const columns: ColumnDef<LeaveRequest>[] = [
               </button>
             </div>
           )}
-          {status !== "pending" && (
+          {status !== "PENDING" && (
             <span className="text-sm text-gray-400">-</span>
+          )}
+        </>
+      );
+    },
+  },
+  {
+    accessorKey: "approver",
+    header: "APPROVED BY",
+    cell: ({ row }) => {
+      const approver = row.original.approver;
+      return (
+        <>
+          {approver && (
+            <p className="text-sm font-medium text-gray-900 hover:text-blue-500">
+              {approver.first_name + " " + approver.last_name}
+            </p>
           )}
         </>
       );
@@ -162,9 +156,16 @@ export default function LeaveRequests() {
   const [statusFilter, setStatusFilter] = useState<
     "All" | "Pending" | "Approved" | "Rejected"
   >("All");
-  const [data, setData] = useState<LeaveRequest[]>(mockLeaveRequests);
+  const { data: requests } = useQuery({
+    queryKey: ["leaves"],
+    queryFn: leaveService.getRequests,
+  });
+  const { data: stats } = useQuery({
+    queryKey: ["leaveStats"],
+    queryFn: leaveService.getStats,
+  });
   const table = useReactTable({
-    data,
+    data: requests ?? [],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -191,25 +192,7 @@ export default function LeaveRequests() {
       </div>
 
       {/* Stats Overview */}
-      <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <div
-            className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow"
-            key={stat.label}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">{stat.label}</p>
-                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-              </div>
-              <div className={`rounded-lg ${stat.color} p-3`}>
-                <stat.icon className="h-6 w-6 text-white" />
-              </div>
-            </div>
-          </div>
-        ))}
-      </section>
-
+      <StatCard stats={stats} />
       {/* Filtering Bar */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-4">

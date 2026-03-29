@@ -5,6 +5,7 @@ import {
   editDepartmentSchema,
   getDepartmentSchema,
   getEmployeeSchema,
+  leaveSchema,
 } from "../lib/zodSchema";
 import z from "zod";
 import {
@@ -361,6 +362,107 @@ export async function partialUpdateDepartment(req: Request, res: Response) {
         message: `Department with id ${id} not found`,
       });
     }
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+}
+
+export async function getRequestStats(req: Request, res: Response) {
+  try {
+    const rawStats = await prisma.leave_request.groupBy({
+      by: ["status"],
+      _count: {
+        _all: true,
+      },
+    });
+
+    const totalRequests = rawStats.reduce((sum, item) => {
+      return sum + item._count._all;
+    }, 0);
+    const stats = {
+      total: totalRequests,
+      byStatus: rawStats.reduce(
+        (acc, item) => {
+          // ex: { PENDING: 12, APPROVED: 34, REJECTED: 5, CANCELLED: 2 }
+          acc[item.status] = item._count._all;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
+    };
+
+    return res.status(200).json({ stats });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+export async function getRequests(req: Request, res: Response) {
+  try {
+    const requests = await prisma.leave_request.findMany({
+      orderBy: [
+        { status_priority: "asc" },
+        { start_date: "asc" },
+        { created_at: "desc" },
+      ],
+      select: {
+        id: true,
+        type: true,
+        hours: true,
+        start_date: true,
+        end_date: true,
+        reason: true,
+        status: true,
+        requester: {
+          select: {
+            id: true,
+            first_name: true,
+            last_name: true,
+          },
+        },
+        approver: {
+          select: {
+            first_name: true,
+            last_name: true,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({ requests });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+}
+
+export async function createRequest(req: Request, res: Response) {
+  const result = leaveSchema.safeParse(req.body);
+  if (!result.success) {
+    console.log(z.treeifyError(result.error).properties);
+    return res.status(400).json({
+      message: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
+  }
+  try {
+    await prisma.leave_request.create({
+      data: result.data,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+}
+
+export async function updateRequest(req: Request, res: Response) {
+  try {
+  } catch (error) {
+    console.log(error);
     return res.status(500).json({
       message: "Internal server error",
     });
