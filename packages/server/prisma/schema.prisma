@@ -1,6 +1,6 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
   previewFeatures = ["relationJoins"]
 }
 
@@ -9,92 +9,104 @@ datasource db {
 }
 
 model admin {
-  id            String       @id @default(cuid())
+  id            String    @id @default(cuid())
   first_name    String    @db.VarChar(100)
   last_name     String    @db.VarChar(100)
   email         String    @unique @db.VarChar(255)
-  password_hash String    @db.VarChar(255)   // need to activate
+  password_hash String    @db.VarChar(255) // need to activate
   role          user_role @default(ADMIN)
-  session       session[]   // admin 1 to many session
+  session       session[] // admin 1 to many session
 }
 
 model user {
-  id            String       @id @default(cuid())
-  email         String    @unique @db.VarChar(255)
-  password_hash String    @db.VarChar(255)   // need to activate
-  address       String    @db.VarChar(255)
-  position      String    @db.VarChar(255)    
-  role          user_role @default(EMPLOYEE)
-  first_name    String    @db.VarChar(100)
-  last_name     String    @db.VarChar(100)
-  employment_type   employement_type  @default(FULL_TIME)
-  status        status    @default(IN_ACTIVE)
-  phone         String   @unique @db.VarChar(20)
-  salary        Decimal  @db.Decimal(10, 2)
-  emergency_contact String? @db.VarChar(100)
-  emergency_phone  String? @db.VarChar(20)
-  start_date    DateTime? @default(now())
-  updated_at    DateTime? @updatedAt
+  id                String           @id @default(cuid())
+  email             String           @unique @db.VarChar(255)
+  password_hash     String           @db.VarChar(255) // need to activate
+  address           String           @db.VarChar(255)
+  position          String           @db.VarChar(255)
+  role              user_role        @default(EMPLOYEE)
+  first_name        String           @db.VarChar(100)
+  last_name         String           @db.VarChar(100)
+  employment_type   employement_type @default(FULL_TIME)
+  status            status           @default(IN_ACTIVE)
+  phone             String           @unique @db.VarChar(20)
+  salary            Decimal          @db.Decimal(10, 2)
+  emergency_contact String?          @db.VarChar(100)
+  emergency_phone   String?          @db.VarChar(20)
+  start_date        DateTime?        @default(now())
+  updated_at        DateTime?        @updatedAt
 
-  session      session[]   // A user may have multiple session
-  department_id        String?
-  department           department? @relation("DepartmentEmployees",fields: [department_id], references: [id], onDelete: SetNull)
-  managed_department   department?  @relation("DepartmentManager")
+  session            session[] // A user may have multiple session
+  department_id      String?
+  department         department? @relation("DepartmentEmployees", fields: [department_id], references: [id], onDelete: SetNull)
+  managed_department department? @relation("DepartmentManager")
 
-  leave_request        leave_request[] @relation("Requester")
-  approve_request      leave_request[] @relation("Approver")
+  leave_request   leave_request[] @relation("Requester")
+  approve_request leave_request[] @relation("Approver")
+  leaveBalances   leave_balance[]
 
   @@index([start_date])
 }
 
 model session {
-  id             String              @id @default(cuid())
-  owner_type     SessionOwnerType
-  user_id        String?
-  admin_id       String?
-  user           user?        @relation(fields: [user_id], references: [id])
-  admin          admin?           @relation(fields: [admin_id], references: [id])
-  refresh_token  String           @unique @db.VarChar(255)
-  expires_at     DateTime         
-  created_at     DateTime?        @default(now())
-  updated_at     DateTime?        @updatedAt
+  id            String           @id @default(cuid())
+  owner_type    SessionOwnerType
+  user_id       String?
+  admin_id      String?
+  user          user?            @relation(fields: [user_id], references: [id])
+  admin         admin?           @relation(fields: [admin_id], references: [id])
+  refresh_token String           @unique @db.VarChar(255)
+  expires_at    DateTime
+  created_at    DateTime?        @default(now())
+  updated_at    DateTime?        @updatedAt
 }
 
 model department {
-  id                      String               @id @default(cuid())
-  manager_id              String?              @unique
-  name                    String            @unique @db.VarChar(50)
-  location                String            @db.VarChar(100)
-  budget                  Decimal           @db.Decimal(10, 2)
-  budget_utilization      Int     
-  open_position           Int                 
-  employee_count           Int  
-  description             String?           @db.VarChar(255)           
-  established             DateTime?         @default(now())
-  updated_at              DateTime?         @updatedAt
-  user                    user[]            @relation("DepartmentEmployees")// A department may have multiple users     
-  manager                 user?             @relation("DepartmentManager", fields: [manager_id], references: [id], onDelete: SetNull)
+  id                 String    @id @default(cuid())
+  manager_id         String?   @unique
+  name               String    @unique @db.VarChar(50)
+  location           String    @db.VarChar(100)
+  budget             Decimal   @db.Decimal(10, 2)
+  budget_utilization Int
+  open_position      Int
+  employee_count     Int
+  description        String?   @db.VarChar(255)
+  established        DateTime? @default(now())
+  updated_at         DateTime? @updatedAt
+  user               user[]    @relation("DepartmentEmployees") // A department may have multiple users     
+  manager            user?     @relation("DepartmentManager", fields: [manager_id], references: [id], onDelete: SetNull)
+}
+
+model leave_balance {
+  id      String    @id @default(cuid())
+  user_id String
+  type    LeaveType
+
+  total Float
+  used  Float
+
+  user user @relation(fields: [user_id], references: [id])
 }
 
 model leave_request {
-  id            String              @id @default(cuid())
-  requester_id  String           
-  approver_id   String?           
-  type          LeaveType
-  start_date    DateTime          
-  end_date      DateTime          
-  hours         Float               // Total hours requested
-  reason        String?             @db.VarChar(255)
-  status        LeaveRequestStatus  @default(PENDING)
-  status_priority Int               @default(1)
-  
+  id              String             @id @default(cuid())
+  requester_id    String
+  approver_id     String?
+  type            LeaveType
+  start_date      DateTime
+  end_date        DateTime
+  hours           Float // Total hours requested
+  reason          String?            @db.VarChar(255)
+  status          LeaveRequestStatus @default(PENDING)
+  status_priority Int                @default(1)
+
   // Audit fields
-  created_at    DateTime            @default(now())
-  updated_at    DateTime            @updatedAt
-  reviewed_at   DateTime?            // When approved/rejected
-  
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  reviewed_at DateTime? // When approved/rejected
+
   // Relations
-  requester user @relation("Requester", fields: [requester_id], references: [id], onDelete: Cascade)
+  requester user  @relation("Requester", fields: [requester_id], references: [id], onDelete: Cascade)
   approver  user? @relation("Approver", fields: [approver_id], references: [id], onDelete: SetNull)
 
   @@index([requester_id])
@@ -130,13 +142,10 @@ enum SessionOwnerType {
 enum LeaveType {
   VACATION
   SICK_LEAVE
-  UNPAID
-  OTHER
 }
 
 enum LeaveRequestStatus {
- PENDING
- APPROVED
- REJECTED
- CANCELLED
+  PENDING
+  APPROVED
+  REJECTED
 }
