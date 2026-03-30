@@ -43,7 +43,8 @@ model user {
 
   leave_request   leave_request[] @relation("Requester")
   approve_request leave_request[] @relation("Approver")
-  leaveBalances   leave_balance[]
+
+  leave_balances leave_balance[]
 
   @@index([start_date])
 }
@@ -86,6 +87,9 @@ model leave_balance {
   used  Float
 
   user user @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, type])
+  @@index([user_id])
 }
 
 model leave_request {

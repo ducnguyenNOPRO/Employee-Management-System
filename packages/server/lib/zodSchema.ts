@@ -92,7 +92,7 @@ export const getDepartmentSchema = departmentSchema.pick({
 // LEAVE REQUEST SCHEMAS
 export const leaveSchema = z.object({
   requester_id: z.cuid("Invalid ID format"),
-  type: z.enum(["VACATION", "SICK_LEAVE", "UNPAID", "OTHER"]),
+  type: z.enum(["VACATION", "SICK_LEAVE"]),
   hours: z
     .number()
     .min(0, "Must be a positive value > 0")

@@ -14,6 +14,7 @@ import {
   transferManagerAndAssign,
   updateDepartment,
 } from "../lib/helper";
+import type { leave_balance } from "../generated/prisma/client";
 
 export async function getEmployees(req: Request, res: Response) {
   const { role } = req.query;
@@ -448,10 +449,58 @@ export async function createRequest(req: Request, res: Response) {
     });
   }
   try {
-    await prisma.leave_request.create({
-      data: result.data,
+    await prisma.$transaction(async (tx) => {
+      // Lock the row
+      const balances = await tx.$queryRaw<leave_balance[]>`
+        SELECT *
+        FROM "leave_balance"
+        WHERE "user_id" = ${result.data.requester_id} AND "type" = ${result.data.type}
+        LIMIT 1
+        FOR UPDATE
+      `;
+      if (!balances.length) {
+        throw {
+          status: 404,
+          message: `Balances record for user ${result.data.requester_id} not found`,
+        };
+      }
+
+      const balance = balances[0];
+      const total = balance?.total ?? 0;
+      const used = balance?.used ?? 0;
+
+      if (total - used < result.data.hours) {
+        throw {
+          status: 422,
+          message: "Requested leave exceeds available balance",
+        };
+      }
+
+      await tx.leave_request.create({
+        data: {
+          ...result.data,
+          start_date: new Date(result.data.start_date),
+          end_date: new Date(result.data.end_date),
+        },
+      });
+
+      await tx.leave_balance.update({
+        where: {
+          user_id_type: {
+            // compound unique key
+            user_id: result.data.requester_id,
+            type: result.data.type,
+          },
+        },
+        data: { used: { increment: result.data.hours } },
+      });
     });
-  } catch (error) {
+
+    return res.status(201).json({ message: "Request created successfully" });
+  } catch (error: any) {
+    if (error?.status) {
+      return res.status(error.status).json({ message: error.message });
+    }
     console.log(error);
     return res.status(500).json({
       message: "Internal server error",
