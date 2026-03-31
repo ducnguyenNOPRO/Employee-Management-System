@@ -9,6 +9,11 @@ import {
   getDepartment,
   partialUpdateDepartment,
   createDepartment,
+  getRequests,
+  createRequest,
+  updateRequest,
+  getRequestStats,
+  getEmployeeBalance,
 } from "../controllers/admin.controller";
 
 const adminRouter = Router();
@@ -16,6 +21,7 @@ const adminRouter = Router();
 // employee
 adminRouter.get("/employees", getEmployees); // Get all employees or by role
 adminRouter.get("/employees/:id", getEmployee); // Get 1 employee
+adminRouter.get("/employees/:id/balances", getEmployeeBalance); // Get all leave balances
 adminRouter.post("/employees", addEmployee); // Create new employee
 adminRouter.put("/employees/:id", updateEmployee); // Fully update employe
 adminRouter.patch("/employees/:id", partialUpdateEmployee); // Partially update employee mostly updating role
@@ -26,5 +32,11 @@ adminRouter.get("/departments", getDepartments); // Get all departments paginate
 adminRouter.get("/departments/:id", getDepartment); // Get 1 department
 adminRouter.post("/departments", createDepartment); // Create a new department
 adminRouter.patch("/departments/:id", partialUpdateDepartment); // Partially update department, dynamically handle field changes in FE
+
+// leave request
+adminRouter.get("/leaves", getRequests); // Get all leave request paginated
+adminRouter.get("/leaves/stats", getRequestStats); // Get request count per status
+adminRouter.post("/leaves", createRequest); // Create a new request
+adminRouter.patch("/leaves/:id", updateRequest); // Update the status Approved or Rejected
 
 export default adminRouter;

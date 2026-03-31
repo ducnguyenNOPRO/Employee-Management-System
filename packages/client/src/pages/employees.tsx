@@ -67,8 +67,9 @@ const columns: ColumnDef<EmployeeOverview>[] = [
       const department = row.original.department;
       return (
         <div className="flex flex-col">
-          <span className="font-semibold">{department.name}</span>
-          <span className="text-sm text-gray-500">Id: {department.id}</span>
+          <span className="font-semibold">
+            {department ? department.name : "Unassigned"}
+          </span>
         </div>
       );
     },
@@ -85,9 +86,9 @@ const columns: ColumnDef<EmployeeOverview>[] = [
       return (
         <span
           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-            status === "active"
+            status === "ACTIVE"
               ? "bg-green-100 text-green-800"
-              : status === "on_leave"
+              : status === "ON_LEAVE"
                 ? "bg-yellow-100 text-yellow-800"
                 : "bg-gray-100 text-gray-800"
           }`}

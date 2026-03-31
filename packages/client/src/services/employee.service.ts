@@ -22,6 +22,16 @@ export const employeeService = {
       throw error; // tell react query this failed
     }
   },
+  getSelectedEmployeeBalance: async (id: string) => {
+    try {
+      const res = await api.get(`/admin/employees/${id}/balances`, {
+        withCredentials: true,
+      });
+      return res.data.balances;
+    } catch (error: any) {
+      throw error;
+    }
+  },
   getManagers: async () => {
     try {
       const res = await api.get("/admin/employees", {

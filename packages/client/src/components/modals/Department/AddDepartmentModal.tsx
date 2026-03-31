@@ -22,6 +22,7 @@ export default function AddDepartmentModal({
   const handleSuccess = () => {
     // Successfull submit form
     queryClient.invalidateQueries(["departments"]);
+    queryClient.invalidateQueries(["managers"]);
     setOpenModal(false);
   };
   return (

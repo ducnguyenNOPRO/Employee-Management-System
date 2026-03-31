@@ -3,8 +3,9 @@ import { prisma } from "../lib/prisma";
 import {
   addDepartmentSchema,
   editDepartmentSchema,
-  getDepartmentSchema,
-  getEmployeeSchema,
+  editLeaveSchema,
+  idSchmena,
+  leaveSchema,
 } from "../lib/zodSchema";
 import z from "zod";
 import {
@@ -13,6 +14,13 @@ import {
   transferManagerAndAssign,
   updateDepartment,
 } from "../lib/helper";
+import type { leave_balance } from "../generated/prisma/client";
+
+const STATUS_PRIORITY = {
+  PENDING: 1,
+  APPROVED: 2,
+  REJECTED: 3,
+};
 
 export async function getEmployees(req: Request, res: Response) {
   const { role } = req.query;
@@ -73,7 +81,7 @@ export async function getEmployees(req: Request, res: Response) {
 }
 
 export async function getEmployee(req: Request, res: Response) {
-  const result = getEmployeeSchema.safeParse(req.params.id);
+  const result = idSchmena.safeParse(req.params.id);
   if (!result.success) {
     console.log(z.treeifyError(result.error).properties);
     res.status(400).json({ message: "Missing or Invalid ID format" });
@@ -110,6 +118,34 @@ export async function getEmployee(req: Request, res: Response) {
     return res.status(500).json({
       message: "Internal server error",
     });
+  }
+}
+
+export async function getEmployeeBalance(req: Request, res: Response) {
+  const result = idSchmena.safeParse({ id: req.params.id }); // schema expect a object
+  if (!result.success) {
+    console.log(z.treeifyError(result.error).properties);
+    return res.status(400).json({ message: "Missing or Invalid ID format" });
+  }
+  try {
+    const balances = await prisma.leave_balance.findMany({
+      where: { user_id: result.data?.id },
+      select: {
+        type: true,
+        total: true,
+        used: true,
+      },
+    });
+
+    const formatted = balances.map((balance) => ({
+      type: balance.type,
+      remaining: parseFloat((balance.total - balance.used).toFixed(2)),
+    }));
+
+    return res.status(200).json({ balances: formatted });
+  } catch (error) {
+    console.log("Error", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 }
 
@@ -164,7 +200,7 @@ export async function getDepartments(req: Request, res: Response) {
 }
 
 export async function getDepartment(req: Request, res: Response) {
-  const result = getDepartmentSchema.safeParse({ id: req.params.id });
+  const result = idSchmena.safeParse({ id: req.params.id });
   if (!result.success) {
     console.log(z.treeifyError(result.error).properties);
     res.status(400).json({ message: "Missing or Invalid ID format" });
@@ -271,7 +307,7 @@ export async function createDepartment(req: Request, res: Response) {
 }
 
 export async function partialUpdateDepartment(req: Request, res: Response) {
-  const idCheck = getDepartmentSchema.safeParse({ id: req.params.id });
+  const idCheck = idSchmena.safeParse({ id: req.params.id });
   if (!idCheck.success) {
     return res.status(400).json({
       message: `Missing or Invalid ID format`,
@@ -364,6 +400,209 @@ export async function partialUpdateDepartment(req: Request, res: Response) {
     return res.status(500).json({
       message: "Internal server error",
     });
+  }
+}
+
+export async function getRequestStats(req: Request, res: Response) {
+  try {
+    const rawStats = await prisma.leave_request.groupBy({
+      by: ["status"],
+      _count: {
+        _all: true,
+      },
+    });
+
+    const totalRequests = rawStats.reduce((sum, item) => {
+      return sum + item._count._all;
+    }, 0);
+    const stats = {
+      total: totalRequests,
+      byStatus: rawStats.reduce(
+        (acc, item) => {
+          // ex: { PENDING: 12, APPROVED: 34, REJECTED: 5, CANCELLED: 2 }
+          acc[item.status] = item._count._all;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
+    };
+
+    return res.status(200).json({ stats });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+export async function getRequests(req: Request, res: Response) {
+  try {
+    const requests = await prisma.leave_request.findMany({
+      orderBy: [
+        { status_priority: "asc" },
+        { start_date: "asc" },
+        { created_at: "desc" },
+      ],
+      select: {
+        id: true,
+        type: true,
+        hours: true,
+        start_date: true,
+        end_date: true,
+        reason: true,
+        status: true,
+        requester: {
+          select: {
+            id: true,
+            first_name: true,
+            last_name: true,
+          },
+        },
+        approver: {
+          select: {
+            first_name: true,
+            last_name: true,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({ requests });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+}
+
+// Using FOR UPDATE to lock row to prevent race condition
+// Update 'used' column when creating a new request
+export async function createRequest(req: Request, res: Response) {
+  const result = leaveSchema.safeParse(req.body);
+  if (!result.success) {
+    console.log(z.treeifyError(result.error).properties);
+    return res.status(400).json({
+      message: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
+  }
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Lock the row
+      const balances = await tx.$queryRaw<leave_balance[]>`
+        SELECT *
+        FROM "leave_balance"
+        WHERE "user_id" = ${result.data.requester_id} AND "type" = ${result.data.type}
+        LIMIT 1
+        FOR UPDATE
+      `;
+      if (!balances.length) {
+        throw {
+          status: 404,
+          message: `Balances record for user ${result.data.requester_id} not found`,
+        };
+      }
+
+      const balance = balances[0];
+      const total = balance?.total ?? 0;
+      const used = balance?.used ?? 0;
+
+      if (total - used < result.data.hours) {
+        throw {
+          status: 422,
+          message: "Requested leave exceeds available balance",
+        };
+      }
+
+      await tx.leave_request.create({
+        data: {
+          ...result.data,
+          start_date: new Date(result.data.start_date),
+          end_date: new Date(result.data.end_date),
+        },
+      });
+
+      await tx.leave_balance.update({
+        where: {
+          user_id_type: {
+            // compound unique key
+            user_id: result.data.requester_id,
+            type: result.data.type,
+          },
+        },
+        data: { used: { increment: result.data.hours } },
+      });
+    });
+
+    return res.status(201).json({ message: "Request created successfully" });
+  } catch (error: any) {
+    if (error?.status) {
+      return res.status(error.status).json({ message: error.message });
+    }
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+}
+
+// Update status, status_priority, approver_id and reviewed_at columns
+// 'used' column in leave_balance is already incremented when request created
+// Only neeed to deduct from 'used' if REJECTED
+export async function updateRequest(req: Request, res: Response) {
+  const idCheck = idSchmena.safeParse({ id: req.params.id });
+  if (!idCheck.success) {
+    return res.status(400).json({
+      message: `Missing or Invalid ID format`,
+    });
+  }
+  const result = editLeaveSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({
+      message: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
+  }
+  try {
+    await prisma.$transaction(async (tx) => {
+      const request = await tx.leave_request.findUnique({
+        where: { id: idCheck.data.id },
+      });
+
+      if (!request) throw { status: 404, message: "Request not found" };
+      if (request.status !== "PENDING")
+        throw { status: 409, message: "Request is no longer pending" };
+
+      // Deduct hours from used if REJECTED
+      if (result.data.status === "REJECTED") {
+        await tx.leave_balance.update({
+          where: {
+            user_id_type: {
+              user_id: request.requester_id,
+              type: request.type,
+            },
+          },
+          data: {
+            used: { decrement: request.hours },
+          },
+        });
+      }
+
+      await tx.leave_request.update({
+        where: { id: request.id },
+        data: {
+          status: result.data.status,
+          status_priority: STATUS_PRIORITY[result.data.status],
+          approver_id: result.data.approver_id,
+          reviewed_at: new Date(),
+        },
+      });
+    });
+
+    return res.status(200).json({ message: "Decision updated successfully" });
+  } catch (error: any) {
+    console.log(error);
+    if (error?.status) {
+      return res.status(error.status).json({ message: error.message });
+    }
+    return res.status(500).json({ message: "Internal server error" });
   }
 }
 

@@ -16,9 +16,7 @@ interface UserAuth extends BaseAuth {
   created_at?: string;
   updated_at?: string;
 }
-interface AdminAuth {
-  id: string;
-  email: string;
+interface AdminAuth extends BaseAuth {
   role: "ADMIN";
 }
 

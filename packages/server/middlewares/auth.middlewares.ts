@@ -2,10 +2,10 @@ import type { NextFunction, Request, Response } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
 
-type Role = "admin" | "employee" | "manager";
+type Role = "ADMIN" | "EMPLOYEE" | "MANAGER";
 
 interface DecodedUser extends JwtPayload {
-  userId: number;
+  userId: string;
   userRole: Role;
   // add other properties from your token payload
 }
@@ -60,13 +60,13 @@ export function AuthenticatedRoute(
         }
         let userWithPassword;
 
-        if (decodedUser.userRole === "admin") {
+        if (decodedUser.userRole === "ADMIN") {
           userWithPassword = await prisma.admin.findUnique({
             where: {
               id: decodedUser.userId,
             },
           });
-        } else if (decodedUser.userRole === "employee") {
+        } else if (decodedUser.userRole === "EMPLOYEE") {
           userWithPassword = await prisma.user.findUnique({
             where: {
               id: decodedUser.userId,

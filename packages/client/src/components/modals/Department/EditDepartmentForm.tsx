@@ -61,7 +61,6 @@ export default function EditDepartmentForm({
       employee_count: department.employee_count,
     },
   });
-  console.log(department);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingFormData, setPendingFormData] =
     useState<Partial<EditDepartmentPayload> | null>(null);
@@ -86,9 +85,10 @@ export default function EditDepartmentForm({
       : department.budget / department.employee_count;
 
   const checkManagerConflict = () => {
+    console.log(selectedManager);
     const isAssignedManager =
-      selectedManager?.department.manager_id !== null &&
-      selectedManager?.department.manager_id === selectedManager?.id;
+      selectedManager?.department?.manager_id !== null &&
+      selectedManager?.department?.manager_id === selectedManager?.id;
     return isAssignedManager ? selectedManager : null;
   };
 
