@@ -54,8 +54,8 @@ export default function AddForm({ onSuccess }: AddFormProps) {
 
   const checkManagerConflict = () => {
     const isAssignedManager =
-      selectedManager?.department.manager_id !== null &&
-      selectedManager?.department.manager_id === selectedManager?.id;
+      selectedManager?.department?.manager_id !== null &&
+      selectedManager?.department?.manager_id === selectedManager?.id;
     return isAssignedManager ? selectedManager : null;
   };
 
