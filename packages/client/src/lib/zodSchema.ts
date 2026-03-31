@@ -124,14 +124,18 @@ export type AddDepartmentPayload = z.infer<typeof addDepartmentSchema>;
 
 // Leave Request
 export const leaveRequestSchema = z.object({
-  employeeName: z.string().trim().min(1, "Employee Name is required"),
-  type: z.enum(["Vacation", "Sick Leave", "Personal", "Other"]),
-  startDate: z.string().trim().min(1, "Start date is required"),
-  reason: z.string().trim().optional(),
-  hour: z.coerce
+  requester_id: z.cuid("Employee is required"),
+  type: z.enum(["VACATION", "SICK_LEAVE"]),
+  start_date: z.iso.date(),
+  end_date: z.iso.date(),
+  reason: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? null : val),
+    z.string().trim().max(255, "Maximum 255 characters").nullable()
+  ),
+  hours: z.coerce
     .number()
-    .min(1, "Minimum of 1 hour requesteable")
-    .max(40, "Maximum of 40 hour requestable"),
+    .min(0.5, "Minimum of 0.5 hour requestable")
+    .max(160, "Maximum of 160 hour requestable"),
 });
 
-export type LeaveRequestFormFields = z.infer<typeof leaveRequestSchema>;
+export type AddLeaveRequestPayload = z.infer<typeof leaveRequestSchema>;

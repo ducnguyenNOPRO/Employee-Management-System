@@ -115,6 +115,34 @@ export async function getEmployee(req: Request, res: Response) {
   }
 }
 
+export async function getEmployeeBalance(req: Request, res: Response) {
+  const result = getEmployeeSchema.safeParse({ id: req.params.id }); // schema expect a object
+  if (!result.success) {
+    console.log(z.treeifyError(result.error).properties);
+    return res.status(400).json({ message: "Missing or Invalid ID format" });
+  }
+  try {
+    const balances = await prisma.leave_balance.findMany({
+      where: { user_id: result.data?.id },
+      select: {
+        type: true,
+        total: true,
+        used: true,
+      },
+    });
+
+    const formatted = balances.map((balance) => ({
+      type: balance.type,
+      remaining: parseFloat((balance.total - balance.used).toFixed(2)),
+    }));
+
+    return res.status(200).json({ balances: formatted });
+  } catch (error) {
+    console.log("Error", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
 export function addEmployee(req: Request, res: Response) {
   try {
   } catch (error) {}
@@ -440,6 +468,8 @@ export async function getRequests(req: Request, res: Response) {
   }
 }
 
+// Using FOR UPDATE to lock row to prevent race condition
+// Update 'used' column when creating a new request
 export async function createRequest(req: Request, res: Response) {
   const result = leaveSchema.safeParse(req.body);
   if (!result.success) {

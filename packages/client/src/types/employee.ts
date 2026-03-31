@@ -7,6 +7,11 @@ export interface ManagerDepartmentOverview extends EmployeeDepartmentOverview {
   manager_id: string;
 }
 
+export interface EmployeeBalance {
+  type: "VACATION" | "SICK_LEAVE";
+  remaining: number;
+}
+
 // Shared fields
 interface BaseEmployee {
   id: string;

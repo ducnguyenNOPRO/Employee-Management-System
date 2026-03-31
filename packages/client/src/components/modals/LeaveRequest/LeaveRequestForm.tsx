@@ -3,56 +3,96 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Label from "@/components/ui/label";
 import { User, FileText, Calendar, AlertCircle } from "lucide-react";
-import { useForm, type SubmitHandler } from "react-hook-form";
+import { useForm, useWatch, type SubmitHandler } from "react-hook-form";
 import {
   leaveRequestSchema,
-  type LeaveRequestFormFields,
+  type AddLeaveRequestPayload,
 } from "@/lib/zodSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Select from "@/components/ui/select";
+import { employeeService } from "@/services/employee.service";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { EmployeeBalance, EmployeeOverview } from "@/types/employee";
+import { leaveService } from "@/services/leave.service";
+import { toast } from "sonner";
 
 const leaveTypes = [
   {
-    value: "Vacation",
+    value: "VACATION",
     label: "Vacation",
     description: "Planned time off for personal reasons",
     color: "bg-blue-100 text-blue-800",
   },
   {
-    value: "Sick",
+    value: "SICK_LEAVE",
     label: "Sick Leave",
     description: "Medical reasons or illness",
     color: "bg-purple-100 text-purple-800",
   },
-  {
-    value: "Personal",
-    label: "Personal",
-    description: "Personal matters or family events",
-    color: "bg-orange-100 text-orange-800",
-  },
-  {
-    value: "Other",
-    label: "Other",
-    description: "Other leave reasons",
-    color: "bg-gray-100 text-gray-800",
-  },
 ];
 
-export default function LeaveRequestForm() {
+const LEAVE_LABELS = {
+  SICK_LEAVE: "Sick Leave",
+  VACATION: "Vacation",
+};
+
+type AddFormProps = {
+  onSuccess: () => void;
+};
+
+export default function LeaveRequestForm({ onSuccess }: AddFormProps) {
+  const queryClient = useQueryClient();
   const {
     register,
     handleSubmit,
     watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(leaveRequestSchema),
   });
 
   const selectedLeaveType = watch("type");
+  const selectedStartDate = watch("start_date");
+  const selectedReason = (watch("reason") as string) ?? "";
+  const selectedEmployee = useWatch({ control, name: "requester_id" });
 
-  const onSubmit: SubmitHandler<LeaveRequestFormFields> = async (data) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log(data);
+  const { data: employees } = useQuery<EmployeeOverview[]>({
+    queryKey: ["employees"],
+    queryFn: employeeService.getEmployees,
+  });
+
+  const {
+    data: balances,
+    isFetching,
+    isError,
+  } = useQuery<EmployeeBalance[]>({
+    queryKey: ["leaveBalance", selectedEmployee],
+    queryFn: () => employeeService.getSelectedEmployeeBalance(selectedEmployee),
+    enabled: !!selectedEmployee,
+  });
+
+  const onSubmit: SubmitHandler<AddLeaveRequestPayload> = async (data) => {
+    if (!validateBalance(data.type, data.hours)) {
+      toast.error("Insufficient leave balance");
+      return;
+    }
+    await leaveService.createRequest(data);
+    onSuccess();
+    invalidateQueries();
+  };
+
+  const validateBalance = (type: "VACATION" | "SICK_LEAVE", hours: number) => {
+    const balance = balances?.find((b) => b.type === type);
+    console.log(balance?.remaining);
+    console.log(hours);
+    if (!balance) return false;
+
+    return balance.remaining >= hours;
+  };
+
+  const invalidateQueries = () => {
+    queryClient.invalidateQueries(["leaves"]);
   };
 
   return (
@@ -63,24 +103,48 @@ export default function LeaveRequestForm() {
           <User className="h-5 w-5 text-blue-600" />
           Employee Information
         </h3>
-        <div>
+        <div className="space-y-2">
           <Label required>Employee Name</Label>
-          <Select
-            register={register}
-            name="employeeName"
-            required
-            error={errors.employeeName?.message}
-          >
-            <option value="">Select Employee</option>
-            <option value="Sarah Johnson">Sarah Johnson</option>
-            <option value="Michael Chen">Michael Chen</option>
-            <option value="Emily Rodriguez">Emily Rodriguez</option>
-            <option value="David Kim">David Kim</option>
-            <option value="Jessica Taylor">Jessica Taylor</option>
-            <option value="James Anderson">James Anderson</option>
-            <option value="Amanda Martinez">Amanda Martinez</option>
-            <option value="Christopher White">Christopher White</option>
-          </Select>
+          {employees && (
+            <Select
+              register={register}
+              name="requester_id"
+              required
+              error={errors.requester_id?.message}
+            >
+              <option value="">Select a employee</option>
+              {employees.map((emp) => (
+                <option value={emp.id} key={emp.id}>
+                  {emp.first_name + " " + emp.last_name}
+                </option>
+              ))}
+            </Select>
+          )}
+
+          {/* Leave Balances */}
+          {isFetching && <div>Loading Balance...</div>}
+          {isError && (
+            <div className="text-sm text-red-500">
+              Failed to load leave balance.
+            </div>
+          )}
+          {balances?.length == 0 && (
+            <div className="text-sm text-red-500">No records found</div>
+          )}
+          {balances && balances.length > 0 && (
+            <div className="flex gap-5">
+              {balances.map((b) => (
+                <div key={b.type} className="flex items-center gap-1.5">
+                  <span className="text-sm text-muted-foreground">
+                    {LEAVE_LABELS[b.type]}:
+                  </span>
+                  <span className="text-sm font-medium">
+                    {b.remaining} hours
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -128,46 +192,62 @@ export default function LeaveRequestForm() {
         )}
       </div>
 
-      {/* Start Date && Hours\ */}
+      {/* Date && Hours\ */}
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <Calendar className="h-5 w-5 text-blue-600" />
           Duration
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <div>
             <Input
               label="Start Date"
               type="date"
-              name="startDate"
+              name="start_date"
               required
               register={register}
-              error={errors.startDate?.message}
+              error={errors.start_date?.message}
             />
           </div>
           <div>
             <Input
-              label="Hour"
-              type="number"
-              name="hour"
+              label="End Date"
+              type="date"
+              name="end_date"
+              min={selectedStartDate}
               required
               register={register}
-              error={errors.hour?.message}
+              error={errors.end_date?.message}
+            />
+          </div>
+          <div>
+            <Input
+              label="Hours"
+              type="number"
+              name="hours"
+              step="0.5"
+              required
+              register={register}
+              error={errors.hours?.message}
             />
           </div>
         </div>
       </div>
 
       {/* Reason */}
-      <div>
+      <div className="relative">
         <Label>Reason for Leave</Label>
         <textarea
           {...register("reason")}
           name="reason"
-          rows={4}
+          rows={3}
+          maxLength={40}
           className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
           placeholder="(Optional) Please provide a brief explanation for your leave request..."
         />
+        <span className="absolute bottom-2 right-3 text-xs text-gray-500">
+          {selectedReason.length} / 40
+        </span>
         {errors.reason && (
           <span className="text-red-500">{errors.reason.message}</span>
         )}

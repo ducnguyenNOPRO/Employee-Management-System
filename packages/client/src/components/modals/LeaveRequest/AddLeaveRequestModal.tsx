@@ -19,6 +19,9 @@ export default function AddLeaveRequestModal({
   isOpen,
   setOpenModal,
 }: AddLeaveRequestModalProps) {
+  const handleSuccess = () => {
+    setOpenModal(false);
+  };
   return (
     <Dialog open={isOpen} onOpenChange={setOpenModal}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
@@ -30,7 +33,7 @@ export default function AddLeaveRequestModal({
         </DialogHeader>
 
         {/* Form && Footer */}
-        <LeaveRequestForm />
+        <LeaveRequestForm onSuccess={handleSuccess} />
       </DialogContent>
     </Dialog>
   );

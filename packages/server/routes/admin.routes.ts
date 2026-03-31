@@ -13,6 +13,7 @@ import {
   createRequest,
   updateRequest,
   getRequestStats,
+  getEmployeeBalance,
 } from "../controllers/admin.controller";
 
 const adminRouter = Router();
@@ -20,6 +21,7 @@ const adminRouter = Router();
 // employee
 adminRouter.get("/employees", getEmployees); // Get all employees or by role
 adminRouter.get("/employees/:id", getEmployee); // Get 1 employee
+adminRouter.get("/employees/:id/balances", getEmployeeBalance); // Get all leave balances
 adminRouter.post("/employees", addEmployee); // Create new employee
 adminRouter.put("/employees/:id", updateEmployee); // Fully update employe
 adminRouter.patch("/employees/:id", partialUpdateEmployee); // Partially update employee mostly updating role

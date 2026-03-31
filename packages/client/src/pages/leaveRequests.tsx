@@ -67,7 +67,7 @@ const columns: ColumnDef<BaseRequest>[] = [
     header: "DURATION",
     cell: ({ row }) => {
       const hours = row.original.hours;
-      return <p>{hours} days</p>;
+      return <p className="font-semibold">{hours} hours</p>;
     },
   },
   {
