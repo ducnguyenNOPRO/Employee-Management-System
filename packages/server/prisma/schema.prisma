@@ -38,8 +38,8 @@ model user {
 
   session            session[] // A user may have multiple session
   department_id      String?
-  department         department? @relation("DepartmentEmployees", fields: [department_id], references: [id], onDelete: SetNull)
-  managed_department department? @relation("DepartmentManager")
+  department         department? @relation("DepartmentEmployees", fields: [department_id], references: [id], onDelete: SetNull)  // department this user belong to
+  managed_department department? @relation("DepartmentManager")    // The department this manager is managing
 
   leave_request   leave_request[] @relation("Requester")
   approve_request leave_request[] @relation("Approver")
