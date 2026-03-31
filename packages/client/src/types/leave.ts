@@ -16,3 +16,8 @@ interface Requester {
 }
 
 interface Approver extends Omit<Requester, "id"> {}
+
+export interface UpdateRequestDecisionPayload {
+  status: "APPROVED" | "REJECTED";
+  approver_id: string;
+}

@@ -3,8 +3,8 @@ import { prisma } from "../lib/prisma";
 import {
   addDepartmentSchema,
   editDepartmentSchema,
-  getDepartmentSchema,
-  getEmployeeSchema,
+  editLeaveSchema,
+  idSchmena,
   leaveSchema,
 } from "../lib/zodSchema";
 import z from "zod";
@@ -15,6 +15,12 @@ import {
   updateDepartment,
 } from "../lib/helper";
 import type { leave_balance } from "../generated/prisma/client";
+
+const STATUS_PRIORITY = {
+  PENDING: 1,
+  APPROVED: 2,
+  REJECTED: 3,
+};
 
 export async function getEmployees(req: Request, res: Response) {
   const { role } = req.query;
@@ -75,7 +81,7 @@ export async function getEmployees(req: Request, res: Response) {
 }
 
 export async function getEmployee(req: Request, res: Response) {
-  const result = getEmployeeSchema.safeParse(req.params.id);
+  const result = idSchmena.safeParse(req.params.id);
   if (!result.success) {
     console.log(z.treeifyError(result.error).properties);
     res.status(400).json({ message: "Missing or Invalid ID format" });
@@ -116,7 +122,7 @@ export async function getEmployee(req: Request, res: Response) {
 }
 
 export async function getEmployeeBalance(req: Request, res: Response) {
-  const result = getEmployeeSchema.safeParse({ id: req.params.id }); // schema expect a object
+  const result = idSchmena.safeParse({ id: req.params.id }); // schema expect a object
   if (!result.success) {
     console.log(z.treeifyError(result.error).properties);
     return res.status(400).json({ message: "Missing or Invalid ID format" });
@@ -194,7 +200,7 @@ export async function getDepartments(req: Request, res: Response) {
 }
 
 export async function getDepartment(req: Request, res: Response) {
-  const result = getDepartmentSchema.safeParse({ id: req.params.id });
+  const result = idSchmena.safeParse({ id: req.params.id });
   if (!result.success) {
     console.log(z.treeifyError(result.error).properties);
     res.status(400).json({ message: "Missing or Invalid ID format" });
@@ -301,7 +307,7 @@ export async function createDepartment(req: Request, res: Response) {
 }
 
 export async function partialUpdateDepartment(req: Request, res: Response) {
-  const idCheck = getDepartmentSchema.safeParse({ id: req.params.id });
+  const idCheck = idSchmena.safeParse({ id: req.params.id });
   if (!idCheck.success) {
     return res.status(400).json({
       message: `Missing or Invalid ID format`,
@@ -538,13 +544,65 @@ export async function createRequest(req: Request, res: Response) {
   }
 }
 
+// Update status, status_priority, approver_id and reviewed_at columns
+// 'used' column in leave_balance is already incremented when request created
+// Only neeed to deduct from 'used' if REJECTED
 export async function updateRequest(req: Request, res: Response) {
-  try {
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      message: "Internal server error",
+  const idCheck = idSchmena.safeParse({ id: req.params.id });
+  if (!idCheck.success) {
+    return res.status(400).json({
+      message: `Missing or Invalid ID format`,
     });
+  }
+  const result = editLeaveSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({
+      message: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
+  }
+  try {
+    await prisma.$transaction(async (tx) => {
+      const request = await tx.leave_request.findUnique({
+        where: { id: idCheck.data.id },
+      });
+
+      if (!request) throw { status: 404, message: "Request not found" };
+      if (request.status !== "PENDING")
+        throw { status: 409, message: "Request is no longer pending" };
+
+      // Deduct hours from used if REJECTED
+      if (result.data.status === "REJECTED") {
+        await tx.leave_balance.update({
+          where: {
+            user_id_type: {
+              user_id: request.requester_id,
+              type: request.type,
+            },
+          },
+          data: {
+            used: { decrement: request.hours },
+          },
+        });
+      }
+
+      await tx.leave_request.update({
+        where: { id: request.id },
+        data: {
+          status: result.data.status,
+          status_priority: STATUS_PRIORITY[result.data.status],
+          approver_id: result.data.approver_id,
+          reviewed_at: new Date(),
+        },
+      });
+    });
+
+    return res.status(200).json({ message: "Decision updated successfully" });
+  } catch (error: any) {
+    console.log(error);
+    if (error?.status) {
+      return res.status(error.status).json({ message: error.message });
+    }
+    return res.status(500).json({ message: "Internal server error" });
   }
 }
 

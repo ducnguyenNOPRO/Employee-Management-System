@@ -1,5 +1,6 @@
 import api from "@/lib/axios";
 import type { AddLeaveRequestPayload } from "@/lib/zodSchema";
+import type { UpdateRequestDecisionPayload } from "@/types/leave";
 import { toast } from "sonner";
 
 export const leaveService = {
@@ -26,6 +27,19 @@ export const leaveService = {
   createRequest: async (payload: AddLeaveRequestPayload) => {
     try {
       const res = await api.post("/admin/leaves", payload, {
+        withCredentials: true,
+      });
+      toast.success(res.data.message);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message);
+    }
+  },
+  updateRequestDecision: async (
+    id: string,
+    payload: UpdateRequestDecisionPayload
+  ) => {
+    try {
+      const res = await api.patch(`/admin/leaves/${id}`, payload, {
         withCredentials: true,
       });
       toast.success(res.data.message);

@@ -32,13 +32,14 @@ export const sessionSchema = z.object({
   expires_at: z.date(),
 });
 
+// Generic schema
+export const idSchmena = z.object({
+  id: z.cuid("Invalid ID format"),
+});
+
 // EMPLOYEE SCHEMAS
 const employeeSchema = z.object({
   id: z.cuid("Invalid ID forma"),
-});
-
-export const getEmployeeSchema = employeeSchema.pick({
-  id: true,
 });
 
 // DEPARTMENT SCHEMAS
@@ -85,9 +86,6 @@ export const addDepartmentSchema = departmentSchema.omit({
   established: true,
   id: true,
 });
-export const getDepartmentSchema = departmentSchema.pick({
-  id: true,
-});
 
 // LEAVE REQUEST SCHEMAS
 export const leaveSchema = z.object({
@@ -100,4 +98,9 @@ export const leaveSchema = z.object({
   start_date: z.iso.date(),
   end_date: z.iso.date(),
   reason: z.string().trim().max(40, "Maximum 40 characters").nullable(),
+});
+
+export const editLeaveSchema = z.object({
+  approver_id: z.cuid("Invalid ID format"),
+  status: z.enum(["APPROVED", "REJECTED"]),
 });

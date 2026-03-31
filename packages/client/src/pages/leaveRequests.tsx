@@ -12,9 +12,10 @@ import {
 } from "@/components/ui/table";
 import { getLeaveRequestStatus, getTypeColor } from "@/lib/utils";
 import { leaveService } from "@/services/leave.service";
-import type { BaseRequest } from "@/types/leave";
+import { useAuthStore } from "@/stores/useAuthStore";
+import type { BaseRequest, UpdateRequestDecisionPayload } from "@/types/leave";
 import { formatString } from "@/utils/formatString";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   flexRender,
   getCoreRowModel,
@@ -22,137 +23,11 @@ import {
   type ColumnDef,
 } from "@tanstack/react-table";
 import { Check, Filter, Plus, X } from "lucide-react";
-import { useState } from "react";
-
-const columns: ColumnDef<BaseRequest>[] = [
-  {
-    accessorKey: "id",
-    header: "EMPLOYEE",
-    cell: ({ row }) => {
-      const requester = row.original.requester;
-      return (
-        <div className="flex items-center gap-4">
-          <UserCharacters
-            firstName={requester.first_name[0]}
-            lastName={requester.last_name[0]}
-          />
-          <div>
-            <p className="text-sm font-medium text-gray-900 hover:text-blue-500">
-              {requester.first_name + " " + requester.last_name}
-            </p>
-            <p className="text-sm text-gray-500">ID: {requester.id}</p>
-          </div>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "type",
-    header: "TYPE",
-    cell: ({ row }) => {
-      const type = row.original.type;
-      return (
-        <span
-          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(
-            type
-          )}`}
-        >
-          {formatString(type)}
-        </span>
-      );
-    },
-  },
-  {
-    accessorKey: "hours",
-    header: "DURATION",
-    cell: ({ row }) => {
-      const hours = row.original.hours;
-      return <p className="font-semibold">{hours} hours</p>;
-    },
-  },
-  {
-    accessorKey: "start_date",
-    header: "DATE",
-    cell: ({ row }) => {
-      const leave = row.original;
-      return (
-        <div>
-          <p>{leave.start_date.split("T")[0]}</p>
-          <p className="text-gray-500">to</p>
-          <p>{leave.end_date.split("T")[0]}</p>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "reason",
-    header: "REASON",
-  },
-  {
-    accessorKey: "status",
-    header: "STATUS",
-    cell: ({ row }) => {
-      const status = row.original.status;
-      return (
-        <span
-          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getLeaveRequestStatus(
-            status
-          )}`}
-        >
-          {status}
-        </span>
-      );
-    },
-  },
-  {
-    id: "actions",
-    header: "ACTIONS",
-    cell: ({ row }) => {
-      const status = row.original.status;
-      return (
-        <>
-          {status === "PENDING" && (
-            <div className="flex gap-2">
-              <button
-                title="Accept"
-                className="p-2 text-green-600 hover:bg-green-200 rounded-lg transition-colors active:opacity-70 cursor-pointer"
-              >
-                <Check className="h-5 w-5" />
-              </button>
-              <button
-                title="Reject"
-                className="p-2 text-red-600 hover:bg-red-200 rounded-lg transition-colors active:opacity-70 cursor-pointer"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-          )}
-          {status !== "PENDING" && (
-            <span className="text-sm text-gray-400">-</span>
-          )}
-        </>
-      );
-    },
-  },
-  {
-    accessorKey: "approver",
-    header: "APPROVED BY",
-    cell: ({ row }) => {
-      const approver = row.original.approver;
-      return (
-        <>
-          {approver && (
-            <p className="text-sm font-medium text-gray-900 hover:text-blue-500">
-              {approver.first_name + " " + approver.last_name}
-            </p>
-          )}
-        </>
-      );
-    },
-  },
-];
+import { useCallback, useMemo, useState } from "react";
 
 export default function LeaveRequests() {
+  const user = useAuthStore((s) => s.user);
+  const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<
     "All" | "Pending" | "Approved" | "Rejected"
   >("All");
@@ -164,12 +39,173 @@ export default function LeaveRequests() {
     queryKey: ["leaveStats"],
     queryFn: leaveService.getStats,
   });
+  const [openModal, setOpenModal] = useState(false);
+
+  // Update request decision
+  const { mutate: updateDecision } = useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: UpdateRequestDecisionPayload;
+    }) => leaveService.updateRequestDecision(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["leaves"] });
+      queryClient.invalidateQueries({ queryKey: ["leaveStats"] });
+    },
+  });
+  const handleDecision = useCallback(
+    (id: string, status: "APPROVED" | "REJECTED") => {
+      updateDecision({
+        id,
+        payload: {
+          status,
+          approver_id: user?.id ?? "cmncfac4y00011c7kh16ulx3r",
+        },
+      }); // temporary using a manager_id
+    },
+    [updateDecision]
+  );
+
+  const columns = useMemo<ColumnDef<BaseRequest>[]>(
+    () => [
+      {
+        accessorKey: "id",
+        header: "EMPLOYEE",
+        cell: ({ row }) => {
+          const requester = row.original.requester;
+          return (
+            <div className="flex items-center gap-4">
+              <UserCharacters
+                firstName={requester.first_name[0]}
+                lastName={requester.last_name[0]}
+              />
+              <div>
+                <p className="text-sm font-medium text-gray-900 hover:text-blue-500">
+                  {requester.first_name + " " + requester.last_name}
+                </p>
+                <p className="text-sm text-gray-500">ID: {requester.id}</p>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "type",
+        header: "TYPE",
+        cell: ({ row }) => {
+          const type = row.original.type;
+          return (
+            <span
+              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(
+                type
+              )}`}
+            >
+              {formatString(type)}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "hours",
+        header: "DURATION",
+        cell: ({ row }) => {
+          const hours = row.original.hours;
+          return <p className="font-semibold">{hours} hours</p>;
+        },
+      },
+      {
+        accessorKey: "start_date",
+        header: "DATE",
+        cell: ({ row }) => {
+          const leave = row.original;
+          return (
+            <div>
+              <p>{leave.start_date.split("T")[0]}</p>
+              <p className="text-gray-500">to</p>
+              <p>{leave.end_date.split("T")[0]}</p>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "reason",
+        header: "REASON",
+      },
+      {
+        accessorKey: "status",
+        header: "STATUS",
+        cell: ({ row }) => {
+          const status = row.original.status;
+          return (
+            <span
+              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getLeaveRequestStatus(
+                status
+              )}`}
+            >
+              {status}
+            </span>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: "ACTIONS",
+        cell: ({ row }) => {
+          const status = row.original.status;
+          const id = row.original.id;
+          return (
+            <>
+              {status === "PENDING" && (
+                <div className="flex gap-2">
+                  <button
+                    title="Accept"
+                    className="p-2 text-green-600 hover:bg-green-200 rounded-lg transition-colors active:opacity-70 cursor-pointer"
+                    onClick={() => handleDecision(id, "APPROVED")}
+                  >
+                    <Check className="h-5 w-5" />
+                  </button>
+                  <button
+                    title="Reject"
+                    className="p-2 text-red-600 hover:bg-red-200 rounded-lg transition-colors active:opacity-70 cursor-pointer"
+                    onClick={() => handleDecision(id, "REJECTED")}
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              )}
+              {status !== "PENDING" && (
+                <span className="text-sm text-gray-400">-</span>
+              )}
+            </>
+          );
+        },
+      },
+      {
+        accessorKey: "approver",
+        header: "APPROVED BY",
+        cell: ({ row }) => {
+          const approver = row.original.approver;
+          return (
+            <>
+              {approver && (
+                <p className="text-sm font-medium text-gray-900 ">
+                  {approver.first_name + " " + approver.last_name}
+                </p>
+              )}
+            </>
+          );
+        },
+      },
+    ],
+    [handleDecision]
+  );
   const table = useReactTable({
     data: requests ?? [],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
-  const [openModal, setOpenModal] = useState(false);
 
   return (
     <div className="space-y-6 p-6">
