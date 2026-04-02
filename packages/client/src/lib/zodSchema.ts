@@ -36,27 +36,39 @@ export type SignInPayload = z.infer<typeof signInSchema>;
 /*** Employees Schemas  ***/
 // Employee Schemas
 export const employeeSchema = z.object({
-  id: z.coerce.number().optional(), // non-editable
-  firstName: z.string().trim().min(1, "First name is required"),
-  lastName: z.string().trim().min(1, "Last name is required"),
-  email: z.email("Invalid email address"),
+  email: z.email(),
+  first_name: z.string().trim().min(1, "First name is required"),
+  last_name: z.string().trim().min(1, "Last name is required"),
   phone: z
     .string()
     .trim()
-    .min(10, "Phone number must be 10 digits")
-    .max(10, "Phone number must be 10 digits"),
-  address: z.string().trim().min(1, "Address is required"),
+    .regex(/^\+1\d{10}$/),
+  address: z
+    .string()
+    .trim()
+    .min(1, "Must has a length between 1 and 255 characters")
+    .max(255, "Must has a length between 1 and 255 characters"),
   position: z.string().trim().min(1, "Position is required"),
-  departmentId: z.coerce.number("Department Id is required"),
-  employmentType: z.enum(["full_time", "part_time", "contract"]),
-  status: z.enum(["active", "on_leave", "inactive"]).default("active"),
-  startDate: z.string().trim().min(1, "Start date is required"),
-  salary: z.coerce.number().min(0, "Salary must be a positive number"),
-  emergencyContact: z.string().trim().optional(),
-  emergencyPhone: z.string().trim().optional(),
+  employment_type: z.enum(["FULL_TIME", "PART_TIME", "CONTRACT"]),
+  role: z.enum(["EMPLOYEE", "MANAGER"]),
+  salary: z.coerce.number().min(0, "Must be a positive value > 0"),
+  start_date: z.iso.date(),
+  department_id: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? null : val),
+    z.cuid("Invalid ID format").nullable()
+  ),
+  emergency_contact: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? null : val),
+    z.string().trim().max(255, "Maximum 255 characters").nullable()
+  ),
+  emergency_phone: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? null : val),
+    z.string().trim().max(255, "Maximum 255 characters").nullable()
+  ),
 });
 
-export type EmployeeFormFields = z.infer<typeof employeeSchema>;
+export type AddEmployeePayload = z.infer<typeof employeeSchema>;
+
 /*** Employees Schemas  ***/
 
 /*** Department Schemas ***/

@@ -21,7 +21,7 @@ model admin {
 model user {
   id                String           @id @default(cuid())
   email             String           @unique @db.VarChar(255)
-  password_hash     String           @db.VarChar(255) // need to activate
+  password_hash     String?           @db.VarChar(255) // need to activate
   address           String           @db.VarChar(255)
   position          String           @db.VarChar(255)
   role              user_role        @default(EMPLOYEE)

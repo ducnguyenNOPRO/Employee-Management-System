@@ -38,8 +38,27 @@ export const idSchmena = z.object({
 });
 
 // EMPLOYEE SCHEMAS
-const employeeSchema = z.object({
-  id: z.cuid("Invalid ID forma"),
+export const employeeSchema = z.object({
+  email: z.email(),
+  first_name: z.string().trim().min(1, "First name is required"),
+  last_name: z.string().trim().min(1, "Last name is required"),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\+1\d{10}$/),
+  address: z
+    .string()
+    .trim()
+    .min(1, "Must has a length between 1 and 255 characters")
+    .max(255, "Must has a length between 1 and 255 characters"),
+  position: z.string().trim().min(1, "Position is required"),
+  employment_type: z.enum(["FULL_TIME", "PART_TIME", "CONTRACT"]),
+  role: z.enum(["EMPLOYEE", "MANAGER"]),
+  salary: z.number().min(0),
+  start_date: z.iso.date(),
+  department_id: z.cuid().nullable(),
+  emergency_contact: z.string().trim().nullable(),
+  emergency_phone: z.string().trim().nullable(),
 });
 
 // DEPARTMENT SCHEMAS

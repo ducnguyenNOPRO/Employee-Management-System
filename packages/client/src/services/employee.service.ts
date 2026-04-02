@@ -1,4 +1,5 @@
 import api from "@/lib/axios";
+import type { AddEmployeePayload } from "@/lib/zodSchema";
 
 import { toast } from "sonner";
 
@@ -41,6 +42,17 @@ export const employeeService = {
       return res.data.managers;
     } catch (error: any) {
       throw error; // tell react query this failed
+    }
+  },
+  createEmployee: async (payload: AddEmployeePayload) => {
+    try {
+      const res = await api.post("/admin/employee", payload, {
+        withCredentials: true,
+      });
+      toast.success(res.data.message);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message);
+      throw error;
     }
   },
 };

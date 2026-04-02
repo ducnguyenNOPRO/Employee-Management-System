@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import type { EmployeeDetail } from "@/types/employee";
+import { formatString } from "@/utils/formatString";
 
 type EmployeeProps = {
   employee: EmployeeDetail;
@@ -53,14 +54,14 @@ export default function EmployeeReadOnly({ employee, toggle }: EmployeeProps) {
               <p className="text-gray-600">{employee.position}</p>
               <span
                 className={`mt-3 inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
-                  employee.status === "active"
+                  employee.status === "ACTIVE"
                     ? "bg-green-100 text-green-800"
-                    : employee.status === "on_leave"
+                    : employee.status === "ON_LEAVE"
                       ? "bg-yellow-100 text-yellow-800"
                       : "bg-gray-100 text-gray-800"
                 }`}
               >
-                {employee.status}
+                {formatString(employee.status)}
               </span>
             </div>
 
@@ -135,7 +136,7 @@ export default function EmployeeReadOnly({ employee, toggle }: EmployeeProps) {
                     Employment Type
                   </label>
                   <p className="mt-1 text-gray-900">
-                    {employee.employment_type}
+                    {formatString(employee.employment_type)}
                   </p>
                 </div>
                 <div>

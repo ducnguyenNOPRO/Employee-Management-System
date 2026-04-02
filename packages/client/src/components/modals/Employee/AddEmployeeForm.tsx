@@ -7,9 +7,17 @@ import { DialogClose } from "@/components/ui/dialog";
 import { User, Mail, Briefcase, DollarSign, Phone } from "lucide-react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { employeeSchema, type EmployeeFormFields } from "@/lib/zodSchema";
+import { employeeSchema, type AddEmployeePayload } from "@/lib/zodSchema";
+import type { DepartmentOverview } from "@/types/department";
+import { departmentService } from "@/services/department.service";
+import { useQuery } from "@tanstack/react-query";
+import { employeeService } from "@/services/employee.service";
 
-export default function Form() {
+type AddFormProps = {
+  onSuccess: () => void;
+};
+
+export default function AddEmployeeForm({ onSuccess }: AddFormProps) {
   const {
     register,
     handleSubmit,
@@ -17,10 +25,18 @@ export default function Form() {
   } = useForm({
     resolver: zodResolver(employeeSchema),
   });
+  const { data: departments } = useQuery<DepartmentOverview[]>({
+    queryKey: ["departments"],
+    queryFn: departmentService.getDepartments,
+  });
 
-  const onSubmit: SubmitHandler<EmployeeFormFields> = async (data) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log(data);
+  const onSubmit: SubmitHandler<AddEmployeePayload> = async (data) => {
+    try {
+      await employeeService.createEmployee(data);
+      onSuccess();
+    } catch {
+      // Error already toasted, modal stay open
+    }
   };
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -36,11 +52,11 @@ export default function Form() {
               register={register}
               label="First Name"
               type="text"
-              id="firstName"
-              name="firstName"
+              id="first_name"
+              name="first_name"
               required
               placeholder="John"
-              error={errors.firstName?.message}
+              error={errors.first_name?.message}
             />
           </div>
           <div>
@@ -49,10 +65,10 @@ export default function Form() {
               label="Last Name"
               type="text"
               id="lastName"
-              name="lastName"
+              name="last_name"
               required
               placeholder="Doe"
-              error={errors.lastName?.message}
+              error={errors.last_name?.message}
             />
           </div>
         </div>
@@ -85,7 +101,7 @@ export default function Form() {
               id="phone"
               name="phone"
               required
-              placeholder="+1 (555) 123-4567"
+              placeholder="+15559876543"
               error={errors.phone?.message}
             />
           </div>
@@ -124,37 +140,50 @@ export default function Form() {
             />
           </div>
           <div>
-            <Label required>Department</Label>
-            <Select
-              required
-              id="department"
-              name="department"
-              register={register}
-              error={errors.department?.message}
-            >
-              <option value="">Select Department</option>
-              <option value="Engineering">Engineering</option>
-              <option value="Product">Product</option>
-              <option value="Design">Design</option>
-              <option value="Marketing">Marketing</option>
-              <option value="Sales">Sales</option>
-              <option value="Human Resources">Human Resources</option>
-              <option value="Analytics">Analytics</option>
-            </Select>
+            <Label>Department</Label>
+            {departments && (
+              <Select
+                id="department_id"
+                name="department_id"
+                register={register}
+                error={errors.department_id?.message}
+              >
+                <option value="">Select Department</option>
+                {departments.map((d) => (
+                  <option value={d.id} key={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </Select>
+            )}
           </div>
           <div>
             <Label required>Employment Type</Label>
             <Select
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               register={register}
-              id="employmentType"
-              name="employmentType"
+              id="employment_type"
+              name="employment_type"
               required
-              error={errors.employmentType?.message}
+              error={errors.employment_type?.message}
             >
-              <option value="full-time">Full-time</option>
-              <option value="part-time">Part-time</option>
-              <option value="contract">Contract</option>
+              <option value="FULL_TIME">Full-time</option>
+              <option value="PART_TIME">Part-time</option>
+              <option value="CONTRACT">Contract</option>
+            </Select>
+          </div>
+          <div>
+            <Label required>Role</Label>
+            <Select
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              register={register}
+              id="role"
+              name="role"
+              required
+              error={errors.role?.message}
+            >
+              <option value="EMPLOYEE">Employee</option>
+              <option value="MANAGER">Manager</option>
             </Select>
           </div>
           <div>
@@ -162,10 +191,10 @@ export default function Form() {
               register={register}
               label="Start Date"
               type="date"
-              id="startDate"
-              name="startDate"
+              id="start_date"
+              name="start_date"
               required
-              error={errors.startDate?.message}
+              error={errors.start_date?.message}
             />
           </div>
           <div>
@@ -174,6 +203,7 @@ export default function Form() {
               <Input
                 label="Annual Salary"
                 type="number"
+                step="0.01"
                 register={register}
                 id="salary"
                 name="salary"
@@ -199,10 +229,10 @@ export default function Form() {
               register={register}
               label="Contact Name"
               type="text"
-              id="emergencyContact"
-              name="emergencyContact"
+              id="emergency_contact"
+              name="emergency_contact"
               placeholder="Jane Doe"
-              error={errors.emergencyContact?.message}
+              error={errors.emergency_contact?.message}
             />
           </div>
           <div>
@@ -210,10 +240,10 @@ export default function Form() {
               register={register}
               label="Contact Phone"
               type="tel"
-              id="emergencyPhone"
-              name="emergencyPhone"
-              placeholder="+1 (555) 987-6543"
-              error={errors.emergencyPhone?.message}
+              id="emergency_phone"
+              name="emergency_phone"
+              placeholder="+15559876543"
+              error={errors.emergency_phone?.message}
             />
           </div>
         </div>

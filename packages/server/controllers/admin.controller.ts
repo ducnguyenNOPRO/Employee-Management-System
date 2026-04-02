@@ -4,6 +4,7 @@ import {
   addDepartmentSchema,
   editDepartmentSchema,
   editLeaveSchema,
+  employeeSchema,
   idSchmena,
   leaveSchema,
 } from "../lib/zodSchema";
@@ -81,10 +82,10 @@ export async function getEmployees(req: Request, res: Response) {
 }
 
 export async function getEmployee(req: Request, res: Response) {
-  const result = idSchmena.safeParse(req.params.id);
+  const result = idSchmena.safeParse({ id: req.params.id });
   if (!result.success) {
     console.log(z.treeifyError(result.error).properties);
-    res.status(400).json({ message: "Missing or Invalid ID format" });
+    return res.status(400).json({ message: "Missing or Invalid ID format" });
   }
   try {
     const employee = await prisma.user.findUnique({
@@ -149,9 +150,33 @@ export async function getEmployeeBalance(req: Request, res: Response) {
   }
 }
 
-export function addEmployee(req: Request, res: Response) {
+export async function addEmployee(req: Request, res: Response) {
+  const result = employeeSchema.safeParse(req.body);
+  if (!result.success) {
+    console.log(z.treeifyError(result.error).properties);
+    return res
+      .status(400)
+      .json({
+        message: `Error validation ${z.treeifyError(result.error).properties}`,
+      });
+  }
   try {
-  } catch (error) {}
+    await prisma.user.create({
+      data: {
+        ...result.data,
+        start_date: new Date(result.data.start_date),
+      },
+    });
+    return res.status(201).json({ message: "User created successfully" });
+  } catch (error: any) {
+    console.log(error);
+    if (error.code === "P2002") {
+      return res
+        .status(400)
+        .json({ message: "Email or phone number is already existed" });
+    }
+    return res.status(500).json({ message: "Internal server error" });
+  }
 }
 
 export function updateEmployee(req: Request, res: Response) {
