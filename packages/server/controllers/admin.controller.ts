@@ -24,35 +24,15 @@ const STATUS_PRIORITY = {
 };
 
 export async function getEmployees(req: Request, res: Response) {
-  const { role } = req.query;
   try {
-    if (role == "MANAGER") {
-      const managers = await prisma.user.findMany({
-        orderBy: {
-          start_date: "desc",
-        },
-        select: {
-          id: true,
-          first_name: true,
-          last_name: true,
-          email: true,
-          phone: true,
-          department: {
-            select: {
-              manager_id: true,
-              name: true,
-              id: true,
-            },
-          },
-        },
-        where: {
-          role,
-        },
-      });
+    const { role } = req.query;
+    const where: any = {};
 
-      return res.status(200).json({ managers });
+    if (role == "MANAGER") {
+      where.role = role;
     }
     const employees = await prisma.user.findMany({
+      where,
       orderBy: {
         start_date: "asc",
       },
@@ -64,8 +44,10 @@ export async function getEmployees(req: Request, res: Response) {
         position: true,
         employment_type: true,
         status: true,
+        phone: true,
         department: {
           select: {
+            manager_id: true,
             id: true,
             name: true,
           },
@@ -154,11 +136,9 @@ export async function addEmployee(req: Request, res: Response) {
   const result = employeeSchema.safeParse(req.body);
   if (!result.success) {
     console.log(z.treeifyError(result.error).properties);
-    return res
-      .status(400)
-      .json({
-        message: `Error validation ${z.treeifyError(result.error).properties}`,
-      });
+    return res.status(400).json({
+      message: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
   }
   try {
     await prisma.user.create({

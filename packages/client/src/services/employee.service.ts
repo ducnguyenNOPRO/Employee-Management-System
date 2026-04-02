@@ -39,7 +39,7 @@ export const employeeService = {
         params: { role: "MANAGER" },
         withCredentials: true,
       });
-      return res.data.managers;
+      return res.data.employees;
     } catch (error: any) {
       throw error; // tell react query this failed
     }

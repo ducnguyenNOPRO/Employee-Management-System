@@ -44,6 +44,8 @@ model user {
   leave_request   leave_request[] @relation("Requester")
   approve_request leave_request[] @relation("Approver")
 
+  invitation      invitation?
+
   leave_balances leave_balance[]
 
   @@index([start_date])
@@ -117,6 +119,23 @@ model leave_request {
   @@index([approver_id])
   @@index([status])
   @@index([start_date])
+}
+
+model invitation {
+  id              String        @id @default(cuid())
+
+  user_id         String        @unique
+  user            user          @relation(fields: [user_id], references: [id], onDelete: Cascade)        
+  token_hash      String        @db.VarChar(255) 
+
+  expires_at      DateTime
+  used_at         DateTime?     // null = not used
+  revoked_at      DateTime?     // null = still valid
+
+  created_at     DateTime      @default(now())
+
+  @@index([user_id])
+  @@index([token_hash])
 }
 
 enum user_role {
