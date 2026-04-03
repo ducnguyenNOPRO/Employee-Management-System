@@ -72,7 +72,7 @@ export default function EmployeeReadOnly({ employee, toggle }: EmployeeProps) {
                     Department
                   </label>
                   <p className="mt-1 text-gray-900">
-                    {employee.department.name}
+                    {employee.department?.name ?? "Unassigned"}
                   </p>
                 </div>
                 <div>

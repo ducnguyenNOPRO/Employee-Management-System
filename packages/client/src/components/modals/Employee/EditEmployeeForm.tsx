@@ -34,7 +34,7 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
       first_name: employee.first_name,
       last_name: employee.last_name,
       address: employee.address,
-      department_id: employee.department.id,
+      department_id: employee.department?.id ?? "",
       email: employee.email,
       emergency_contact: employee.emergency_contact,
       emergency_phone: employee.emergency_phone,
@@ -121,6 +121,7 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
                     register={register}
                     error={errors.department_id?.message}
                   >
+                    <option value="">Select a department</option>
                     {departments?.map((dpt) => (
                       <option key={dpt.id} value={dpt.id}>
                         {dpt.name}
