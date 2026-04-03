@@ -103,17 +103,28 @@ const columns: ColumnDef<EmployeeOverview>[] = [
     accessorKey: "invitation_status",
     header: "Invite",
     cell: ({ row }) => {
-      const status = getButtonText(row.original.invitation.invitation_status);
+      const buttonText = getButtonText(
+        row.original.invitation.invitation_status
+      );
       return (
         <>
-          {status.length > 0 && (
-            <Button
-              variant={status === "Invite" ? "add" : "default"}
-              icon={status !== "" ? <Send /> : ""}
+          {buttonText === "Invite" ? (
+            <button
+              onClick={() => {}}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
             >
-              {status}
-            </Button>
-          )}
+              <Send className="h-4 w-4" />
+              Invite
+            </button>
+          ) : buttonText === "Resend" ? (
+            <button
+              onClick={() => {}}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50"
+            >
+              <Send className="h-4 w-4" />
+              Resend Invite
+            </button>
+          ) : null}
         </>
       );
     },
