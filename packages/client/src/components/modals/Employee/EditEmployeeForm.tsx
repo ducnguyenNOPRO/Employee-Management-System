@@ -1,25 +1,17 @@
-import {
-  ArrowLeft,
-  Building2,
-  DollarSign,
-  Edit,
-  Mail,
-  MapPin,
-  Phone,
-  Save,
-} from "lucide-react";
+import { ArrowLeft, DollarSign, Edit, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import Label from "@/components/ui/label";
 import Select from "@/components/ui/select";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import { employeeSchema, type EmployeeFormFields } from "@/lib/zodSchema";
+import { employeeSchema, type AddEmployeePayload } from "@/lib/zodSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { EmployeeDetail } from "@/types/employee";
 import { departmentService } from "@/services/department.service";
 import type { DepartmentOverview } from "@/types/department";
 import { useQuery } from "@tanstack/react-query";
+import ProfileCard from "./ProfileCard";
 
 type EmployeeProps = {
   employee: EmployeeDetail;
@@ -39,22 +31,22 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
   } = useForm({
     resolver: zodResolver(employeeSchema),
     defaultValues: {
-      firstName: employee.first_name,
-      lastName: employee.last_name,
+      first_name: employee.first_name,
+      last_name: employee.last_name,
       address: employee.address,
-      departmentId: employee.department.id,
+      department_id: employee.department?.id ?? "",
       email: employee.email,
-      emergencyContact: employee.emergency_contact,
-      emergencyPhone: employee.emergency_phone,
-      employmentType: employee.employment_type,
+      emergency_contact: employee.emergency_contact,
+      emergency_phone: employee.emergency_phone,
+      employment_type: employee.employment_type,
       position: employee.position,
       phone: employee.phone,
       salary: employee.salary,
-      startDate: employee.start_date.split("T")[0], // BE return ISO format
+      start_date: employee.start_date.split("T")[0], // BE return ISO format
     },
   });
 
-  const onSubmit: SubmitHandler<EmployeeFormFields> = async (data) => {
+  const onSubmit: SubmitHandler<AddEmployeePayload> = async (data) => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     console.log(data);
   };
@@ -88,62 +80,7 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Profile Card */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex flex-col items-center">
-              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-blue-100 text-blue-700 text-3xl font-bold">
-                {employee.first_name[0]}
-                {employee.last_name[0]}
-              </div>
-              <h2 className="mt-4 text-xl font-semibold text-gray-900">
-                {employee.first_name} {employee.last_name}
-              </h2>
-              <p className="text-gray-600">{employee.position}</p>
-              <span
-                className={`mt-3 inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
-                  employee.status === "active"
-                    ? "bg-green-100 text-green-800"
-                    : employee.status === "on_leave"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-gray-100 text-gray-800"
-                }`}
-              >
-                {employee.status}
-              </span>
-            </div>
-
-            <div className="mt-6 space-y-4 border-t pt-6">
-              <div className="flex items-center gap-3 text-sm">
-                <Mail className="h-5 w-5 text-gray-400" />
-                <a
-                  href={`mailto:${employee.email}`}
-                  className="text-gray-700 hover:text-blue-600"
-                >
-                  {employee.email}
-                </a>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <Phone className="h-5 w-5 text-gray-400" />
-                <a
-                  href={`tel:${employee.phone}`}
-                  className="text-gray-700 hover:text-blue-600"
-                >
-                  {employee.phone}
-                </a>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <MapPin className="h-5 w-5 text-gray-400" />
-                <span className="text-gray-700">{employee.address}</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <Building2 className="h-5 w-5 text-gray-400" />
-                <span className="text-gray-700">
-                  {employee.department.name}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ProfileCard employee={employee} />
 
         {/* Details */}
         <div className="lg:col-span-2 space-y-6">
@@ -180,10 +117,11 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
                   <Label required>Department</Label>
                   <Select
                     required
-                    name="departmentId"
+                    name="department_id"
                     register={register}
-                    error={errors.departmentId?.message}
+                    error={errors.department_id?.message}
                   >
+                    <option value="">Select a department</option>
                     {departments?.map((dpt) => (
                       <option key={dpt.id} value={dpt.id}>
                         {dpt.name}
@@ -196,13 +134,13 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
                   <Select
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     register={register}
-                    name="employmentType"
+                    name="employment_type"
                     required
-                    error={errors.employmentType?.message}
+                    error={errors.employment_type?.message}
                   >
-                    <option value="full_time">Full-time</option>
-                    <option value="part_time">Part-time</option>
-                    <option value="contract">Contract</option>
+                    <option value="FULL_TIME">Full-time</option>
+                    <option value="PART_TIME">Part-time</option>
+                    <option value="CONTRACT">Contract</option>
                   </Select>
                 </div>
                 <div>
@@ -210,10 +148,10 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
                     register={register}
                     label="Start Date"
                     type="date"
-                    id="startDate"
-                    name="startDate"
+                    id="start_date"
+                    name="start_date"
                     required
-                    error={errors.startDate?.message}
+                    error={errors.start_date?.message}
                   />
                 </div>
                 <div>
@@ -250,11 +188,11 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
                     register={register}
                     label="First Name"
                     type="text"
-                    id="firstName"
-                    name="firstName"
+                    id="first_name"
+                    name="first_name"
                     required
                     placeholder="John"
-                    error={errors.firstName?.message}
+                    error={errors.first_name?.message}
                   />
                 </div>
                 <div>
@@ -262,11 +200,11 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
                     register={register}
                     label="Last Name"
                     type="text"
-                    id="lastName"
-                    name="lastName"
+                    id="last_name"
+                    name="last_name"
                     required
                     placeholder="Doe"
-                    error={errors.lastName?.message}
+                    error={errors.last_name?.message}
                   />
                 </div>
                 <div>
@@ -323,10 +261,10 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
                     register={register}
                     label="Contact Name"
                     type="text"
-                    id="emergencyContact"
-                    name="emergencyContact"
+                    id="emergency_contact"
+                    name="emergency_contact"
                     placeholder="Jane Doe"
-                    error={errors.emergencyContact?.message}
+                    error={errors.emergency_contact?.message}
                   />
                 </div>
                 <div>
@@ -334,10 +272,10 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
                     register={register}
                     label="Contact Phone"
                     type="tel"
-                    id="emergencyPhone"
-                    name="emergencyPhone"
+                    id="emergency_phone"
+                    name="emergency_phone"
                     placeholder="+1 (555) 987-6543"
-                    error={errors.emergencyPhone?.message}
+                    error={errors.emergency_phone?.message}
                   />
                 </div>
               </div>

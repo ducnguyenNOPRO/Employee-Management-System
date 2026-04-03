@@ -14,7 +14,7 @@ import { getLeaveRequestStatus, getTypeColor } from "@/lib/utils";
 import { leaveService } from "@/services/leave.service";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { BaseRequest, UpdateRequestDecisionPayload } from "@/types/leave";
-import { formatString } from "@/utils/formatString";
+import { formatString } from "@/utils/format";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   flexRender,

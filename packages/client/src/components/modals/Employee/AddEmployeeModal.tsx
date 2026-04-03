@@ -6,7 +6,8 @@ import {
   DialogTitle,
 } from "../../ui/dialog";
 import type { Dispatch, SetStateAction } from "react";
-import Form from "./AddEmployeeForm";
+import AddEmployeeForm from "./AddEmployeeForm";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AddEmployeeModalProps {
   isOpen: boolean;
@@ -17,6 +18,11 @@ export default function AddEmployeeModal({
   isOpen,
   setOpenModal,
 }: AddEmployeeModalProps) {
+  const queryClient = useQueryClient();
+  const handleSuccess = () => {
+    queryClient.invalidateQueries(["employees"]);
+    setOpenModal(false);
+  };
   return (
     <Dialog open={isOpen} onOpenChange={setOpenModal}>
       <DialogContent className="md:max-w-3xl! max-h-[90vh] overflow-y-auto">
@@ -27,7 +33,7 @@ export default function AddEmployeeModal({
           </DialogDescription>
         </DialogHeader>
         {/* Form && Footer */}
-        <Form />
+        <AddEmployeeForm onSuccess={handleSuccess} />
       </DialogContent>
     </Dialog>
   );

@@ -74,8 +74,6 @@ export default function EditDepartmentForm({
     control,
     name: "manager_id",
   });
-
-  console.log(selectedManagerId);
   const selectedManager = managers?.find((m) => m.id === selectedManagerId);
 
   const quarterlyBudget = department.budget / 4;

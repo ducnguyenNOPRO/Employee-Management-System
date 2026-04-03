@@ -7,7 +7,7 @@ import {
 import { mockEmployees } from "@/lib/mockData";
 import { useState } from "react";
 import UserCharacters from "@/components/ui/characters";
-import { Download, Plus, Search } from "lucide-react";
+import { Download, Plus, Search, Send } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -22,7 +22,8 @@ import AddEmployeeModal from "@/components/modals/Employee/AddEmployeeModal";
 import { useQuery } from "@tanstack/react-query";
 import { employeeService } from "@/services/employee.service";
 import type { EmployeeOverview } from "@/types/employee";
-import { formatString } from "@/utils/formatString";
+import { formatString } from "@/utils/format";
+import { getButtonText } from "@/utils/helper";
 
 const columns: ColumnDef<EmployeeOverview>[] = [
   {
@@ -88,13 +89,43 @@ const columns: ColumnDef<EmployeeOverview>[] = [
           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
             status === "ACTIVE"
               ? "bg-green-100 text-green-800"
-              : status === "ON_LEAVE"
+              : status === "ON LEAVE"
                 ? "bg-yellow-100 text-yellow-800"
                 : "bg-gray-100 text-gray-800"
           }`}
         >
           {status}
         </span>
+      );
+    },
+  },
+  {
+    accessorKey: "invitation_status",
+    header: "Invite",
+    cell: ({ row }) => {
+      const buttonText = getButtonText(
+        row.original.invitation.invitation_status
+      );
+      return (
+        <>
+          {buttonText === "Invite" ? (
+            <button
+              onClick={() => {}}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+            >
+              <Send className="h-4 w-4" />
+              {buttonText}
+            </button>
+          ) : buttonText === "Resend" ? (
+            <button
+              onClick={() => {}}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50"
+            >
+              <Send className="h-4 w-4" />
+              {buttonText}
+            </button>
+          ) : null}
+        </>
       );
     },
   },
