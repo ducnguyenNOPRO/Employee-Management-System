@@ -182,10 +182,7 @@ export async function addEmployee(req: Request, res: Response) {
   }
   try {
     await prisma.user.create({
-      data: {
-        ...result.data,
-        start_date: new Date(result.data.start_date),
-      },
+      data: result.data,
     });
     return res.status(201).json({ message: "User created successfully" });
   } catch (error: any) {
@@ -573,11 +570,7 @@ export async function createRequest(req: Request, res: Response) {
       }
 
       await tx.leave_request.create({
-        data: {
-          ...result.data,
-          start_date: new Date(result.data.start_date),
-          end_date: new Date(result.data.end_date),
-        },
+        data: result.data,
       });
 
       await tx.leave_balance.update({

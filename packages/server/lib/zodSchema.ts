@@ -55,7 +55,7 @@ export const employeeSchema = z.object({
   employment_type: z.enum(["FULL_TIME", "PART_TIME", "CONTRACT"]),
   role: z.enum(["EMPLOYEE", "MANAGER"]),
   salary: z.number().min(0),
-  start_date: z.iso.date().transform((val) => new Date(val).toISOString()),
+  start_date: z.iso.date().transform((val) => new Date(val)),
   department_id: z.cuid().nullable(),
   emergency_contact: z.string().trim().nullable(),
   emergency_phone: z.string().trim().nullable(),
@@ -116,7 +116,7 @@ export const leaveSchema = z.object({
     .number()
     .min(0, "Must be a positive value > 0")
     .max(160, "Max 4 weeks or 160 hours"),
-  start_date: z.iso.date(),
+  start_date: z.iso.date().transform((val) => new Date(val)),
   end_date: z.iso.date(),
   reason: z.string().trim().max(40, "Maximum 40 characters").nullable(),
 });
