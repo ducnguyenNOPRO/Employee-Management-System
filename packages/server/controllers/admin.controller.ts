@@ -14,6 +14,7 @@ import {
   transferManagerFromAnotherDepartment,
   transferManagerAndAssign,
   updateDepartment,
+  getInvitationStatus,
 } from "../lib/helper";
 import type { leave_balance } from "../generated/prisma/client";
 
@@ -23,6 +24,7 @@ const STATUS_PRIORITY = {
   REJECTED: 3,
 };
 
+// With invitation status
 export async function getEmployees(req: Request, res: Response) {
   try {
     const { role } = req.query;
@@ -52,9 +54,29 @@ export async function getEmployees(req: Request, res: Response) {
             name: true,
           },
         },
+        invitation: {
+          orderBy: { created_at: "desc" },
+          take: 1, // recent one == active one
+          select: {
+            expires_at: true,
+          },
+        },
       },
     });
-    return res.status(200).json({ employees });
+
+    const format = employees.map((e) => {
+      const invitation = e.invitation[0] || null;
+
+      return {
+        ...e,
+        invitation: {
+          expires_at: invitation?.expires_at || null,
+          invitation_status: getInvitationStatus(e, invitation || null),
+        },
+      };
+    });
+
+    return res.status(200).json({ employees: format });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -86,6 +108,13 @@ export async function getEmployee(req: Request, res: Response) {
             name: true,
           },
         },
+        invitation: {
+          orderBy: { created_at: "desc" },
+          take: 1,
+          select: {
+            expires_at: true,
+          },
+        },
       },
     });
 
@@ -95,7 +124,17 @@ export async function getEmployee(req: Request, res: Response) {
         .json({ message: `Employee with id: ${result.data?.id} not found` });
     }
 
-    return res.status(200).json({ employee });
+    const invitation = employee.invitation[0] || null;
+
+    const format = {
+      ...employee,
+      invitation: {
+        expires_at: invitation?.expires_at,
+        invitation_status: getInvitationStatus(employee, invitation),
+      },
+    };
+
+    return res.status(200).json({ employee: format });
   } catch (error) {
     console.log(error);
     return res.status(500).json({

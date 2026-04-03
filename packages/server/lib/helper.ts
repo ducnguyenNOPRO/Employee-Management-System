@@ -84,3 +84,16 @@ export async function removeManager(departmentId: string, departmentData: any) {
     data: { ...departmentData, manager_id: null },
   });
 }
+
+export function getInvitationStatus(
+  user: any,
+  invitation: {
+    expires_at: Date;
+  } | null
+) {
+  if (user.status === "ACTIVE" || user.status === "ON_LEAVE") return "ACCEPTED"; // use 'status' for source of truth instead of accepted_at
+  if (!invitation) return "NOT_SENT";
+  if (new Date(invitation.expires_at) < new Date()) return "EXPIRED";
+
+  return "PENDING";
+}

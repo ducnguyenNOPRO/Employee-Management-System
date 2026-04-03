@@ -7,7 +7,7 @@ import {
 import { mockEmployees } from "@/lib/mockData";
 import { useState } from "react";
 import UserCharacters from "@/components/ui/characters";
-import { Download, Plus, Search } from "lucide-react";
+import { Download, Plus, Search, Send } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -22,7 +22,8 @@ import AddEmployeeModal from "@/components/modals/Employee/AddEmployeeModal";
 import { useQuery } from "@tanstack/react-query";
 import { employeeService } from "@/services/employee.service";
 import type { EmployeeOverview } from "@/types/employee";
-import { formatString } from "@/utils/formatString";
+import { formatString } from "@/utils/format";
+import { getButtonText } from "@/utils/helper";
 
 const columns: ColumnDef<EmployeeOverview>[] = [
   {
@@ -88,13 +89,32 @@ const columns: ColumnDef<EmployeeOverview>[] = [
           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
             status === "ACTIVE"
               ? "bg-green-100 text-green-800"
-              : status === "ON_LEAVE"
+              : status === "ON LEAVE"
                 ? "bg-yellow-100 text-yellow-800"
                 : "bg-gray-100 text-gray-800"
           }`}
         >
           {status}
         </span>
+      );
+    },
+  },
+  {
+    accessorKey: "invitation_status",
+    header: "Invite",
+    cell: ({ row }) => {
+      const status = getButtonText(row.original.invitation.invitation_status);
+      return (
+        <>
+          {status.length > 0 && (
+            <Button
+              variant={status === "Invite" ? "add" : "default"}
+              icon={status !== "" ? <Send /> : ""}
+            >
+              {status}
+            </Button>
+          )}
+        </>
       );
     },
   },
