@@ -12,6 +12,7 @@ import { departmentService } from "@/services/department.service";
 import type { DepartmentOverview } from "@/types/department";
 import { useQuery } from "@tanstack/react-query";
 import ProfileCard from "./ProfileCard";
+import { employeeService } from "@/services/employee.service";
 
 type EmployeeProps = {
   employee: EmployeeDetail;
@@ -27,7 +28,7 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { dirtyFields, errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(employeeSchema),
     defaultValues: {
@@ -42,16 +43,51 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
       position: employee.position,
       phone: employee.phone,
       salary: employee.salary,
+      role: employee.role,
       start_date: employee.start_date.split("T")[0], // BE return ISO format
     },
   });
 
+  // Get only changed inputs
+  const getChangedFields = (data: AddEmployeePayload) => {
+    return Object.entries(data).reduce((acc, [key, value]) => {
+      const typedKey = key as keyof AddEmployeePayload;
+      if (dirtyFields[typedKey]) {
+        // Access department_id through employee.department.id
+        const currentValue =
+          typedKey === "department_id"
+            ? employee.department.id
+            : employee[typedKey];
+        if (value !== currentValue) {
+          return {
+            ...acc,
+            [typedKey]: value,
+          };
+        }
+      }
+      return acc;
+    }, {} as Partial<AddEmployeePayload>);
+  };
+
   const onSubmit: SubmitHandler<AddEmployeePayload> = async (data) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log(data);
+    const changedFields = getChangedFields(data);
+    // No modified data == do nothing
+    if (Object.keys(changedFields).length === 0) {
+      return;
+    }
+
+    try {
+      await employeeService.patchEmployee(employee.id, changedFields);
+      toggle(); // Go back to ReadOnly Component
+    } catch {
+      // stay in edit mode
+    }
   };
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 p-6">
+    <form
+      onSubmit={handleSubmit(onSubmit, (errors) => console.log(errors))}
+      className="space-y-6 p-6"
+    >
       {/* Header */}
       <div className="gap-3 flex items-center">
         <button onClick={() => navigate(-1)}>
@@ -98,7 +134,7 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
                     Employee ID
                   </label>
                   <p className="mt-1 text-gray-900">
-                    EMP-{employee.id.toString().padStart(4, "0")}
+                    {employee.id.toString().padStart(4, "0")}
                   </p>
                 </div>
                 <div>
@@ -114,20 +150,35 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
                   />
                 </div>
                 <div>
-                  <Label required>Department</Label>
+                  <Label required>Role</Label>
                   <Select
-                    required
-                    name="department_id"
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     register={register}
-                    error={errors.department_id?.message}
+                    id="role"
+                    name="role"
+                    required
+                    error={errors.role?.message}
                   >
-                    <option value="">Select a department</option>
-                    {departments?.map((dpt) => (
-                      <option key={dpt.id} value={dpt.id}>
-                        {dpt.name}
-                      </option>
-                    ))}
+                    <option value="EMPLOYEE">Employee</option>
+                    <option value="MANAGER">Manager</option>
                   </Select>
+                </div>
+                <div>
+                  <Label required>Department</Label>
+                  {departments && (
+                    <Select
+                      name="department_id"
+                      register={register}
+                      error={errors.department_id?.message}
+                    >
+                      <option value="">Select a department</option>
+                      {departments.map((dpt) => (
+                        <option key={dpt.id} value={dpt.id}>
+                          {dpt.name}
+                        </option>
+                      ))}
+                    </Select>
+                  )}
                 </div>
                 <div>
                   <Label required>Employment Type</Label>

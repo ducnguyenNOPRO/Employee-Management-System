@@ -55,11 +55,13 @@ export const employeeSchema = z.object({
   employment_type: z.enum(["FULL_TIME", "PART_TIME", "CONTRACT"]),
   role: z.enum(["EMPLOYEE", "MANAGER"]),
   salary: z.number().min(0),
-  start_date: z.iso.date(),
+  start_date: z.iso.date().transform((val) => new Date(val).toISOString()),
   department_id: z.cuid().nullable(),
   emergency_contact: z.string().trim().nullable(),
   emergency_phone: z.string().trim().nullable(),
 });
+
+export const editEmployeeSchema = employeeSchema.partial().strict();
 
 // DEPARTMENT SCHEMAS
 const departmentSchema = z.object({

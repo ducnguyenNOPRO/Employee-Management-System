@@ -13,7 +13,6 @@ type EmployeeProps = {
 
 export default function EmployeeReadOnly({ employee, toggle }: EmployeeProps) {
   const navigate = useNavigate();
-  console.log(employee);
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -58,7 +57,7 @@ export default function EmployeeReadOnly({ employee, toggle }: EmployeeProps) {
                     Employee ID
                   </label>
                   <p className="mt-1 text-gray-900">
-                    EMP-{employee.id.toString().padStart(4, "0")}
+                    {employee.id.toString().padStart(4, "0")}
                   </p>
                 </div>
                 <div>
@@ -66,6 +65,12 @@ export default function EmployeeReadOnly({ employee, toggle }: EmployeeProps) {
                     Position
                   </label>
                   <p className="mt-1 text-gray-900">{employee.position}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Role
+                  </label>
+                  <p className="mt-1 text-gray-900">{employee.role}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">
