@@ -55,4 +55,15 @@ export const employeeService = {
       throw error;
     }
   },
+  patchEmployee: async (id: string, payload: Partial<AddEmployeePayload>) => {
+    try {
+      const res = await api.patch(`/admin/employees/${id}`, payload, {
+        withCredentials: true,
+      });
+      toast.success(res.data.message);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message);
+      throw error;
+    }
+  },
 };

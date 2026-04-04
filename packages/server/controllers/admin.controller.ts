@@ -3,6 +3,7 @@ import { prisma } from "../lib/prisma";
 import {
   addDepartmentSchema,
   editDepartmentSchema,
+  editEmployeeSchema,
   editLeaveSchema,
   employeeSchema,
   idSchmena,
@@ -181,10 +182,7 @@ export async function addEmployee(req: Request, res: Response) {
   }
   try {
     await prisma.user.create({
-      data: {
-        ...result.data,
-        start_date: new Date(result.data.start_date),
-      },
+      data: result.data,
     });
     return res.status(201).json({ message: "User created successfully" });
   } catch (error: any) {
@@ -198,14 +196,29 @@ export async function addEmployee(req: Request, res: Response) {
   }
 }
 
-export function updateEmployee(req: Request, res: Response) {
+export async function partialUpdateEmployee(req: Request, res: Response) {
+  const idCheck = idSchmena.safeParse({ id: req.params.id });
+  if (!idCheck.success) {
+    return res.status(400).json({
+      message: `Missing or Invalid ID format`,
+    });
+  }
+  const result = editEmployeeSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({
+      message: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
+  }
   try {
-  } catch (error) {}
-}
+    await prisma.user.update({
+      where: { id: idCheck.data.id },
+      data: result.data,
+    });
 
-export function partialUpdateEmployee(req: Request, res: Response) {
-  try {
-  } catch (error) {}
+    return res.status(200).json({ message: "Employee updated successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
 }
 
 // Department Management
@@ -557,11 +570,7 @@ export async function createRequest(req: Request, res: Response) {
       }
 
       await tx.leave_request.create({
-        data: {
-          ...result.data,
-          start_date: new Date(result.data.start_date),
-          end_date: new Date(result.data.end_date),
-        },
+        data: result.data,
       });
 
       await tx.leave_balance.update({
