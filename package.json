@@ -1,7 +1,6 @@
 {
   "name": "employee-management-system",
   "module": "index.ts",
-  
   "devDependencies": {
     "@types/bun": "latest",
     "concurrently": "^9.2.1",

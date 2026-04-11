@@ -18,12 +18,107 @@ import {
   getInvitationStatus,
 } from "../lib/helper";
 import type { leave_balance } from "../generated/prisma/client";
+import crypto from "crypto";
+import { getFrontendBaseUrl } from "../lib/normalizeURL";
+import { sendInviteEmail } from "./email.controller";
 
 const STATUS_PRIORITY = {
   PENDING: 1,
   APPROVED: 2,
   REJECTED: 3,
 };
+
+export async function inviteEmployee(req: Request, res: Response) {
+  const result = idSchmena.safeParse({ id: req.params.id });
+  if (!result.success) {
+    console.log(z.treeifyError(result.error).properties);
+    return res.status(400).json({ message: "Missing or Invalid ID format" });
+  }
+
+  try {
+    const id = result.data.id;
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ messsage: `User with ID: ${id} not found` });
+    }
+
+    if (user.status !== "IN_ACTIVE") {
+      return res
+        .status(400)
+        .json({ message: "User is already active. Refresh page for update" });
+    }
+
+    const invitation = await prisma.$transaction(async (tx) => {
+      const THIRTY_SECONDS_AGO = new Date(Date.now() - 30 * 1000);
+      // Simple rate limit check at DB level
+      const recentInvite = await tx.invitation.findFirst({
+        where: {
+          user_id: id,
+          created_at: { gte: THIRTY_SECONDS_AGO },
+          revoked_at: null,
+        },
+      });
+
+      if (recentInvite) {
+        throw {
+          status: 429,
+          message:
+            "Invitation is already sent recently. Please wait and try again later",
+        };
+      }
+
+      // Revoke existing
+      await tx.invitation.updateMany({
+        where: {
+          user_id: id,
+          accepted_at: null,
+          revoked_at: null,
+          expires_at: { gt: new Date() },
+        },
+        data: { revoked_at: new Date() },
+      });
+
+      // Create new
+      const rawToken = crypto.randomBytes(32).toString("base64url");
+      const tokenHash = crypto
+        .createHash("sha256")
+        .update(rawToken)
+        .digest("hex");
+
+      await tx.invitation.create({
+        data: {
+          user_id: id,
+          token_hash: tokenHash,
+          expires_at: new Date(Date.now() + 1000 * 60 * 60),
+        },
+      });
+
+      return { rawToken };
+    });
+
+    const baseUrl = getFrontendBaseUrl();
+    const inviteLink = `${baseUrl}/create-password?token=${invitation.rawToken}`;
+
+    await sendInviteEmail({
+      to: user.email,
+      link: inviteLink,
+    });
+
+    return res.status(201).json({ message: "Invitations sent" });
+  } catch (error: any) {
+    console.log(error);
+    if (error.status) {
+      return res.status(error.status).json({ message: error.message });
+    }
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
 
 // With invitation status
 export async function getEmployees(req: Request, res: Response) {

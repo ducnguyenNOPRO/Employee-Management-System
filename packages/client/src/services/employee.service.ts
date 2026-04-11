@@ -66,4 +66,16 @@ export const employeeService = {
       throw error;
     }
   },
+  sendInvite: async (id: string) => {
+    try {
+      const res = await api.post(
+        `/admin/employees/${id}/invite`,
+        {},
+        { withCredentials: true }
+      );
+      toast.success(res.data.message);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message);
+    }
+  },
 };
