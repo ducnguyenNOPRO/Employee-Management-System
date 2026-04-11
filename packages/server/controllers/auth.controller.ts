@@ -1,10 +1,11 @@
 import bcrypt from "bcrypt";
-import { signUpSchema, signInSchema } from "../lib/zodSchema";
+import { signUpSchema, signInSchema, activateSchema } from "../lib/zodSchema";
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import z from "zod";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { consumeInvitation } from "../lib/helper";
 
 const ACCESS_TOKEN_TTL = "5s";
 const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000; // 14 days in ms
@@ -205,6 +206,83 @@ export async function refreshToken(req: Request, res: Response) {
   }
 }
 
-export async function inviteEmployee(req: Request, res: Response) {}
+export async function validateInvitaion(req: Request, res: Response) {
+  try {
+    const token = req.query.token as string;
+    if (!token) {
+      return res.status(400).json({ message: "Invalid invitation" });
+    }
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    const invitation = await prisma.invitation.findFirst({
+      where: {
+        token_hash: tokenHash,
+        accepted_at: null,
+        revoked_at: null,
+        expires_at: { gt: new Date() },
+      },
+    });
+    if (!invitation) {
+      return res
+        .status(200)
+        .json({
+          valid: false,
+          message:
+            "Invalid, expired, used or revoked invitation. Please contact your manager for a new invitation",
+        });
+    }
 
-export async function activateEmployee(req: Request, res: Response) {}
+    return res.status(200).json({ valid: true });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+export async function activateEmployee(req: Request, res: Response) {
+  const result = activateSchema.safeParse(req.body);
+  if (!result.success) {
+    console.log(z.treeifyError(result.error).properties);
+    return res
+      .status(400)
+      .json({ message: z.treeifyError(result.error).properties });
+  }
+  try {
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(result.data.token)
+      .digest("hex");
+    const passwordHash = await bcrypt.hash(result.data.password, 10);
+    await prisma.$transaction(async (tx) => {
+      // Atomic UPDATE...SET
+      const query = await consumeInvitation(tx, tokenHash);
+
+      if (query.length === 0) {
+        throw {
+          status: 400,
+          message: "Invalid, expired, revoked or used invitation",
+        };
+      }
+
+      await tx.user.update({
+        where: {
+          id: query[0]?.user_id,
+          status: "IN_ACTIVE",
+        },
+        data: {
+          password_hash: passwordHash,
+          status: "ACTIVE",
+        },
+      });
+    });
+
+    return res
+      .status(200)
+      .json({ message: "Password created successfully. Please log in" });
+  } catch (error: any) {
+    console.log(error);
+    if (error.status) {
+      return res.status(error.status).json({ message: error.message });
+    }
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}

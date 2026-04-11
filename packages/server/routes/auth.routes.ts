@@ -3,8 +3,9 @@ import {
   signUp,
   signOut,
   refreshToken,
-  inviteEmployee,
   signIn,
+  activateEmployee,
+  validateInvitaion,
 } from "../controllers/auth.controller";
 
 const authRouter = Router();
@@ -15,9 +16,9 @@ authRouter.post("/signin", signIn);
 authRouter.post("/signup", signUp);
 authRouter.post("/signout", signOut);
 authRouter.post("/refresh", refreshToken);
+authRouter.get("/invitation/validate", validateInvitaion);
 
-// Invite and activate after create a employee
-authRouter.post("/invite", inviteEmployee);
-authRouter.post("/activate", inviteEmployee);
+// Activate after create a employee
+authRouter.post("/activate", activateEmployee);
 
 export default authRouter;
