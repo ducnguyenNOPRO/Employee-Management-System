@@ -25,6 +25,17 @@ export const signInSchema = z.object({
   password: z.string().trim(),
 });
 
+export const activateSchema = z.object({
+  token: z.string().min(43).max(44),
+  password: z
+    .string()
+    .trim()
+    .min(10, "Password legnth must be at least 10 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
+});
+
 // Session
 export const sessionSchema = z.object({
   user_id: z.cuid("Invalid "),

@@ -31,6 +31,18 @@ export const signInSchema = z.object({
 });
 export type SignInPayload = z.infer<typeof signInSchema>;
 
+export const createPasswordSchema = z.object({
+  password: z
+    .string()
+    .trim()
+    .min(10, "Password legnth must be at least 10 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
+});
+export type CreatePassword = z.infer<typeof createPasswordSchema>;
+export type ActivatePayload = CreatePassword & { token: string };
+
 /*** Authentication Schemas  ***/
 
 /*** Employees Schemas  ***/

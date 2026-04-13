@@ -97,3 +97,19 @@ export function getInvitationStatus(
 
   return "PENDING";
 }
+
+export async function consumeInvitation(
+  tx: any,
+  tokenHash: string
+): Promise<{ user_id: string }[]> {
+  const date = new Date();
+  return await tx.$queryRaw<{ user_id: string }[]>`
+    UPDATE "invitation"
+    SET   "accepted_at" = ${date}
+    WHERE "token_hash"  = ${tokenHash}
+      AND "accepted_at" IS null
+      AND "revoked_at"  IS null
+      AND "expires_at"  > ${date}
+    RETURNING "user_id"
+  `;
+}

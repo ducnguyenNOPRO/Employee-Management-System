@@ -13,6 +13,7 @@ import DepartmentDetail from "./pages/departmentDetail";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import Forbidden from "./pages/404";
+import CreatePassword from "./pages/createPassword";
 
 const router = createBrowserRouter([
   // Public routes
@@ -23,6 +24,10 @@ const router = createBrowserRouter([
   {
     path: "/register",
     element: <Register />,
+  },
+  {
+    path: "/create-password",
+    element: <CreatePassword />,
   },
 
   { path: "/Forbidden", element: <Forbidden /> },

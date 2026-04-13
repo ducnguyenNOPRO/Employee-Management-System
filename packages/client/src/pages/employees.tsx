@@ -5,7 +5,7 @@ import {
   type ColumnDef,
 } from "@tanstack/react-table";
 import { mockEmployees } from "@/lib/mockData";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import UserCharacters from "@/components/ui/characters";
 import { Download, Plus, Search, Send } from "lucide-react";
 import {
@@ -19,117 +19,11 @@ import {
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import AddEmployeeModal from "@/components/modals/Employee/AddEmployeeModal";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { employeeService } from "@/services/employee.service";
 import type { EmployeeOverview } from "@/types/employee";
 import { formatString } from "@/utils/format";
 import { getButtonText } from "@/utils/helper";
-
-const columns: ColumnDef<EmployeeOverview>[] = [
-  {
-    accessorKey: "id",
-    header: "EMPLOYEE",
-    cell: ({ row }) => {
-      const employee = row.original;
-      return (
-        <div className="flex items-center gap-4">
-          <UserCharacters
-            firstName={employee.first_name}
-            lastName={employee.last_name}
-          />
-          <Link to={`/employees/${employee.id}`}>
-            <p className="text-sm font-medium text-gray-900 hover:text-blue-500">
-              {employee.first_name} {employee.last_name}
-            </p>
-            <p>ID: {employee.id}</p>
-          </Link>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "position",
-    header: "POSITION",
-    cell: ({ row }) => {
-      const employee = row.original;
-      const employmentType = formatString(employee.employment_type);
-      return (
-        <div className="flex flex-col">
-          <p>{employee.position}</p>
-          <p className="text-sm text-gray-500">{employmentType}</p>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "department",
-    header: "DEPARTMENT",
-    cell: ({ row }) => {
-      const department = row.original.department;
-      return (
-        <div className="flex flex-col">
-          <span className="font-semibold">
-            {department ? department.name : "Unassigned"}
-          </span>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "email",
-    header: "Email",
-  },
-  {
-    accessorKey: "status",
-    header: "STATUS",
-    cell: ({ row }) => {
-      const status = formatString(row.original.status);
-      return (
-        <span
-          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-            status === "ACTIVE"
-              ? "bg-green-100 text-green-800"
-              : status === "ON LEAVE"
-                ? "bg-yellow-100 text-yellow-800"
-                : "bg-gray-100 text-gray-800"
-          }`}
-        >
-          {status}
-        </span>
-      );
-    },
-  },
-  {
-    accessorKey: "invitation_status",
-    header: "Invite",
-    cell: ({ row }) => {
-      const buttonText = getButtonText(
-        row.original.invitation.invitation_status
-      );
-      return (
-        <>
-          {buttonText === "Invite" ? (
-            <button
-              onClick={() => {}}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
-            >
-              <Send className="h-4 w-4" />
-              {buttonText}
-            </button>
-          ) : buttonText === "Resend" ? (
-            <button
-              onClick={() => {}}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50"
-            >
-              <Send className="h-4 w-4" />
-              {buttonText}
-            </button>
-          ) : null}
-        </>
-      );
-    },
-  },
-];
 
 const departments = Array.from(new Set(mockEmployees.map((e) => e.department)));
 export default function Employees() {
@@ -137,10 +31,129 @@ export default function Employees() {
     queryKey: ["employees"],
     queryFn: employeeService.getEmployees,
   });
+  const queryClient = useQueryClient();
 
   const [openModal, setOpenModal] = useState(false);
   const [department, setDepartment] = useState("");
   const [status, setStatus] = useState("");
+
+  const { mutate: sendInvitation } = useMutation({
+    mutationFn: ({ id }: { id: string }) => employeeService.sendInvite(id),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries(["employees"]);
+      queryClient.invalidateQueries(["employee", variables.id]);
+    },
+  });
+
+  const columns = useMemo<ColumnDef<EmployeeOverview>[]>(
+    () => [
+      {
+        accessorKey: "id",
+        header: "EMPLOYEE",
+        cell: ({ row }) => {
+          const employee = row.original;
+          return (
+            <div className="flex items-center gap-4">
+              <UserCharacters
+                firstName={employee.first_name}
+                lastName={employee.last_name}
+              />
+              <Link to={`/employees/${employee.id}`}>
+                <p className="text-sm font-medium text-gray-900 hover:text-blue-500">
+                  {employee.first_name} {employee.last_name}
+                </p>
+                <p>ID: {employee.id}</p>
+              </Link>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "position",
+        header: "POSITION",
+        cell: ({ row }) => {
+          const employee = row.original;
+          const employmentType = formatString(employee.employment_type);
+          return (
+            <div className="flex flex-col">
+              <p>{employee.position}</p>
+              <p className="text-sm text-gray-500">{employmentType}</p>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "department",
+        header: "DEPARTMENT",
+        cell: ({ row }) => {
+          const department = row.original.department;
+          return (
+            <div className="flex flex-col">
+              <span className="font-semibold">
+                {department ? department.name : "Unassigned"}
+              </span>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "email",
+        header: "Email",
+      },
+      {
+        accessorKey: "status",
+        header: "STATUS",
+        cell: ({ row }) => {
+          const status = formatString(row.original.status);
+          return (
+            <span
+              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                status === "ACTIVE"
+                  ? "bg-green-100 text-green-800"
+                  : status === "ON LEAVE"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-gray-100 text-gray-800"
+              }`}
+            >
+              {status}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "invitation_status",
+        header: "Invite",
+        cell: ({ row }) => {
+          const buttonText = getButtonText(
+            row.original.invitation.invitation_status
+          );
+          return (
+            <>
+              {buttonText === "Invite" ? (
+                <button
+                  onClick={() => sendInvitation({ id: row.original.id })}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                >
+                  <Send className="h-4 w-4" />
+                  {buttonText}
+                </button>
+              ) : buttonText === "Resend" ? (
+                <button
+                  onClick={() => sendInvitation({ id: row.original.id })}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50"
+                >
+                  <Send className="h-4 w-4" />
+                  {buttonText}
+                </button>
+              ) : null}
+            </>
+          );
+        },
+      },
+    ],
+    [sendInvitation]
+  );
+
   const table = useReactTable({
     data: data ?? [],
     columns,

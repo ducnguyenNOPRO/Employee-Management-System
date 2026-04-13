@@ -11,6 +11,8 @@ export function prettyFormatISODate(d: string) {
     month: "short",
     day: "numeric",
     year: "numeric",
-    timeZone: "UTC",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short", // shows "UTC" — remove if you don't want it
   }).format(new Date(d));
 }

@@ -13,6 +13,7 @@ import {
   updateRequest,
   getRequestStats,
   getEmployeeBalance,
+  inviteEmployee,
 } from "../controllers/admin.controller";
 
 const adminRouter = Router();
@@ -24,6 +25,9 @@ adminRouter.get("/employees/:id/balances", getEmployeeBalance); // Get all leave
 adminRouter.post("/employee", addEmployee); // Create new employee
 adminRouter.patch("/employees/:id", partialUpdateEmployee); // Partially update employee mostly updating role
 // adminRouter.delete("/api/employees/:id", deleteEmployee)
+
+// invitation
+adminRouter.post("/employees/:id/invite", inviteEmployee); // Invite 1 employee
 
 // department
 adminRouter.get("/departments", getDepartments); // Get all departments paginated

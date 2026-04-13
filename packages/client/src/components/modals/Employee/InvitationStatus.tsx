@@ -1,16 +1,12 @@
 import type { Invitation } from "@/types/employee";
 import { prettyFormatISODate, formatString } from "@/utils/format";
-import { getButtonText } from "@/utils/helper";
-import { Send } from "lucide-react";
 
 type InvitationProps = {
   invitation: Invitation;
-  id: string;
 };
 
-export default function InvitationStatus({ invitation, id }: InvitationProps) {
+export default function InvitationStatus({ invitation }: InvitationProps) {
   const status = invitation.invitation_status;
-  const buttonText = getButtonText(status);
   return (
     <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
       <div className="flex items-center justify-between">
@@ -28,24 +24,6 @@ export default function InvitationStatus({ invitation, id }: InvitationProps) {
                 {prettyFormatISODate(invitation.expires_at)}
               </span>
             </span>
-          )}
-          {/* Only "invite" or "resend exist here" */}
-          {buttonText === "Invite" ? (
-            <button
-              onClick={() => {}}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
-            >
-              <Send className="h-4 w-4" />
-              Send Invite
-            </button>
-          ) : (
-            <button
-              onClick={() => {}}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50"
-            >
-              <Send className="h-4 w-4" />
-              Resend Invite
-            </button>
           )}
         </div>
       </div>

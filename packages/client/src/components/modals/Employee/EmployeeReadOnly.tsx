@@ -34,7 +34,7 @@ export default function EmployeeReadOnly({ employee, toggle }: EmployeeProps) {
       </div>
 
       {employee.invitation.invitation_status !== "ACCEPTED" && (
-        <InvitationStatus invitation={employee.invitation} id={employee.id} />
+        <InvitationStatus invitation={employee.invitation} />
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
