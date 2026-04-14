@@ -16,6 +16,8 @@ model admin {
   password_hash String    @db.VarChar(255) // need to activate
   role          user_role @default(ADMIN)
   session       session[] // admin 1 to many session
+
+  time_entry_edit  time_entry_edit[]
 }
 
 model user {
@@ -47,6 +49,9 @@ model user {
   invitation      invitation[]
 
   leave_balances leave_balance[]
+
+  time_entries   time_entry[]
+  shifts         shift[]
 
   @@index([start_date])
 }
@@ -136,6 +141,78 @@ model invitation {
 
   @@index([user_id])
   @@index([token_hash])
+}
+
+model location {
+  id          String      @id @default(dbgenerated("(floor(random() * 900000) + 100000)::text"))
+  street      String
+  street2     String?
+  city        String
+  state       String
+  zip_code    String
+  country     String      @default("US")
+}
+
+model shift {
+  id                String    @id @default(cuid())
+  user_id           String
+  
+  start_time        DateTime
+  end_time          DateTime
+
+  // optional
+  location          String?
+  
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  // relation
+  time_entries      time_entry[]
+  user              user      @relation(fields: [user_id], references: [id])
+
+  @@index([user_id, start_time])
+  @@index([location])
+}
+
+
+// Actual work
+model time_entry{
+  id               String     @id @default(cuid())
+  user_id          String
+
+  shift_id         String?    // could be unscheduled work
+
+  clock_in         DateTime
+  clock_out        DateTime?  // null = active session
+
+  // system flags
+  is_manual        Boolean    @default(false)
+
+  created_at       DateTime   @default(now())
+  updated_at       DateTime   @updatedAt
+
+  // relation
+  user             user       @relation(fields: [user_id], references: [id])
+  shift            shift?      @relation(fields: [shift_id], references: [id])
+
+  @@index([user_id, clock_in])
+}
+
+model time_entry_edit{
+  id              String     @id  @default(cuid())
+  time_entry_id   String
+  
+  old_clock_in    DateTime?
+  old_clock_out   DateTime?
+
+  new_clock_in    DateTime?
+  new_clock_out   DateTime?
+
+  reason          String     @db.VarChar(255)
+  edited_by_id    String
+  edited_by       admin      @relation(fields: [edited_by_id], references: [id])
+
+  created_at      DateTime  @default(now())
 }
 
 enum user_role {
