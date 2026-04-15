@@ -10,7 +10,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import { getLeaveRequestStatus, getTypeColor } from "@/lib/utils";
+import { getLeaveRequestStatus, getTypeColor } from "@/utils/utils";
 import { leaveService } from "@/services/leave.service";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { BaseRequest, UpdateRequestDecisionPayload } from "@/types/leave";

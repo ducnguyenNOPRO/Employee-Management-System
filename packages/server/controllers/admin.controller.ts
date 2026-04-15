@@ -854,7 +854,8 @@ export async function getAttendanceLive(req: Request, res: Response) {
       return {
         employee: {
           id: shift.user_id,
-          name: `${shift.user.first_name} ${shift.user.last_name}`,
+          first_name: shift.user.first_name,
+          last_name: shift.user.last_name,
         },
         shift: {
           start_time: shift.start_time,

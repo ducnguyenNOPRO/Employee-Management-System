@@ -139,16 +139,14 @@ export function getAttendanceStatus(
     return "LATE";
   }
 
-  // Has entry
-  if (entry.clock_in > shift.start_time) {
-    // Clocked in late
-    if (!entry.clock_out) return "ACTIVE";
-    return "COMPLETED";
-  }
-
   // On time entry
   if (!entry.clock_out) return "ACTIVE";
   if (!shiftEnded) return "ACTIVE";
+
+  // Completed shift
+  if (entry.clock_out) {
+    return "COMPLETED";
+  }
 
   // Shift ended but no proper clock-out
   return "INCOMPLETE";
