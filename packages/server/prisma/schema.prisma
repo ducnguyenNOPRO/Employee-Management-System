@@ -197,6 +197,7 @@ model time_entry{
 
   // system flags
   is_manual        Boolean    @default(false)
+  is_absent        Boolean    @default(false)
 
   created_at       DateTime   @default(now())
   updated_at       DateTime   @updatedAt
@@ -205,12 +206,14 @@ model time_entry{
   user             user       @relation(fields: [user_id], references: [id])
   shift            shift?      @relation(fields: [shift_id], references: [id])
 
+  time_entry_edit  time_entry_edit?
+
   @@index([user_id, clock_in])
 }
 
 model time_entry_edit{
   id              String     @id  @default(cuid())
-  time_entry_id   String
+  time_entry_id   String     @unique
   
   old_clock_in    DateTime?
   old_clock_out   DateTime?
@@ -221,6 +224,7 @@ model time_entry_edit{
   reason          String     @db.VarChar(255)
   edited_by_id    String
   edited_by       admin      @relation(fields: [edited_by_id], references: [id])
+  time_entry      time_entry @relation(fields: [time_entry_id], references: [id])
 
   created_at      DateTime  @default(now())
 }
