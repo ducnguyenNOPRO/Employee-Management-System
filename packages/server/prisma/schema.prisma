@@ -192,23 +192,23 @@ model time_entry{
 
   shift_id         String?    // could be unscheduled work
 
-  clock_in         DateTime
+  clock_in         DateTime?
   clock_out        DateTime?  // null = active session
 
-  // system flags
-  is_manual        Boolean    @default(false)
-  is_absent        Boolean    @default(false)
+  type             time_entry_type  // WORK | ABSENT
 
   created_at       DateTime   @default(now())
   updated_at       DateTime   @updatedAt
 
   // relation
-  user             user       @relation(fields: [user_id], references: [id])
-  shift            shift?      @relation(fields: [shift_id], references: [id])
+  user             user       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  shift            shift?      @relation(fields: [shift_id], references: [id], onDelete: Cascade)
 
   time_entry_edit  time_entry_edit?
 
-  @@index([user_id, clock_in])
+  @@unique([user_id, shift_id])
+  @@index([shift_id])     // dashboard per location/day
+  @@index([user_id])      // employee history
 }
 
 model time_entry_edit{
@@ -224,9 +224,10 @@ model time_entry_edit{
   reason          String     @db.VarChar(255)
   edited_by_id    String
   edited_by       admin      @relation(fields: [edited_by_id], references: [id])
-  time_entry      time_entry @relation(fields: [time_entry_id], references: [id])
+  time_entry      time_entry @relation(fields: [time_entry_id], references: [id], onDelete: Cascade)
 
   created_at      DateTime  @default(now())
+  @@index([time_entry_id])
 }
 
 enum user_role {
@@ -262,4 +263,9 @@ enum LeaveRequestStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum time_entry_type{
+  WORK
+  ABSENT
 }

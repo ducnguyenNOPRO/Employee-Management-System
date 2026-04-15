@@ -835,8 +835,6 @@ export async function getAttendanceLive(req: Request, res: Response) {
           },
         },
         time_entries: {
-          orderBy: { clock_in: "desc" },
-          take: 1, // only latest entry
           select: {
             clock_in: true,
             clock_out: true,

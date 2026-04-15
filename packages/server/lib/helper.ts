@@ -124,41 +124,49 @@ type Status =
 
 export function getAttendanceStatus(
   shift: { start_time: Date; end_time: Date },
-  entry: { clock_in: Date; clock_out: Date | null } | null,
+  entry: { clock_in: Date | null; clock_out: Date | null } | null,
   now: Date
 ): Status {
   const shiftStarted = shift.start_time <= now;
   const shiftEnded = shift.end_time <= now;
 
-  // Not started
+  // Shift not started
   if (!shiftStarted) return "UPCOMING";
 
   // No entry at all
   if (!entry) {
-    if (shiftEnded) return "ABSENT";
-    return "LATE";
+    if (shiftEnded) return "ABSENT"; // never showed up
+    return "INCOMPLETE"; // no clocked in yet
   }
 
-  // On time entry
-  if (!entry.clock_out) return "ACTIVE";
-  if (!shiftEnded) return "ACTIVE";
+  // Has entry but no clock_in (edge cases - absent/manager manual update / bad data)
+  if (!entry.clock_in) {
+    return shiftEnded ? "ABSENT" : "INCOMPLETE";
+  }
 
-  // Completed shift
-  if (entry.clock_out) {
+  const isLate = entry.clock_in > shift.start_time;
+
+  // Still working (no clock_out yet)
+  if (!entry.clock_out) {
+    return isLate ? "LATE" : "ACTIVE";
+  }
+
+  // Shift done
+  if (shiftEnded) {
     return "COMPLETED";
   }
 
-  // Shift ended but no proper clock-out
+  // Clocked out early (before shift end)
   return "INCOMPLETE";
 }
 
 export function getLateBy(
   shift: { start_time: Date },
-  entry: { clock_in: Date } | null,
+  entry: { clock_in: Date | null } | null,
   now: Date
 ): string | null {
   // Clocked in late
-  if (entry && entry.clock_in > shift.start_time) {
+  if (entry && entry.clock_in && entry.clock_in > shift.start_time) {
     const diff = entry.clock_in.getTime() - shift.start_time.getTime();
     return formatDuration(diff);
   }
