@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { startOfDay, endOfDay } from "date-fns";
 import { prisma } from "../lib/prisma";
 import {
   addDepartmentSchema,
@@ -16,6 +17,8 @@ import {
   transferManagerAndAssign,
   updateDepartment,
   getInvitationStatus,
+  getAttendanceStatus,
+  getLateBy,
 } from "../lib/helper";
 import type { leave_balance } from "../generated/prisma/client";
 import crypto from "crypto";
@@ -276,8 +279,12 @@ export async function addEmployee(req: Request, res: Response) {
     });
   }
   try {
+    const location_id = req.user?.location_id || "250387";
     await prisma.user.create({
-      data: result.data,
+      data: {
+        ...result.data,
+        location_id,
+      },
     });
     return res.status(201).json({ message: "User created successfully" });
   } catch (error: any) {
@@ -637,6 +644,7 @@ export async function createRequest(req: Request, res: Response) {
     });
   }
   try {
+    const location_id = req.user?.location_id || "250387";
     await prisma.$transaction(async (tx) => {
       // Lock the row
       const balances = await tx.$queryRaw<leave_balance[]>`
@@ -665,7 +673,10 @@ export async function createRequest(req: Request, res: Response) {
       }
 
       await tx.leave_request.create({
-        data: result.data,
+        data: {
+          ...result.data,
+          location_id,
+        },
       });
 
       await tx.leave_balance.update({
@@ -750,6 +761,113 @@ export async function updateRequest(req: Request, res: Response) {
     if (error?.status) {
       return res.status(error.status).json({ message: error.message });
     }
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+export async function getAttendanceStats(req: Request, res: Response) {
+  const location_id = req.user?.location_id || "250387";
+  try {
+    const now = new Date();
+    const [working, late, absent, onLeave] = await prisma.$transaction([
+      // Working - clock_in in the past and clock_out is null
+      prisma.time_entry.count({
+        where: {
+          clock_out: null,
+          clock_in: { lte: now },
+          shift: {
+            location_id,
+          },
+        },
+      }),
+
+      // Late - Shift started but no time_entry recorded for that shift
+      prisma.shift.count({
+        where: {
+          location_id,
+          start_time: { lte: now },
+          end_time: { gte: now },
+          time_entries: { none: {} },
+        },
+      }),
+
+      // Absent -  Shift ended but no clock_in (no time_entry recorded)
+      prisma.shift.count({
+        where: {
+          location_id,
+          end_time: { lte: now },
+          time_entries: { none: {} },
+        },
+      }),
+
+      // On leave
+      prisma.leave_request.count({
+        where: {
+          location_id,
+          status: "APPROVED",
+          start_date: { lte: now },
+          end_date: { gte: now },
+        },
+      }),
+    ]);
+    return res.status(200).json({ working, late, absent, onLeave });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+export async function getAttendanceLive(req: Request, res: Response) {
+  const location_id = req.user?.location_id || "250387";
+  const now = new Date();
+
+  try {
+    const shifts = await prisma.shift.findMany({
+      where: {
+        location_id,
+        start_time: { lte: endOfDay(now) }, // include shift winthin next 24 hours
+        end_time: { gte: startOfDay(now) }, // exlude too old shifts
+      },
+      include: {
+        user: {
+          select: {
+            first_name: true,
+            last_name: true,
+          },
+        },
+        time_entries: {
+          orderBy: { clock_in: "desc" },
+          take: 1, // only latest entry
+          select: {
+            clock_in: true,
+            clock_out: true,
+          },
+        },
+      },
+    });
+
+    const rows = shifts.map((shift) => {
+      const entry = shift.time_entries[0] ?? null;
+
+      const status = getAttendanceStatus(shift, entry, now);
+      const lateBy = getLateBy(shift, entry, now);
+
+      return {
+        employee: {
+          id: shift.user_id,
+          name: `${shift.user.first_name} ${shift.user.last_name}`,
+        },
+        shift: {
+          start_time: shift.start_time,
+          end_time: shift.end_time,
+        },
+        clock_in: entry?.clock_in ?? null,
+        clock_out: entry?.clock_out ?? null,
+        late_by: lateBy,
+        status,
+      };
+    });
+    return res.status(200).json({ rows });
+  } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
   }
 }

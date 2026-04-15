@@ -14,6 +14,8 @@ import {
   getRequestStats,
   getEmployeeBalance,
   inviteEmployee,
+  getAttendanceStats,
+  getAttendanceLive,
 } from "../controllers/admin.controller";
 
 const adminRouter = Router();
@@ -40,5 +42,9 @@ adminRouter.get("/leaves", getRequests); // Get all leave request paginated
 adminRouter.get("/leaves/stats", getRequestStats); // Get request count per status
 adminRouter.post("/leaves", createRequest); // Create a new request
 adminRouter.patch("/leaves/:id", updateRequest); // Update the status Approved or Rejected
+
+// attendance
+adminRouter.get("/attendance/stats", getAttendanceStats); // Get count of working, late, absent
+adminRouter.get("/attendance/live", getAttendanceLive); // Get data for live attendance table
 
 export default adminRouter;

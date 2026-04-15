@@ -22,6 +22,9 @@ model admin {
 
 model user {
   id                String           @id @default(cuid())
+  department_id     String?
+  location_id       String     // Store ID
+
   email             String           @unique @db.VarChar(255)
   password_hash     String?           @db.VarChar(255) // need to activate
   address           String           @db.VarChar(255)
@@ -39,9 +42,10 @@ model user {
   updated_at        DateTime?        @updatedAt
 
   session            session[] // A user may have multiple session
-  department_id      String?
+
   department         department? @relation("DepartmentEmployees", fields: [department_id], references: [id], onDelete: SetNull)  // department this user belong to
   managed_department department? @relation("DepartmentManager")    // The department this manager is managing
+  location           location    @relation(fields: [location_id], references: [id])
 
   leave_request   leave_request[] @relation("Requester")
   approve_request leave_request[] @relation("Approver")
@@ -103,6 +107,8 @@ model leave_request {
   id              String             @id @default(cuid())
   requester_id    String
   approver_id     String?
+  location_id     String
+
   type            LeaveType
   start_date      DateTime
   end_date        DateTime
@@ -119,11 +125,12 @@ model leave_request {
   // Relations
   requester user  @relation("Requester", fields: [requester_id], references: [id], onDelete: Cascade)
   approver  user? @relation("Approver", fields: [approver_id], references: [id], onDelete: SetNull)
+  location  location @relation(fields: [location_id], references: [id])
 
   @@index([requester_id])
-  @@index([approver_id])
   @@index([status])
   @@index([start_date])
+  @@index([location_id])
 }
 
 model invitation {
@@ -151,17 +158,19 @@ model location {
   state       String
   zip_code    String
   country     String      @default("US")
+
+  shifts      shift[]
+  users       user[]
+  leave_requests  leave_request[]
 }
 
 model shift {
   id                String    @id @default(cuid())
   user_id           String
+  location_id       String
   
   start_time        DateTime
   end_time          DateTime
-
-  // optional
-  location          String?
   
   created_at        DateTime  @default(now())
   updated_at        DateTime  @updatedAt
@@ -169,9 +178,10 @@ model shift {
   // relation
   time_entries      time_entry[]
   user              user      @relation(fields: [user_id], references: [id])
+  location          location  @relation(fields: [location_id], references: [id])
 
   @@index([user_id, start_time])
-  @@index([location])
+  @@index([location_id])
 }
 
 
