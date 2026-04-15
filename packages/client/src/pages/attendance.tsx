@@ -20,6 +20,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   flexRender,
   getCoreRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
@@ -29,7 +30,9 @@ import { ArrowUpDown } from "lucide-react";
 import { useMemo, useState } from "react";
 
 export default function AttendanceDashboard() {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "clock_in", desc: true },
+  ]);
   const { data } = useQuery<AttendanceStats>({
     queryKey: ["attendanceStats"],
     queryFn: attendanceService.getStats,
@@ -84,6 +87,7 @@ export default function AttendanceDashboard() {
           return (
             <div
               className="flex items-center cursor-pointer"
+              title={`Sort by ${column.getIsSorted()}`}
               onClick={() =>
                 column.toggleSorting(column.getIsSorted() === "asc")
               }
@@ -122,6 +126,7 @@ export default function AttendanceDashboard() {
           return (
             <div
               className="flex items-center cursor-pointer"
+              title={`Sort by ${column.getIsSorted()}`}
               onClick={() =>
                 column.toggleSorting(column.getIsSorted() === "asc")
               }
@@ -148,7 +153,21 @@ export default function AttendanceDashboard() {
       },
       {
         accessorKey: "shift",
-        header: "SHIFT",
+        accessorFn: (row) => row.shift.start_time,
+        header: ({ column }) => {
+          return (
+            <div
+              className="flex items-center cursor-pointer"
+              title={`Sort by start time ${column.getIsSorted()}`}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              SHIFT
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </div>
+          );
+        },
         cell: ({ row }) => {
           const shift = row.original.shift;
           return (
@@ -169,8 +188,15 @@ export default function AttendanceDashboard() {
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     state: {
       sorting,
+    },
+    initialState: {
+      pagination: {
+        pageIndex: 0,
+        pageSize: 5, // 👈 default page size
+      },
     },
   });
   console.log(rows);
@@ -230,6 +256,24 @@ export default function AttendanceDashboard() {
             )}
           </TableBody>
         </Table>
+      </div>
+      <div className="flex items-center justify-end gap-2">
+        <Button
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          Previous
+        </Button>
+        <span className="text-sm">
+          Page {table.getState().pagination.pageIndex + 1} of{" "}
+          {table.getPageCount()}
+        </span>
+        <Button
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          Next
+        </Button>
       </div>
     </div>
   );

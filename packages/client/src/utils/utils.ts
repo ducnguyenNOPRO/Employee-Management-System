@@ -51,13 +51,13 @@ export function getAttendanceStatusText(status: string) {
       return "Working";
     case "LATE":
       return "Late";
-    case "ABSENT":
-      return "Absent";
+    case "UPCOMING":
+      return "Upcoming";
     case "INCOMPLETE":
-      return "Not clock out";
+      return "Incomplete";
     case "COMPLETED":
       return "Completed";
     default:
-      return "bg-gray-500/10 text-gray-700 border-gray-200";
+      return "Incomplete";
   }
 }
