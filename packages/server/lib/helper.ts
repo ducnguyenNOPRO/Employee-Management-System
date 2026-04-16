@@ -113,3 +113,83 @@ export async function consumeInvitation(
     RETURNING "user_id"
   `;
 }
+
+type Status =
+  | "ACTIVE" // Working on time
+  | "LATE" // Either working late regardless of shift ended or not show up but shift no ended
+  | "ABSENT" // Not show up and shift ended
+  | "UPCOMING" // Shift not started
+  | "COMPLETED" // Shift completed
+  | "INCOMPLETE"; // Clock in but no clock out or clock out early
+
+export function getAttendanceStatus(
+  shift: { start_time: Date; end_time: Date },
+  entry: { clock_in: Date | null; clock_out: Date | null } | null,
+  now: Date
+): Status {
+  const shiftStarted = shift.start_time <= now;
+  const shiftEnded = shift.end_time <= now;
+
+  // Shift not started
+  if (!shiftStarted) return "UPCOMING";
+
+  // No entry at all
+  if (!entry) {
+    if (shiftEnded) return "ABSENT"; // never showed up
+    return "LATE"; // no clocked in yet
+  }
+
+  // Has entry but no clock_in (edge cases - absent/manager manual update / bad data)
+  if (!entry.clock_in) {
+    return shiftEnded ? "ABSENT" : "INCOMPLETE";
+  }
+
+  const isLate = entry.clock_in > shift.start_time;
+
+  // No Clock out
+  if (!entry.clock_out) {
+    if (shiftEnded) return "INCOMPLETE";
+    return isLate ? "LATE" : "ACTIVE"; // still working
+  }
+
+  // Clocked out early (before shift end)
+  if (entry.clock_out < shift.end_time) {
+    return "INCOMPLETE";
+  }
+
+  // Shift done
+  if (shiftEnded) {
+    return "COMPLETED";
+  }
+
+  return "INCOMPLETE";
+}
+
+export function getLateBy(
+  shift: { start_time: Date },
+  entry: { clock_in: Date | null } | null,
+  now: Date
+): string | null {
+  // Clocked in late
+  if (entry && entry.clock_in && entry.clock_in > shift.start_time) {
+    const diff = entry.clock_in.getTime() - shift.start_time.getTime();
+    return formatDuration(diff);
+  }
+
+  // Shift started but no clock in
+  if (!entry && shift.start_time <= now) {
+    const diff = now.getTime() - shift.start_time.getTime();
+    return formatDuration(diff);
+  }
+
+  return null;
+}
+
+function formatDuration(ms: number): string {
+  const totalMinutes = Math.floor(ms / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours > 0) return `Late by ${hours}h ${minutes}m`;
+  return `Late by ${minutes}m`;
+}

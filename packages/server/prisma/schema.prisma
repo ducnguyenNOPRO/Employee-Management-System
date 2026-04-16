@@ -16,10 +16,15 @@ model admin {
   password_hash String    @db.VarChar(255) // need to activate
   role          user_role @default(ADMIN)
   session       session[] // admin 1 to many session
+
+  time_entry_edit  time_entry_edit[]
 }
 
 model user {
   id                String           @id @default(cuid())
+  department_id     String?
+  location_id       String     // Store ID
+
   email             String           @unique @db.VarChar(255)
   password_hash     String?           @db.VarChar(255) // need to activate
   address           String           @db.VarChar(255)
@@ -37,9 +42,10 @@ model user {
   updated_at        DateTime?        @updatedAt
 
   session            session[] // A user may have multiple session
-  department_id      String?
+
   department         department? @relation("DepartmentEmployees", fields: [department_id], references: [id], onDelete: SetNull)  // department this user belong to
   managed_department department? @relation("DepartmentManager")    // The department this manager is managing
+  location           location    @relation(fields: [location_id], references: [id])
 
   leave_request   leave_request[] @relation("Requester")
   approve_request leave_request[] @relation("Approver")
@@ -47,6 +53,9 @@ model user {
   invitation      invitation[]
 
   leave_balances leave_balance[]
+
+  time_entries   time_entry[]
+  shifts         shift[]
 
   @@index([start_date])
 }
@@ -98,6 +107,8 @@ model leave_request {
   id              String             @id @default(cuid())
   requester_id    String
   approver_id     String?
+  location_id     String
+
   type            LeaveType
   start_date      DateTime
   end_date        DateTime
@@ -114,11 +125,12 @@ model leave_request {
   // Relations
   requester user  @relation("Requester", fields: [requester_id], references: [id], onDelete: Cascade)
   approver  user? @relation("Approver", fields: [approver_id], references: [id], onDelete: SetNull)
+  location  location @relation(fields: [location_id], references: [id])
 
   @@index([requester_id])
-  @@index([approver_id])
   @@index([status])
   @@index([start_date])
+  @@index([location_id])
 }
 
 model invitation {
@@ -136,6 +148,86 @@ model invitation {
 
   @@index([user_id])
   @@index([token_hash])
+}
+
+model location {
+  id          String      @id @default(dbgenerated("(floor(random() * 900000) + 100000)::text"))
+  street      String
+  street2     String?
+  city        String
+  state       String
+  zip_code    String
+  country     String      @default("US")
+
+  shifts      shift[]
+  users       user[]
+  leave_requests  leave_request[]
+}
+
+model shift {
+  id                String    @id @default(cuid())
+  user_id           String
+  location_id       String
+  
+  start_time        DateTime
+  end_time          DateTime
+  
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  // relation
+  time_entries      time_entry[]
+  user              user      @relation(fields: [user_id], references: [id])
+  location          location  @relation(fields: [location_id], references: [id])
+
+  @@index([user_id, start_time])
+  @@index([location_id])
+}
+
+
+// Actual work
+model time_entry{
+  id               String     @id @default(cuid())
+  user_id          String
+
+  shift_id         String?    // could be unscheduled work
+
+  clock_in         DateTime?
+  clock_out        DateTime?  // null = active session
+
+  type             time_entry_type  // WORK | ABSENT
+
+  created_at       DateTime   @default(now())
+  updated_at       DateTime   @updatedAt
+
+  // relation
+  user             user       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  shift            shift?      @relation(fields: [shift_id], references: [id], onDelete: Cascade)
+
+  time_entry_edit  time_entry_edit?
+
+  @@unique([user_id, shift_id])
+  @@index([shift_id])     // dashboard per location/day
+  @@index([user_id])      // employee history
+}
+
+model time_entry_edit{
+  id              String     @id  @default(cuid())
+  time_entry_id   String     @unique
+  
+  old_clock_in    DateTime?
+  old_clock_out   DateTime?
+
+  new_clock_in    DateTime?
+  new_clock_out   DateTime?
+
+  reason          String     @db.VarChar(255)
+  edited_by_id    String
+  edited_by       admin      @relation(fields: [edited_by_id], references: [id])
+  time_entry      time_entry @relation(fields: [time_entry_id], references: [id], onDelete: Cascade)
+
+  created_at      DateTime  @default(now())
+  @@index([time_entry_id])
 }
 
 enum user_role {
@@ -171,4 +263,9 @@ enum LeaveRequestStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum time_entry_type{
+  WORK
+  ABSENT
 }

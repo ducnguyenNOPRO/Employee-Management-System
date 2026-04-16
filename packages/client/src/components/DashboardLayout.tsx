@@ -5,6 +5,7 @@ import {
   Building2,
   Calendar,
   Menu,
+  ClipboardCheck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -14,6 +15,7 @@ const navigation = [
   { name: "Employees", path: "/employees", icon: Users },
   { name: "Departments", path: "/departments", icon: Building2 },
   { name: "Leave Requests", path: "/leaves", icon: Calendar },
+  { name: "Attendance", path: "/attendance", icon: ClipboardCheck },
 ];
 
 export default function DashboardLayout() {
