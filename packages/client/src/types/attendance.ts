@@ -3,6 +3,9 @@ export interface AttendanceStats {
   late: number;
   absent: number;
   onLeave: number;
+  scheduledHours: number;
+  attendancePercent: number;
+  workedHours: number;
 }
 
 export type AttendanceStatus =

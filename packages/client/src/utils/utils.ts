@@ -34,7 +34,7 @@ const STATUS_COLOR_MAP: Record<AttendanceStatus, string> = {
   ACTIVE: "bg-cyan-500/10 text-cyan-700 border-cyan-200",
   LATE: "bg-amber-500/10 text-amber-700 border-amber-200",
   ABSENT: "bg-rose-500/10 text-rose-700 border-rose-200",
-  INCOMPLETE: "bg-red-500/10 text-red-700 border-red-200",
+  INCOMPLETE: "bg-orange-500/10 text-orange-700 border-orange-200",
   COMPLETED: "bg-green-500/10 text-green-700 border-green-200",
   UPCOMING: "bg-gray-500/10 text-gray-700 border-gray-200",
 };
@@ -57,7 +57,7 @@ export function getAttendanceStatusText(status: string) {
       return "Incomplete";
     case "COMPLETED":
       return "Completed";
-    default:
-      return "Incomplete";
+    case "ABSENT":
+      return "Absent";
   }
 }

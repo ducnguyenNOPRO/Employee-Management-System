@@ -2,7 +2,10 @@ import type { AttendanceStats } from "@/types/attendance";
 import { Clock, UserCheck, UserMinus, UserX } from "lucide-react";
 
 interface StatCardProp {
-  stats: AttendanceStats;
+  stats: Omit<
+    AttendanceStats,
+    "scheduledHours" | "attendancePercent" | "workedHours"
+  >;
 }
 
 export default function StatCard({ stats }: StatCardProp) {

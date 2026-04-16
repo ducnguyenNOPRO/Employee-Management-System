@@ -115,12 +115,12 @@ export async function consumeInvitation(
 }
 
 type Status =
-  | "ACTIVE"
-  | "LATE"
-  | "ABSENT"
-  | "UPCOMING"
-  | "COMPLETED"
-  | "INCOMPLETE";
+  | "ACTIVE" // Working on time
+  | "LATE" // Either working late regardless of shift ended or not show up but shift no ended
+  | "ABSENT" // Not show up and shift ended
+  | "UPCOMING" // Shift not started
+  | "COMPLETED" // Shift completed
+  | "INCOMPLETE"; // Clock in but no clock out or clock out early
 
 export function getAttendanceStatus(
   shift: { start_time: Date; end_time: Date },
@@ -136,7 +136,7 @@ export function getAttendanceStatus(
   // No entry at all
   if (!entry) {
     if (shiftEnded) return "ABSENT"; // never showed up
-    return "INCOMPLETE"; // no clocked in yet
+    return "LATE"; // no clocked in yet
   }
 
   // Has entry but no clock_in (edge cases - absent/manager manual update / bad data)
@@ -146,9 +146,15 @@ export function getAttendanceStatus(
 
   const isLate = entry.clock_in > shift.start_time;
 
-  // Still working (no clock_out yet)
+  // No Clock out
   if (!entry.clock_out) {
-    return isLate ? "LATE" : "ACTIVE";
+    if (shiftEnded) return "INCOMPLETE";
+    return isLate ? "LATE" : "ACTIVE"; // still working
+  }
+
+  // Clocked out early (before shift end)
+  if (entry.clock_out < shift.end_time) {
+    return "INCOMPLETE";
   }
 
   // Shift done
@@ -156,7 +162,6 @@ export function getAttendanceStatus(
     return "COMPLETED";
   }
 
-  // Clocked out early (before shift end)
   return "INCOMPLETE";
 }
 

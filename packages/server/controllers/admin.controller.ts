@@ -769,48 +769,125 @@ export async function getAttendanceStats(req: Request, res: Response) {
   const location_id = req.user?.location_id || "250387";
   try {
     const now = new Date();
-    const [working, late, absent, onLeave] = await prisma.$transaction([
-      // Working - clock_in in the past and clock_out is null
-      prisma.time_entry.count({
-        where: {
-          clock_out: null,
-          clock_in: { lte: now },
-          shift: {
-            location_id,
+    const start = startOfDay(now);
+    const end = endOfDay(now);
+    const [
+      [working, lateNoEntry, absent, onLeave, totalShifts, attended],
+      scheduledResult,
+      hoursWorkedResult,
+      lateButPresent,
+    ] = await Promise.all([
+      prisma.$transaction([
+        // Working - count both on time and late
+        prisma.time_entry.count({
+          where: {
+            clock_out: null,
+            clock_in: { lte: now },
+            shift: {
+              location_id,
+              end_time: { gte: now },
+            },
           },
-        },
-      }),
+        }),
+        // Late - no show up/clock in yet, shift not ended
+        prisma.shift.count({
+          where: {
+            location_id,
+            start_time: { lte: now },
+            end_time: { gte: now },
+            time_entries: { none: {} },
+          },
+        }),
+        // Absent - shift ended, no show up at all
+        prisma.shift.count({
+          where: {
+            location_id,
+            end_time: { lte: now },
+            time_entries: { none: {} },
+          },
+        }),
+        // On leave
+        prisma.leave_request.count({
+          where: {
+            location_id,
+            status: "APPROVED",
+            start_date: { lte: now },
+            end_date: { gte: now },
+          },
+        }),
+        // Total shifts today
+        prisma.shift.count({
+          where: {
+            location_id,
+            start_time: { gte: start },
+            end_time: { lte: end },
+          },
+        }),
+        // Attended
+        prisma.shift.count({
+          where: {
+            location_id,
+            start_time: { gte: start },
+            end_time: { lte: end },
+            time_entries: { some: {} },
+          },
+        }),
+      ]),
 
-      // Late - Shift started but no time_entry recorded for that shift
-      prisma.shift.count({
-        where: {
-          location_id,
-          start_time: { lte: now },
-          end_time: { gte: now },
-          time_entries: { none: {} },
-        },
-      }),
+      // Scheduled hours (raw)
+      prisma.$queryRaw<[{ total_minutes: number }]>`
+          SELECT COALESCE(
+            SUM(EXTRACT(EPOCH FROM (end_time - start_time)) / 60), 0
+          )::int AS total_minutes
+          FROM shift
+          WHERE location_id = ${location_id}
+            AND start_time >= ${start}
+            AND end_time   <= ${end}
+        `,
+      // Hours worked so far
+      // Use clock_out if exist or use current time
+      prisma.$queryRaw<[{ total_minutes: number }]>`
+          SELECT COALESCE(
+            SUM(
+              EXTRACT(EPOCH FROM (
+                COALESCE(te.clock_out, ${now}) - te.clock_in
+              )) / 60
+            ), 0
+          )::int AS total_minutes
+          FROM time_entry te
+          JOIN shift s ON te.shift_id = s.id
+          WHERE s.location_id = ${location_id}
+            AND te.clock_in  >= ${start}
+            AND te.clock_in  <= ${end}
+        `,
 
-      // Absent -  Shift ended but no clock_in (no time_entry recorded)
-      prisma.shift.count({
-        where: {
-          location_id,
-          end_time: { lte: now },
-          time_entries: { none: {} },
-        },
-      }),
-
-      // On leave
-      prisma.leave_request.count({
-        where: {
-          location_id,
-          status: "APPROVED",
-          start_date: { lte: now },
-          end_date: { gte: now },
-        },
-      }),
+      // Late but show up, shift ongoin or ended
+      prisma.$queryRaw<[{ count: number }]>`
+          SELECT COUNT(*)::int AS count
+          FROM time_entry te
+          JOIN shift s ON te.shift_id = s.id
+          WHERE s.location_id = ${location_id}
+            AND s.start_time  <= ${now}
+            AND te.clock_in   >  s.start_time
+        `,
     ]);
-    return res.status(200).json({ working, late, absent, onLeave });
+
+    const late = lateButPresent[0].count + lateNoEntry;
+    const scheduledHours = +(scheduledResult[0].total_minutes / 60).toFixed(1);
+    const workedHours = +(hoursWorkedResult[0].total_minutes / 60).toFixed(1);
+    const attendancePercent =
+      totalShifts > 0 ? Math.round((attended / totalShifts) * 100) : 0;
+    return res
+      .status(200)
+      .json({
+        working,
+        late,
+        absent,
+        onLeave,
+        scheduledHours,
+        workedHours,
+        attendancePercent,
+      });
   } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
   }

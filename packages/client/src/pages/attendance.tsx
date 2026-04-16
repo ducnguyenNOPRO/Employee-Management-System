@@ -1,4 +1,6 @@
+import Exceptions from "@/components/Attendance/Exceptions";
 import StatCard from "@/components/Attendance/StatCard";
+import StatFooter from "@/components/Attendance/StatFooter";
 import { Button } from "@/components/ui/button";
 import UserCharacters from "@/components/ui/characters";
 import {
@@ -67,7 +69,20 @@ export default function AttendanceDashboard() {
       },
       {
         accessorKey: "status",
-        header: "STATUS",
+        header: ({ column }) => {
+          return (
+            <div
+              className="flex items-center cursor-pointer"
+              title={`Sort by ${column.getIsSorted()}`}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              STATUS
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </div>
+          );
+        },
         cell: ({ row }) => {
           const status = row.original.status;
           return (
@@ -199,8 +214,19 @@ export default function AttendanceDashboard() {
       },
     },
   });
-  console.log(rows);
-  const { working = 0, late = 0, absent = 0, onLeave = 0 } = data ?? {};
+  const {
+    working = 0,
+    late = 0,
+    absent = 0,
+    onLeave = 0,
+    scheduledHours = 0,
+    attendancePercent = 0,
+    workedHours = 0,
+  } = data ?? {};
+  const exceptionRows =
+    rows?.filter(
+      (row) => row.status === "ABSENT" || row.status === "INCOMPLETE"
+    ) ?? [];
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -212,6 +238,9 @@ export default function AttendanceDashboard() {
       </div>
       {/* Stats Overview */}
       <StatCard stats={{ working, late, absent, onLeave }} />
+
+      {/* Exceptions */}
+      {exceptionRows.length > 0 && <Exceptions data={exceptionRows} />}
       <div className="rounded-md border">
         <Table className="bg-white">
           <TableHeader>
@@ -275,6 +304,7 @@ export default function AttendanceDashboard() {
           Next
         </Button>
       </div>
+      <StatFooter stats={{ scheduledHours, attendancePercent, workedHours }} />
     </div>
   );
 }
