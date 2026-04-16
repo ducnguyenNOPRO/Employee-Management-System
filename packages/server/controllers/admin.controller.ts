@@ -786,6 +786,7 @@ export async function getAttendanceStats(req: Request, res: Response) {
             shift: {
               location_id,
               end_time: { gte: now },
+              start_time: { gte: start },
             },
           },
         }),
@@ -793,7 +794,7 @@ export async function getAttendanceStats(req: Request, res: Response) {
         prisma.shift.count({
           where: {
             location_id,
-            start_time: { lte: now },
+            start_time: { lte: now, gte: start },
             end_time: { gte: now },
             time_entries: { none: {} },
           },
@@ -802,6 +803,7 @@ export async function getAttendanceStats(req: Request, res: Response) {
         prisma.shift.count({
           where: {
             location_id,
+            start_time: { gte: start },
             end_time: { lte: now },
             time_entries: { none: {} },
           },
@@ -868,6 +870,7 @@ export async function getAttendanceStats(req: Request, res: Response) {
           JOIN shift s ON te.shift_id = s.id
           WHERE s.location_id = ${location_id}
             AND s.start_time  <= ${now}
+            AND s.start_time  >= ${start}
             AND te.clock_in   >  s.start_time
         `,
     ]);

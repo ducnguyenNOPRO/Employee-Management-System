@@ -14,9 +14,10 @@ import {
 import { clockSchema } from "@/lib/zodSchema";
 import { attendanceService } from "@/services/attendance.service";
 import { useQueryClient } from "@tanstack/react-query";
+import { prettyFormatISOTime } from "@/utils/format";
 interface ActionPopoverProps {
   row: AttendaceLive | null;
-  action: "clock-in" | "clock-out" | "edit" | null;
+  action: "clock-in" | "clock-out" | null;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onReset: () => void;
@@ -29,7 +30,9 @@ export default function ActionPopover({
   onOpenChange,
   onReset,
 }: ActionPopoverProps) {
-  const [time, setTime] = useState("");
+  const [time, setTime] = useState(
+    prettyFormatISOTime(new Date().toTimeString())
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -37,13 +40,11 @@ export default function ActionPopover({
   const titleMap = {
     "clock-in": "Clock In",
     "clock-out": "Clock Out",
-    edit: "Edit Time Entry",
   };
 
   const endpointMap = {
     "clock-in": "/attendance/clock-in",
     "clock-out": "/attendance/clock-out",
-    edit: `/attendance/time-entry/${row!.id}`,
   };
 
   const validate = () => {
@@ -53,7 +54,7 @@ export default function ActionPopover({
   const handleSubmit = async () => {
     const result = clockSchema.safeParse({
       id: row?.id,
-      clock_in: time, // your time input state
+      clock: time, // your time input state
     });
 
     if (!result.success) {
