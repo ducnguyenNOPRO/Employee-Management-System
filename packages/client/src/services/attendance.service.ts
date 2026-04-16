@@ -1,4 +1,6 @@
 import api from "@/lib/axios";
+import type { ClockPayload } from "@/lib/zodSchema";
+import { toast } from "sonner";
 
 export const attendanceService = {
   getStats: async () => {
@@ -18,6 +20,18 @@ export const attendanceService = {
       });
       return res.data.rows;
     } catch (error: any) {
+      throw error;
+    }
+  },
+
+  clock: async (payload: ClockPayload, endpoint: string) => {
+    try {
+      const res = await api.post("/admin" + endpoint, payload, {
+        withCredentials: true,
+      });
+      toast.success(res.data.message);
+    } catch (error: any) {
+      toast.error(error.respons?.data?.message);
       throw error;
     }
   },

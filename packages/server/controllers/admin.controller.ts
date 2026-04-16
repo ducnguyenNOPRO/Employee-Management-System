@@ -877,17 +877,15 @@ export async function getAttendanceStats(req: Request, res: Response) {
     const workedHours = +(hoursWorkedResult[0].total_minutes / 60).toFixed(1);
     const attendancePercent =
       totalShifts > 0 ? Math.round((attended / totalShifts) * 100) : 0;
-    return res
-      .status(200)
-      .json({
-        working,
-        late,
-        absent,
-        onLeave,
-        scheduledHours,
-        workedHours,
-        attendancePercent,
-      });
+    return res.status(200).json({
+      working,
+      late,
+      absent,
+      onLeave,
+      scheduledHours,
+      workedHours,
+      attendancePercent,
+    });
   } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
   }
@@ -927,6 +925,7 @@ export async function getAttendanceLive(req: Request, res: Response) {
       const lateBy = getLateBy(shift, entry, now);
 
       return {
+        id: shift.id,
         employee: {
           id: shift.user_id,
           first_name: shift.user.first_name,
