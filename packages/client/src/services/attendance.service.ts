@@ -31,7 +31,7 @@ export const attendanceService = {
       });
       toast.success(res.data.message);
     } catch (error: any) {
-      toast.error(error.respons?.data?.message);
+      toast.error(error.response?.data?.message);
       throw error;
     }
   },

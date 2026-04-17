@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma";
 import {
   addDepartmentSchema,
   clockSchema,
+  editAttendanceSchema,
   editDepartmentSchema,
   editEmployeeSchema,
   editLeaveSchema,
@@ -32,6 +33,9 @@ const STATUS_PRIORITY = {
   APPROVED: 2,
   REJECTED: 3,
 };
+
+const EARLY_CLOCK_IN_HOURS_ALLOWED = 2 * 60 * 60 * 1000;
+const LATE_CLOCK_OUT_HOURS_ALLOWED = 2 * 60 * 60 * 1000;
 
 export async function inviteEmployee(req: Request, res: Response) {
   const result = idSchmena.safeParse({ id: req.params.id });
@@ -952,6 +956,7 @@ export async function getAttendanceLive(req: Request, res: Response) {
   }
 }
 
+// Allowed clock in early for 2 hours
 export async function clockIn(req: Request, res: Response) {
   const location_id = req.user?.location_id || "250387";
   const result = clockSchema.safeParse(req.body);
@@ -979,6 +984,15 @@ export async function clockIn(req: Request, res: Response) {
         .json({ message: "User is not assigned to this shift" });
     }
 
+    const clockInTime = timeToDate(time, shift.start_time);
+    // Tolerance (2 hours)
+    const minAllowed = new Date(
+      shift.start_time.getTime() - EARLY_CLOCK_IN_HOURS_ALLOWED
+    );
+    if (clockInTime < minAllowed) {
+      return res.status(400).json({ message: "Too early to clock in" });
+    }
+
     const timeEntry = await prisma.time_entry.findUnique({
       where: {
         user_id_shift_id: {
@@ -991,7 +1005,7 @@ export async function clockIn(req: Request, res: Response) {
     if (timeEntry?.clock_in) {
       return res.status(400).json({ message: "Already clocked in" });
     }
-    const date = timeToDate(time, shift.start_time);
+
     // Update if absent
     if (timeEntry?.type === "ABSENT") {
       await prisma.time_entry.update({
@@ -1000,7 +1014,7 @@ export async function clockIn(req: Request, res: Response) {
         },
         data: {
           type: "WORK",
-          clock_in: date,
+          clock_in: clockInTime,
         },
       });
 
@@ -1013,7 +1027,7 @@ export async function clockIn(req: Request, res: Response) {
         user_id,
         shift_id,
         type: "WORK",
-        clock_in: date,
+        clock_in: clockInTime,
       },
     });
 
@@ -1033,9 +1047,196 @@ export async function clockOut(req: Request, res: Response) {
     });
   }
   try {
+    const { user_id, shift_id, time } = result.data;
+
+    // Shift validation
+    const shift = await prisma.shift.findUnique({
+      where: { id: shift_id, location_id },
+    });
+
+    if (!shift) {
+      return res.status(404).json({ message: "Shift not found" });
+    }
+
+    if (shift.user_id !== user_id) {
+      return res
+        .status(400)
+        .json({ message: "Employee is not assigned to this shift" });
+    }
+
+    const clockOutTime = timeToDate(time, shift.start_time);
+
+    // Tolerance (2 hours)
+    const maxAllowed = new Date(
+      shift.end_time.getTime() + LATE_CLOCK_OUT_HOURS_ALLOWED
+    );
+    if (clockOutTime > maxAllowed) {
+      return res.status(400).json({ message: "Too late to clock out" });
+    }
+
+    // Entry validation
+    const timeEntry = await prisma.time_entry.findUnique({
+      where: {
+        user_id_shift_id: {
+          shift_id: result.data.shift_id,
+          user_id: result.data.user_id,
+        },
+      },
+    });
+
+    // Must have a time entry record
+    if (!timeEntry) {
+      return res
+        .status(404)
+        .json({
+          message: "No time entry record found. Pleaase clock in first",
+        });
+    }
+
+    // Absent -- must clock in first
+    if (timeEntry.type === "ABSENT") {
+      return res
+        .status(400)
+        .json({
+          message: "Cannot clock out while absent. Please clock in first",
+        });
+    }
+
+    // must clock in first
+    if (!timeEntry.clock_in) {
+      return res
+        .status(400)
+        .json({
+          message: "Clock in time is required before setting a clock out.",
+        });
+    }
+
+    // already clocked out -- use edit instead
+    if (timeEntry.clock_out) {
+      return res.status(400).json({ message: "Already clocked out" });
+    }
+
+    if (clockOutTime <= timeEntry.clock_in) {
+      return res
+        .status(400)
+        .json({ message: "Clock out time must be greater then clock in time" });
+    }
+
+    await prisma.time_entry.update({
+      where: {
+        user_id_shift_id: { user_id, shift_id },
+      },
+      data: {
+        clock_out: clockOutTime,
+      },
+    });
+
+    return res.status(200).json({ message: "Clock out succesfully" });
   } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
   }
 }
 
+// Allow absent edit
+export async function editTimeEntry(req: Request, res: Response) {
+  const location_id = req.user?.location_id || "250387";
+  const result = editAttendanceSchema.safeParse({
+    ...req.body,
+    user_id: req.params.id,
+  });
+  if (!result.success) {
+    console.log(z.treeifyError(result.error).properties);
+    return res.status(400).json({
+      message: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
+  }
+  try {
+    const { user_id, shift_id, clock_in, clock_out, reason } = result.data;
+    // Shift validation
+    const shift = await prisma.shift.findUnique({
+      where: { id: shift_id, location_id },
+    });
+
+    if (!shift) {
+      return res.status(404).json({ message: "Shift not found" });
+    }
+
+    if (shift.user_id !== user_id) {
+      return res
+        .status(400)
+        .json({ message: "Employee is not assigned to this shift" });
+    }
+
+    // Entry Validation
+    const timeEntry = await prisma.time_entry.findUnique({
+      where: {
+        user_id_shift_id: { user_id, shift_id },
+      },
+    });
+
+    if (!timeEntry) {
+      return res.status(404).json({ message: "Time entry not found" });
+    }
+
+    // Convert input times
+    const newClockIn = timeToDate(clock_in, shift.start_time);
+    const newClockOut = timeToDate(clock_out, shift.start_time);
+
+    if (newClockIn > newClockOut) {
+      return res.status(400).json({ message: "Invalid time range" });
+    }
+
+    if (
+      timeEntry.clock_in?.getTime() === newClockIn.getTime() &&
+      timeEntry.clock_out?.getTime() === newClockOut.getTime()
+    ) {
+      return res.status(400).json({ message: "No changes detected" });
+    }
+
+    // Tolerance (+- 2 hours)
+    const minAllowed = new Date(
+      shift.start_time.getTime() - EARLY_CLOCK_IN_HOURS_ALLOWED
+    );
+    const maxAllowed = new Date(
+      shift.end_time.getTime() + LATE_CLOCK_OUT_HOURS_ALLOWED
+    );
+
+    if (newClockIn < minAllowed) {
+      return res.status(400).json({ message: "Clock-in too early" });
+    }
+
+    if (newClockOut > maxAllowed) {
+      return res.status(400).json({ message: "Clock-out too late" });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // Audit log (IMPORTANT)
+      await tx.time_entry_edit.create({
+        data: {
+          time_entry_id: timeEntry.id,
+          old_clock_in: timeEntry.clock_in,
+          old_clock_out: timeEntry.clock_out,
+          new_clock_in: newClockIn,
+          new_clock_out: newClockOut,
+          edited_by_id: req.user?.id || "cmnz7a87n000gr87k1w1apndx",
+          reason,
+        },
+      });
+
+      // Update main record
+      await tx.time_entry.update({
+        where: {
+          user_id_shift_id: { user_id, shift_id },
+        },
+        data: {
+          clock_in: newClockIn,
+          clock_out: newClockOut,
+          type: "WORK",
+        },
+      });
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
 // export function deleteEmployee(req: Request, res: Response) {};
