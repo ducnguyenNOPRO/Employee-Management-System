@@ -136,3 +136,9 @@ export const editLeaveSchema = z.object({
   approver_id: z.cuid("Invalid ID format"),
   status: z.enum(["APPROVED", "REJECTED"]),
 });
+
+export const clockSchema = z.object({
+  shift_id: z.cuid("Invalid ID format"),
+  user_id: z.cuid("Invalid ID format"),
+  time: z.string().trim(),
+});

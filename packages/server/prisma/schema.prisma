@@ -190,7 +190,7 @@ model time_entry{
   id               String     @id @default(cuid())
   user_id          String
 
-  shift_id         String?    // could be unscheduled work
+  shift_id         String   
 
   clock_in         DateTime?
   clock_out        DateTime?  // null = active session
@@ -202,7 +202,7 @@ model time_entry{
 
   // relation
   user             user       @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  shift            shift?      @relation(fields: [shift_id], references: [id], onDelete: Cascade)
+  shift            shift      @relation(fields: [shift_id], references: [id], onDelete: Cascade)
 
   time_entry_edit  time_entry_edit?
 

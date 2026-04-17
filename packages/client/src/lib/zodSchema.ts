@@ -166,7 +166,8 @@ export type AddLeaveRequestPayload = z.infer<typeof leaveRequestSchema>;
 
 // Attendance
 export const clockSchema = z.object({
-  id: z.cuid("Shift ID is required"),
+  shift_id: z.cuid("Shift ID is required"),
+  user_id: z.cuid("Employee ID is required"),
   time: z.string().trim(),
 });
 

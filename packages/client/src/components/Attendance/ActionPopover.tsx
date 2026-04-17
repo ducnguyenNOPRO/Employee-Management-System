@@ -14,7 +14,7 @@ import {
 import { clockSchema } from "@/lib/zodSchema";
 import { attendanceService } from "@/services/attendance.service";
 import { useQueryClient } from "@tanstack/react-query";
-import { prettyFormatISOTime } from "@/utils/format";
+import type z from "zod";
 interface ActionPopoverProps {
   row: AttendaceLive | null;
   action: "clock-in" | "clock-out" | null;
@@ -30,11 +30,11 @@ export default function ActionPopover({
   onOpenChange,
   onReset,
 }: ActionPopoverProps) {
-  const [time, setTime] = useState(
-    prettyFormatISOTime(new Date().toTimeString())
-  );
+  const [time, setTime] = useState(new Date().toTimeString().slice(0, 5));
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<
+    z.inferFlattenedErrors<typeof clockSchema>["fieldErrors"]
+  >({});
 
   const queryClient = useQueryClient();
   const titleMap = {
@@ -48,18 +48,21 @@ export default function ActionPopover({
   };
 
   const validate = () => {
-    queryClient.invalidateQueries(["attendanceStats", "attendanceLive"]);
+    queryClient.invalidateQueries(["attendanceStats"]);
+    queryClient.invalidateQueries(["attendanceLive"]);
   };
 
   const handleSubmit = async () => {
     const result = clockSchema.safeParse({
-      id: row?.id,
-      clock: time, // your time input state
+      shift_id: row?.id,
+      user_id: row?.employee.id,
+      time, // your time input state
     });
 
     if (!result.success) {
       const errors = result.error.flatten().fieldErrors;
       setErrors(errors); // e.g. { id: [...], clock_in: [...] }
+      console.log(errors);
       return;
     }
     try {
@@ -80,7 +83,12 @@ export default function ActionPopover({
         <DialogHeader>
           <DialogTitle>{titleMap[action]}</DialogTitle>
         </DialogHeader>
-        <Input type="time" onChange={(e) => setTime(e.target.value)} />
+        <Input
+          type="time"
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+        />
+        {errors.time && <span>{errors.time[0]}</span>}
         <DialogFooter>
           <DialogClose asChild>
             <Button>Cancel</Button>

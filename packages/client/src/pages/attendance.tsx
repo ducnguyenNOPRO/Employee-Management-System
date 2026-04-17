@@ -45,9 +45,7 @@ export default function AttendanceDashboard() {
     { id: "clock_in", desc: true },
   ]);
   const [selectedRow, setSelectedRow] = useState<AttendaceLive | null>(null);
-  const [action, setAction] = useState<
-    null | "clock-in" | "clock-out" | "edit"
-  >(null);
+  const [action, setAction] = useState<null | "clock-in" | "clock-out">(null);
   const [open, setOpen] = useState(false);
   const { data } = useQuery<AttendanceStats>({
     queryKey: ["attendanceStats"],
@@ -228,15 +226,11 @@ export default function AttendanceDashboard() {
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleStateChange("clock-out", shift)}
-                  disabled={!shift.clock_in}
+                  disabled={!shift.clock_in || !!shift.clock_out}
                 >
                   Clock Out
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleStateChange("edit", shift)}
-                >
-                  Edit
-                </DropdownMenuItem>
+                <DropdownMenuItem>Edit</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="font-semibold">
                   Mark Absent
@@ -282,7 +276,7 @@ export default function AttendanceDashboard() {
     ) ?? [];
 
   const handleStateChange = (
-    action: null | "clock-in" | "clock-out" | "edit",
+    action: null | "clock-in" | "clock-out",
     shift: AttendaceLive
   ) => {
     setSelectedRow(shift);
@@ -356,8 +350,11 @@ export default function AttendanceDashboard() {
           Previous
         </Button>
         <span className="text-sm">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {table.getPageCount()}
+          Page{" "}
+          {table.getPageCount() !== 0
+            ? table.getState().pagination.pageIndex + 1
+            : "0"}{" "}
+          of {table.getPageCount()}
         </span>
         <Button
           onClick={() => table.nextPage()}

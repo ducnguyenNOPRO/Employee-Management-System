@@ -3,6 +3,7 @@ import { startOfDay, endOfDay } from "date-fns";
 import { prisma } from "../lib/prisma";
 import {
   addDepartmentSchema,
+  clockSchema,
   editDepartmentSchema,
   editEmployeeSchema,
   editLeaveSchema,
@@ -19,6 +20,7 @@ import {
   getInvitationStatus,
   getAttendanceStatus,
   getLateBy,
+  timeToDate,
 } from "../lib/helper";
 import type { leave_balance } from "../generated/prisma/client";
 import crypto from "crypto";
@@ -945,6 +947,92 @@ export async function getAttendanceLive(req: Request, res: Response) {
       };
     });
     return res.status(200).json({ rows });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+export async function clockIn(req: Request, res: Response) {
+  const location_id = req.user?.location_id || "250387";
+  const result = clockSchema.safeParse(req.body);
+  if (!result.success) {
+    console.log(z.treeifyError(result.error).properties);
+    return res.status(400).json({
+      message: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
+  }
+  try {
+    const { user_id, shift_id, time } = result.data;
+
+    // Check if shift exist
+    const shift = await prisma.shift.findUnique({
+      where: { id: shift_id, location_id },
+    });
+
+    if (!shift) {
+      return res.status(404).json({ message: "Shift not found" });
+    }
+
+    if (shift.user_id !== user_id) {
+      return res
+        .status(400)
+        .json({ message: "User is not assigned to this shift" });
+    }
+
+    const timeEntry = await prisma.time_entry.findUnique({
+      where: {
+        user_id_shift_id: {
+          shift_id: result.data.shift_id,
+          user_id: result.data.user_id,
+        },
+      },
+    });
+
+    if (timeEntry?.clock_in) {
+      return res.status(400).json({ message: "Already clocked in" });
+    }
+    const date = timeToDate(time, shift.start_time);
+    // Update if absent
+    if (timeEntry?.type === "ABSENT") {
+      await prisma.time_entry.update({
+        where: {
+          user_id_shift_id: { user_id, shift_id },
+        },
+        data: {
+          type: "WORK",
+          clock_in: date,
+        },
+      });
+
+      return res.status(200).json({ message: "Clock in successfully" });
+    }
+
+    // create if no entry
+    await prisma.time_entry.create({
+      data: {
+        user_id,
+        shift_id,
+        type: "WORK",
+        clock_in: date,
+      },
+    });
+
+    return res.status(201).json({ message: "Clock in successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+export async function clockOut(req: Request, res: Response) {
+  const location_id = req.user?.location_id || "250387";
+  const result = clockSchema.safeParse(req.body);
+  if (!result.success) {
+    console.log(z.treeifyError(result.error).properties);
+    return res.status(400).json({
+      message: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
+  }
+  try {
   } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
   }
