@@ -16,8 +16,6 @@ model admin {
   password_hash String    @db.VarChar(255) // need to activate
   role          user_role @default(ADMIN)
   session       session[] // admin 1 to many session
-
-  time_entry_edit  time_entry_edit[]
 }
 
 model user {
@@ -55,6 +53,7 @@ model user {
   leave_balances leave_balance[]
 
   time_entries   time_entry[]
+  time_entry_edit  time_entry_edit[]
   shifts         shift[]
 
   @@index([start_date])
@@ -204,7 +203,7 @@ model time_entry{
   user             user       @relation(fields: [user_id], references: [id], onDelete: Cascade)
   shift            shift      @relation(fields: [shift_id], references: [id], onDelete: Cascade)
 
-  time_entry_edit  time_entry_edit?
+  time_entry_edit  time_entry_edit[]
 
   @@unique([user_id, shift_id])
   @@index([shift_id])     // dashboard per location/day
@@ -213,7 +212,7 @@ model time_entry{
 
 model time_entry_edit{
   id              String     @id  @default(cuid())
-  time_entry_id   String     @unique
+  time_entry_id   String     
   
   old_clock_in    DateTime?
   old_clock_out   DateTime?
@@ -223,7 +222,7 @@ model time_entry_edit{
 
   reason          String     @db.VarChar(255)
   edited_by_id    String
-  edited_by       admin      @relation(fields: [edited_by_id], references: [id])
+  edited_by       user      @relation(fields: [edited_by_id], references: [id])
   time_entry      time_entry @relation(fields: [time_entry_id], references: [id], onDelete: Cascade)
 
   created_at      DateTime  @default(now())

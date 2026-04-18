@@ -1,4 +1,5 @@
 import ActionPopover from "@/components/Attendance/ActionPopover";
+import EditDialog from "@/components/Attendance/EditDialog";
 import Exceptions from "@/components/Attendance/Exceptions";
 import StatCard from "@/components/Attendance/StatCard";
 import StatFooter from "@/components/Attendance/StatFooter";
@@ -47,6 +48,7 @@ export default function AttendanceDashboard() {
   const [selectedRow, setSelectedRow] = useState<AttendaceLive | null>(null);
   const [action, setAction] = useState<null | "clock-in" | "clock-out">(null);
   const [open, setOpen] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
   const { data } = useQuery<AttendanceStats>({
     queryKey: ["attendanceStats"],
     queryFn: attendanceService.getStats,
@@ -208,7 +210,7 @@ export default function AttendanceDashboard() {
       {
         id: "actions",
         cell: ({ row }) => {
-          const shift = row.original;
+          const entry = row.original;
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -219,18 +221,20 @@ export default function AttendanceDashboard() {
                   Actions
                 </DropdownMenuLabel>
                 <DropdownMenuItem
-                  onClick={() => handleStateChange("clock-in", shift)}
-                  disabled={!!shift.clock_in}
+                  onClick={() => handleStateChange("clock-in", entry)}
+                  disabled={!!entry.clock_in}
                 >
                   Clock In
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => handleStateChange("clock-out", shift)}
-                  disabled={!shift.clock_in || !!shift.clock_out}
+                  onClick={() => handleStateChange("clock-out", entry)}
+                  disabled={!entry.clock_in || !!entry.clock_out}
                 >
                   Clock Out
                 </DropdownMenuItem>
-                <DropdownMenuItem>Edit</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleEditStateChange(entry)}>
+                  Edit
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="font-semibold">
                   Mark Absent
@@ -282,6 +286,11 @@ export default function AttendanceDashboard() {
     setSelectedRow(shift);
     setAction(action);
     setOpen(true);
+  };
+
+  const handleEditStateChange = (shift: AttendaceLive) => {
+    setSelectedRow(shift);
+    setOpenEdit(true);
   };
   return (
     <div className="space-y-6 p-6">
@@ -373,6 +382,16 @@ export default function AttendanceDashboard() {
           onReset={() => {
             setSelectedRow(null);
             setAction(null);
+          }}
+        />
+      )}
+      {openEdit && selectedRow && (
+        <EditDialog
+          row={selectedRow}
+          open={openEdit}
+          onOpenChange={setOpenEdit}
+          onReset={() => {
+            setSelectedRow(null);
           }}
         />
       )}

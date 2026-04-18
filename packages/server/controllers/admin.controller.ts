@@ -865,8 +865,8 @@ export async function getAttendanceStats(req: Request, res: Response) {
           FROM time_entry te
           JOIN shift s ON te.shift_id = s.id
           WHERE s.location_id = ${location_id}
-            AND te.clock_in  >= ${start}
-            AND te.clock_in  <= ${end}
+            AND s.start_time  >= ${start}
+            AND s.end_time  <= ${end}
         `,
 
       // Late but show up, shift ongoin or ended
@@ -1086,29 +1086,23 @@ export async function clockOut(req: Request, res: Response) {
 
     // Must have a time entry record
     if (!timeEntry) {
-      return res
-        .status(404)
-        .json({
-          message: "No time entry record found. Pleaase clock in first",
-        });
+      return res.status(404).json({
+        message: "No time entry record found. Pleaase clock in first",
+      });
     }
 
     // Absent -- must clock in first
     if (timeEntry.type === "ABSENT") {
-      return res
-        .status(400)
-        .json({
-          message: "Cannot clock out while absent. Please clock in first",
-        });
+      return res.status(400).json({
+        message: "Cannot clock out while absent. Please clock in first",
+      });
     }
 
     // must clock in first
     if (!timeEntry.clock_in) {
-      return res
-        .status(400)
-        .json({
-          message: "Clock in time is required before setting a clock out.",
-        });
+      return res.status(400).json({
+        message: "Clock in time is required before setting a clock out.",
+      });
     }
 
     // already clocked out -- use edit instead
@@ -1174,10 +1168,6 @@ export async function editTimeEntry(req: Request, res: Response) {
       },
     });
 
-    if (!timeEntry) {
-      return res.status(404).json({ message: "Time entry not found" });
-    }
-
     // Convert input times
     const newClockIn = timeToDate(clock_in, shift.start_time);
     const newClockOut = timeToDate(clock_out, shift.start_time);
@@ -1186,12 +1176,12 @@ export async function editTimeEntry(req: Request, res: Response) {
       return res.status(400).json({ message: "Invalid time range" });
     }
 
-    if (
-      timeEntry.clock_in?.getTime() === newClockIn.getTime() &&
-      timeEntry.clock_out?.getTime() === newClockOut.getTime()
-    ) {
-      return res.status(400).json({ message: "No changes detected" });
-    }
+    // if (
+    //   timeEntry?.clock_in?.getTime() === newClockIn.getTime() &&
+    //   timeEntry?.clock_out?.getTime() === newClockOut.getTime()
+    // ) {
+    //   return res.status(400).json({ message: "No changes detected" });
+    // }
 
     // Tolerance (+- 2 hours)
     const minAllowed = new Date(
@@ -1207,6 +1197,21 @@ export async function editTimeEntry(req: Request, res: Response) {
 
     if (newClockOut > maxAllowed) {
       return res.status(400).json({ message: "Clock-out too late" });
+    }
+
+    if (!timeEntry) {
+      await prisma.time_entry.create({
+        data: {
+          user_id,
+          shift_id,
+          clock_in: newClockIn,
+          clock_out: newClockOut,
+          type: "WORK",
+        },
+      });
+      return res
+        .status(201)
+        .json({ message: "New time entry added successfully" });
     }
 
     await prisma.$transaction(async (tx) => {
@@ -1235,7 +1240,9 @@ export async function editTimeEntry(req: Request, res: Response) {
         },
       });
     });
+    return res.status(200).json({ message: "Update time entry successfully" });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({ message: "Internal server error" });
   }
 }

@@ -1,5 +1,5 @@
 import api from "@/lib/axios";
-import type { ClockPayload } from "@/lib/zodSchema";
+import type { ClockPayload, EditAttendancePayload } from "@/lib/zodSchema";
 import { toast } from "sonner";
 
 export const attendanceService = {
@@ -27,6 +27,18 @@ export const attendanceService = {
   clock: async (payload: ClockPayload, endpoint: string) => {
     try {
       const res = await api.post("/admin" + endpoint, payload, {
+        withCredentials: true,
+      });
+      toast.success(res.data.message);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message);
+      throw error;
+    }
+  },
+
+  editAttendance: async (userId: string, payload: EditAttendancePayload) => {
+    try {
+      const res = await api.patch(`/admin/attendance/${userId}`, payload, {
         withCredentials: true,
       });
       toast.success(res.data.message);

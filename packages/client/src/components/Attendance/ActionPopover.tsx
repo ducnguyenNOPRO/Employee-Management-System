@@ -88,7 +88,7 @@ export default function ActionPopover({
           value={time}
           onChange={(e) => setTime(e.target.value)}
         />
-        {errors.time && <span>{errors.time[0]}</span>}
+        {errors.time && <span className="text-red-500">{errors.time[0]}</span>}
         <DialogFooter>
           <DialogClose asChild>
             <Button>Cancel</Button>
