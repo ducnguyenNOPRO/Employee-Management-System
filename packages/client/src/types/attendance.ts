@@ -17,6 +17,7 @@ export type AttendanceStatus =
   | "INCOMPLETE";
 
 export interface AttendaceLive {
+  id: string;
   employee: {
     id: string;
     first_name: string;

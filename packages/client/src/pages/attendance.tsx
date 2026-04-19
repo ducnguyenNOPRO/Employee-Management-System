@@ -1,8 +1,18 @@
+import ActionPopover from "@/components/Attendance/ActionPopover";
+import EditDialog from "@/components/Attendance/EditDialog";
 import Exceptions from "@/components/Attendance/Exceptions";
 import StatCard from "@/components/Attendance/StatCard";
 import StatFooter from "@/components/Attendance/StatFooter";
 import { Button } from "@/components/ui/button";
 import UserCharacters from "@/components/ui/characters";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -28,13 +38,17 @@ import {
   type ColumnDef,
   type SortingState,
 } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, EllipsisVertical } from "lucide-react";
 import { useMemo, useState } from "react";
 
 export default function AttendanceDashboard() {
   const [sorting, setSorting] = useState<SortingState>([
     { id: "clock_in", desc: true },
   ]);
+  const [selectedRow, setSelectedRow] = useState<AttendaceLive | null>(null);
+  const [action, setAction] = useState<null | "clock-in" | "clock-out">(null);
+  const [open, setOpen] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
   const { data } = useQuery<AttendanceStats>({
     queryKey: ["attendanceStats"],
     queryFn: attendanceService.getStats,
@@ -193,6 +207,43 @@ export default function AttendanceDashboard() {
           );
         },
       },
+      {
+        id: "actions",
+        cell: ({ row }) => {
+          const entry = row.original;
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <EllipsisVertical className="rounded-lg hover:bg-gray-200 p-1 cursor-pointer" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center">
+                <DropdownMenuLabel className="text-gray-500 text-xs">
+                  Actions
+                </DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={() => handleStateChange("clock-in", entry)}
+                  disabled={!!entry.clock_in}
+                >
+                  Clock In
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleStateChange("clock-out", entry)}
+                  disabled={!entry.clock_in || !!entry.clock_out}
+                >
+                  Clock Out
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleEditStateChange(entry)}>
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="font-semibold">
+                  Mark Absent
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
+      },
     ],
     []
   );
@@ -227,6 +278,20 @@ export default function AttendanceDashboard() {
     rows?.filter(
       (row) => row.status === "ABSENT" || row.status === "INCOMPLETE"
     ) ?? [];
+
+  const handleStateChange = (
+    action: null | "clock-in" | "clock-out",
+    shift: AttendaceLive
+  ) => {
+    setSelectedRow(shift);
+    setAction(action);
+    setOpen(true);
+  };
+
+  const handleEditStateChange = (shift: AttendaceLive) => {
+    setSelectedRow(shift);
+    setOpenEdit(true);
+  };
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -294,8 +359,11 @@ export default function AttendanceDashboard() {
           Previous
         </Button>
         <span className="text-sm">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {table.getPageCount()}
+          Page{" "}
+          {table.getPageCount() !== 0
+            ? table.getState().pagination.pageIndex + 1
+            : "0"}{" "}
+          of {table.getPageCount()}
         </span>
         <Button
           onClick={() => table.nextPage()}
@@ -305,6 +373,28 @@ export default function AttendanceDashboard() {
         </Button>
       </div>
       <StatFooter stats={{ scheduledHours, attendancePercent, workedHours }} />
+      {open && (
+        <ActionPopover
+          row={selectedRow}
+          action={action}
+          open={open}
+          onOpenChange={setOpen}
+          onReset={() => {
+            setSelectedRow(null);
+            setAction(null);
+          }}
+        />
+      )}
+      {openEdit && selectedRow && (
+        <EditDialog
+          row={selectedRow}
+          open={openEdit}
+          onOpenChange={setOpenEdit}
+          onReset={() => {
+            setSelectedRow(null);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -163,3 +163,48 @@ export const leaveRequestSchema = z.object({
 });
 
 export type AddLeaveRequestPayload = z.infer<typeof leaveRequestSchema>;
+
+// Attendance
+export const clockSchema = z.object({
+  shift_id: z.cuid("Shift ID is required"),
+  user_id: z.cuid("Employee ID is required"),
+  time: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format (HH:MM)"),
+});
+
+export type ClockPayload = z.infer<typeof clockSchema>;
+
+export const editAttendanceSchema = z
+  .object({
+    shift_id: z.cuid("Invalid ID format"),
+    clock_in: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format (HH:MM)"),
+    clock_out: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format (HH:MM)"),
+    reason: z
+      .string()
+      .trim()
+      .min(1, "Reason is required")
+      .max(120, "Maximum 120 characters"),
+  })
+  .refine(
+    (data) => {
+      if (data.clock_in && data.clock_out) {
+        return data.clock_in < data.clock_out;
+      }
+      return true; // skip check if either is missing
+    },
+    {
+      message: "Clock out must be after clock in",
+      path: ["clock_out"], // error appears on clock_out field
+    }
+  )
+  .refine((data) => !(!data.clock_in && data.clock_out), {
+    message: "Clock in is required when clock out is set",
+    path: ["clock_in"],
+  });
+
+export type EditAttendancePayload = z.infer<typeof editAttendanceSchema>;

@@ -12,6 +12,7 @@ interface ExceptionsProps {
 export default function Exceptions({ data }: ExceptionsProps) {
   const absents = data.filter((d) => d.status === "ABSENT");
   const incomplete = data.filter((d) => d.status === "INCOMPLETE");
+  const now = new Date();
   const [open, setOpen] = useState(true);
   return (
     <div className="rounded-2xl border border-amber-200 bg-linear-to-r from-amber-50 to-orange-50 p-6">
@@ -65,10 +66,13 @@ export default function Exceptions({ data }: ExceptionsProps) {
                 </div>
               ))}
               {incomplete.map((d) => {
-                const issue =
-                  d.clock_out && d.clock_out < d.shift.end_time
-                    ? "Clock Out Early"
-                    : "No Clock Out";
+                const issue = !d.clock_out
+                  ? "No Clock Out"
+                  : new Date(d.clock_out) > now
+                    ? "Future Clock Out"
+                    : new Date(d.clock_out) > new Date(d.shift.end_time)
+                      ? "Overtime"
+                      : "Early Clock Out";
                 return (
                   <div
                     key={d.employee.id}

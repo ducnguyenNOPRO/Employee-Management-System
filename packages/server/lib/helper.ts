@@ -141,7 +141,7 @@ export function getAttendanceStatus(
 
   // Has entry but no clock_in (edge cases - absent/manager manual update / bad data)
   if (!entry.clock_in) {
-    return shiftEnded ? "ABSENT" : "INCOMPLETE";
+    return shiftEnded ? "ABSENT" : "LATE";
   }
 
   const isLate = entry.clock_in > shift.start_time;
@@ -192,4 +192,12 @@ function formatDuration(ms: number): string {
 
   if (hours > 0) return `Late by ${hours}h ${minutes}m`;
   return `Late by ${minutes}m`;
+}
+
+export function timeToDate(time: string, baseDate = new Date()) {
+  const [hours, minutes] = time.split(":").map(Number);
+  const d = new Date(baseDate);
+  d.setHours(hours!, minutes, 0, 0);
+
+  return d;
 }

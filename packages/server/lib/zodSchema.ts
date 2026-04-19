@@ -136,3 +136,23 @@ export const editLeaveSchema = z.object({
   approver_id: z.cuid("Invalid ID format"),
   status: z.enum(["APPROVED", "REJECTED"]),
 });
+
+export const clockSchema = z.object({
+  shift_id: z.cuid("Invalid ID format"),
+  user_id: z.cuid("Invalid ID format"),
+  time: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format (HH:MM)"),
+});
+
+export const editAttendanceSchema = z.object({
+  shift_id: z.cuid("Invalid ID format"),
+  user_id: z.cuid("Invalid ID format"),
+  clock_in: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format (HH:MM)"),
+  clock_out: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format (HH:MM)"),
+  reason: z.string().trim().max(120, "Maximum 120 characters"),
+});

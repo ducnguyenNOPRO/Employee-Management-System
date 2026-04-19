@@ -16,6 +16,9 @@ import {
   inviteEmployee,
   getAttendanceStats,
   getAttendanceLive,
+  clockIn,
+  clockOut,
+  editTimeEntry,
 } from "../controllers/admin.controller";
 
 const adminRouter = Router();
@@ -46,5 +49,8 @@ adminRouter.patch("/leaves/:id", updateRequest); // Update the status Approved o
 // attendance
 adminRouter.get("/attendance/stats", getAttendanceStats); // Get count of working, late, absent
 adminRouter.get("/attendance/live", getAttendanceLive); // Get data for live attendance table
+adminRouter.post("/attendance/clock-in", clockIn); // Create
+adminRouter.post("/attendance/clock-out", clockOut);
+adminRouter.patch("/attendance/:id", editTimeEntry); // id = user_id
 
 export default adminRouter;
