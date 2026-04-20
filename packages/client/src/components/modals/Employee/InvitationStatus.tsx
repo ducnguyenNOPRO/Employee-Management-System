@@ -1,5 +1,5 @@
 import type { Invitation } from "@/types/employee";
-import { prettyFormatISODate, formatString } from "@/utils/format";
+import { prettyFormatISODateTime, formatString } from "@/utils/format";
 
 type InvitationProps = {
   invitation: Invitation;
@@ -21,7 +21,7 @@ export default function InvitationStatus({ invitation }: InvitationProps) {
             <span className="text-sm font-medium text-gray-700">
               Invite expires:{" "}
               <span className="inline-flex items-center px-3 py-1 text-sm font-semibold rounded-full bg-amber-100 text-amber-800">
-                {prettyFormatISODate(invitation.expires_at)}
+                {prettyFormatISODateTime(invitation.expires_at)}
               </span>
             </span>
           )}

@@ -1,3 +1,5 @@
+import { addDays, differenceInDays, format, startOfDay } from "date-fns";
+
 export function getButtonText(status: string) {
   let text: string;
   switch (status) {
@@ -14,4 +16,51 @@ export function getButtonText(status: string) {
       text = "";
   }
   return text;
+}
+
+export function startOfWeekMonday(date: Date) {
+  const d = startOfDay(date);
+  const day = d.getDay();
+
+  // convert Sunday (0) → 6, Monday (1) → 0, etc.
+  const diff = (day + 6) % 7;
+
+  return addDays(d, -diff);
+}
+
+export function buildWeekDays(start: Date | string, end: Date | string) {
+  const length = differenceInDays(end, start) + 1; // +1 to include the end day
+  return Array.from({ length }).map((_, i) => {
+    const date = addDays(start, i);
+
+    return {
+      date,
+      label: format(date, "EEE dd"),
+      key: format(date, "yyyy-MM-dd"),
+    };
+  });
+}
+
+interface Shift {
+  id: string;
+  start_time: string;
+  end_time: string;
+}
+
+export function groupShiftsByLocalDate(shifts: Shift[]) {
+  const local: Record<string, Shift[]> = {};
+
+  for (const shift of shifts) {
+    // Convert server date  to local date
+    const localKey = format(new Date(shift.start_time), "yyyy-MM-dd");
+
+    if (!local[localKey]) local[localKey] = [];
+    local[localKey].push({
+      ...shift,
+      start_time: format(new Date(shift.start_time), "HH:mm"),
+      end_time: format(new Date(shift.end_time), "HH:mm"),
+    });
+  }
+
+  return local;
 }

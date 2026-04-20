@@ -6,17 +6,15 @@ export function simpleFormatISODate(d: string) {
   return d.split("T")[0];
 }
 
-export function prettyFormatISODate(d: string) {
+export function prettyFormatISODate(d: string | Date | null) {
+  if (!d) return;
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short", // shows "UTC" — remove if you don't want it
   }).format(new Date(d));
 }
-export function prettyFormatISOTime(d: string | null) {
+export function prettyFormatISOTime(d: string | Date) {
   if (!d) return;
   return new Intl.DateTimeFormat("en-US", {
     hour: "2-digit",
