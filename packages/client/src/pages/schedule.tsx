@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
-import { addDays } from "date-fns";
+import { addDays, differenceInDays } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import {
   buildWeekDays,
@@ -17,26 +17,21 @@ import {
 } from "@/utils/helper";
 import { Button } from "@/components/ui/button";
 import { prettyFormatISODate } from "@/utils/format";
-import {
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  CirclePlus,
-} from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   flexRender,
   getCoreRowModel,
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
-import type { EmployeeRaw, Employee } from "@/types/schedule";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import AddForm from "@/components/Schedule/AddForm";
+import type {
+  EmployeeRaw,
+  Employee,
+  AddShiftsPayload,
+  ShiftFormatted,
+} from "@/types/schedule";
 import AddShiftCell from "@/components/Schedule/AddPopover";
+import { useQueryClient } from "@tanstack/react-query";
 
 // --- Mock Data ---
 
@@ -107,13 +102,13 @@ const mockData: EmployeeRaw[] = [
 ];
 
 export default function Schedule() {
+  const queryClient = useQueryClient();
   const today = new Date();
 
   const weekStart = startOfWeekMonday(today);
   const weekEnd = addDays(weekStart, 6);
 
   const [openCalendar, setOpenCalendar] = useState(false);
-  const [openAddPopover, setOpenAddPopover] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: weekStart,
     to: weekEnd,
@@ -149,6 +144,7 @@ export default function Schedule() {
           header: () => <div className="text-center">{day.label}</div>,
           cell: ({ row }) => {
             const shifts = row.original.schedule[day.key] ?? [];
+            const userId = row.original.id;
 
             return (
               <div className="group">
@@ -157,9 +153,9 @@ export default function Schedule() {
                     <AddShiftCell
                       weekDays={weekDays}
                       day={day.key}
-                      onConfirm={(days, start, end) => {
-                        console.log(days, start, end);
-                      }}
+                      onConfirm={(payload) =>
+                        handleConfirm({ ...payload, user_id: userId })
+                      }
                     />
                   </div>
                 ) : (
@@ -186,25 +182,26 @@ export default function Schedule() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  // Move to next week -- add 7 days
   const handleNextWeek = () => {
     setDateRange((prev) => {
-      if (!prev?.from) return prev;
+      if (!prev?.from || !prev?.to) return prev;
+      const length = differenceInDays(prev.to, prev.from) + 1;
 
       return {
-        from: addDays(prev.from, 7),
-        to: addDays(prev.to!, 7),
+        from: addDays(prev.from, length),
+        to: addDays(prev.to, length),
       };
     });
   };
 
   const handlePreviousWeek = () => {
     setDateRange((prev) => {
-      if (!prev?.from) return prev;
+      if (!prev?.from || !prev?.to) return prev;
+      const length = differenceInDays(prev.to, prev.from) + 1;
 
       return {
-        from: addDays(prev.from, -7),
-        to: addDays(prev.to!, -7),
+        from: addDays(prev.from, -length),
+        to: addDays(prev.to, -length),
       };
     });
   };
@@ -217,6 +214,41 @@ export default function Schedule() {
   const handleCancelWeekChange = () => {
     setTempRange(dateRange); // reset
     setOpenCalendar(false);
+  };
+
+  const handleConfirm = (payload: AddShiftsPayload & { user_id: string }) => {
+    copyShifts(payload);
+    console.log(employees);
+  };
+
+  // Modify cache data
+  const copyShifts = (payload: AddShiftsPayload & { user_id: string }) => {
+    queryClient.setQueryData<Employee[]>(
+      ["schedule"],
+      (prev) =>
+        prev?.map((emp) => {
+          if (emp.id !== payload.user_id) return emp;
+          return {
+            ...emp,
+            schedule: {
+              ...emp.schedule,
+              ...Object.fromEntries(
+                payload.days.map((day) => [
+                  day,
+                  [
+                    ...(emp.schedule[day] ?? []),
+                    {
+                      id: crypto.randomUUID(),
+                      start_time: payload.start_time,
+                      end_time: payload.end_time,
+                    },
+                  ],
+                ])
+              ),
+            },
+          };
+        }) ?? []
+    );
   };
 
   return (

@@ -1,23 +1,53 @@
-import { useState } from "react";
-import { Input } from "../ui/input";
+import { useRef, useState } from "react";
 import { PopoverHeader, PopoverTitle } from "../ui/popover";
 import { Button } from "../ui/button";
 import { DaySelector } from "./DaySelector";
 import Label from "../ui/label";
+import ShiftPicker from "../TimePicker";
+import { shiftSchema } from "@/lib/zodSchema";
+import type { ConfirmHandler } from "@/types/schedule";
 
 interface AddFormProps {
   weekDays: { key: string; label: string }[];
-  onConfirm: (days: string[], start: string, end: string) => void;
+  onConfirm: ConfirmHandler;
 }
 
 export default function AddForm({ weekDays, onConfirm }: AddFormProps) {
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
+  const noteRef = useRef<HTMLTextAreaElement>(null);
+  const [inputTime, setInputTime] = useState({
+    startTime: "08:00",
+    endTime: "16:00",
+  });
+  const [errors, setErrors] = useState<{
+    notes?: string;
+    start_time?: string;
+    end_time?: string;
+  }>();
 
   const handleConfirm = () => {
-    if (!selectedDays.length || !startTime || !endTime) return;
-    onConfirm(selectedDays, startTime, endTime);
+    const notes = noteRef.current?.value.trim() || null;
+    const result = shiftSchema.safeParse({
+      start_time: inputTime.startTime,
+      end_time: inputTime.endTime,
+      notes,
+    });
+    if (!result.success) {
+      const flat = result.error.flatten().fieldErrors;
+      setErrors({
+        notes: flat.notes?.[0],
+        start_time: flat.start_time?.[0],
+        end_time: flat.end_time?.[0],
+      });
+      return;
+    }
+    if (!inputTime?.startTime || !inputTime.endTime) return;
+    onConfirm({
+      days: selectedDays,
+      start_time: inputTime.startTime,
+      end_time: inputTime.endTime,
+      notes,
+    });
   };
   return (
     <div className="space-y-4">
@@ -26,16 +56,11 @@ export default function AddForm({ weekDays, onConfirm }: AddFormProps) {
       </PopoverHeader>
       <div className="w-full h-px bg-gray-300"></div>
       <div className="flex justify-between">
-        <Input
-          type="time"
-          value={startTime}
-          onChange={(e) => setStartTime(e.target.value)}
-        />
-        <span>-</span>
-        <Input
-          type="time"
-          value={endTime}
-          onChange={(e) => setEndTime(e.target.value)}
+        <ShiftPicker
+          startTime={inputTime?.startTime}
+          endTime={inputTime?.endTime}
+          onChange={setInputTime}
+          errors={errors}
         />
       </div>
       <div className="space-y-2">
@@ -49,16 +74,18 @@ export default function AddForm({ weekDays, onConfirm }: AddFormProps) {
 
       <Label>Shift Notes:</Label>
       <textarea
-        name="reason"
+        ref={noteRef}
+        name="note"
         rows={3}
         maxLength={40}
         className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         placeholder="Leave a note to your employee..."
       />
+      <span className="test-red-500">{errors?.notes}</span>
       <Button
         variant="add"
         className="flex ml-auto"
-        disabled={!selectedDays.length || !startTime || !endTime}
+        disabled={!inputTime?.startTime || !inputTime.endTime}
         onClick={handleConfirm}
       >
         Confirm

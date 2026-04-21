@@ -21,3 +21,14 @@ export interface Employee {
   name: string;
   schedule: Record<string, ShiftFormatted[]>;
 }
+
+// type for adding a shift using popover
+// also use for copying shift
+export interface AddShiftsPayload {
+  days: string[];
+  start_time: string;
+  end_time: string;
+  notes: string | null;
+}
+
+export type ConfirmHandler = (payload: AddShiftsPayload) => void;

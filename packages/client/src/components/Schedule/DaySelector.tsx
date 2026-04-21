@@ -2,7 +2,7 @@ import { cn } from "@/utils/utils";
 
 // DaySelector.tsx
 interface DaySelectorProps {
-  weekDays: { key: string; label: string }[];
+  weekDays: { key: string; label: string }[]; // key = yyyy-mm-dd
   selected: string[];
   onChange: (selected: string[]) => void;
 }

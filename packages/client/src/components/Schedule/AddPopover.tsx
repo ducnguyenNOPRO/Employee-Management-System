@@ -2,6 +2,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { PopoverContent, PopoverTrigger, Popover } from "../ui/popover";
 import AddForm from "./AddForm";
+import type { ConfirmHandler } from "@/types/schedule";
 
 interface WeekDay {
   date: Date;
@@ -9,15 +10,17 @@ interface WeekDay {
   key: string;
 }
 
+interface AddShifeCellProps {
+  weekDays: WeekDay[];
+  day: string;
+  onConfirm: ConfirmHandler;
+}
+
 export default function AddShiftCell({
   weekDays,
   day,
   onConfirm,
-}: {
-  weekDays: WeekDay[];
-  day: string;
-  onConfirm: (days: string[], start: string, end: string) => void;
-}) {
+}: AddShifeCellProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -32,8 +35,8 @@ export default function AddShiftCell({
       <PopoverContent className="w-100" side="right">
         <AddForm
           weekDays={weekDays}
-          onConfirm={(days, start, end) => {
-            onConfirm(days, start, end);
+          onConfirm={(payload) => {
+            onConfirm(payload);
             setOpen(false);
           }}
         />

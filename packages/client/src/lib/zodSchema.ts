@@ -208,3 +208,13 @@ export const editAttendanceSchema = z
   });
 
 export type EditAttendancePayload = z.infer<typeof editAttendanceSchema>;
+
+export const shiftSchema = z.object({
+  start_time: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format (HH:MM)"),
+  end_time: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format (HH:MM)"),
+  notes: z.string().trim().nullable(),
+});
