@@ -12,7 +12,7 @@ interface WeekDay {
 
 interface AddShifeCellProps {
   weekDays: WeekDay[];
-  day: string;
+  day: string; // Current day: yyyy-mm-dd
   onConfirm: ConfirmHandler;
 }
 
@@ -34,6 +34,7 @@ export default function AddShiftCell({
       </PopoverTrigger>
       <PopoverContent className="w-100" side="right">
         <AddForm
+          day={day}
           weekDays={weekDays}
           onConfirm={(payload) => {
             onConfirm(payload);

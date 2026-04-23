@@ -1,33 +1,30 @@
-interface Shift {
+export interface Shift {
   id: string;
-  start_time: string;
-  end_time: string;
+  start_time: string; // ISO string
+  end_time: string; // ISO String
+  notes: string | null;
 }
 
-export interface EmployeeRaw {
+export interface SchedulesRaw {
   id: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   shifts: Shift[];
 }
 
-export interface ShiftFormatted {
+export interface Schedules {
   id: string;
-  start_time: string; // HH:mm
-  end_time: string; // HH:mm
-}
-
-export interface Employee {
-  id: string;
-  name: string;
-  schedule: Record<string, ShiftFormatted[]>;
+  first_name: string;
+  last_name: string;
+  schedule: Record<string, Shift[]>;
 }
 
 // type for adding a shift using popover
 // also use for copying shift
 export interface AddShiftsPayload {
   days: string[];
-  start_time: string;
-  end_time: string;
+  start_time: string; // HH:MM
+  end_time: string; // HH:MM
   notes: string | null;
 }
 

@@ -3,7 +3,7 @@ import { cn } from "@/utils/utils";
 // DaySelector.tsx
 interface DaySelectorProps {
   weekDays: { key: string; label: string }[]; // key = yyyy-mm-dd
-  selected: string[];
+  selected: string[]; // have current day
   onChange: (selected: string[]) => void;
 }
 
@@ -22,12 +22,12 @@ export function DaySelector({
 
   return (
     <div className="flex gap-3 w-fit">
-      {weekDays.map((day) => {
-        const isSelected = selected.includes(day.key);
+      {weekDays.map((d) => {
+        const isSelected = selected.includes(d.key);
         return (
           <button
-            key={day.key}
-            onClick={() => toggle(day.key)}
+            key={d.key}
+            onClick={() => toggle(d.key)}
             className={cn(
               "w-9 h-9 rounded-full text-xs font-medium transition-colors",
               isSelected
@@ -35,7 +35,7 @@ export function DaySelector({
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             )}
           >
-            {day.label.slice(0, 2)} {/* "M", "T" etc */}
+            {d.label.slice(0, 2)} {/* "M", "T" etc */}
           </button>
         );
       })}

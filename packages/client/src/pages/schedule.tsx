@@ -6,9 +6,9 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
-import { addDays, differenceInDays } from "date-fns";
+import { addDays, differenceInDays, format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import {
   buildWeekDays,
@@ -25,120 +25,119 @@ import {
   type ColumnDef,
 } from "@tanstack/react-table";
 import type {
-  EmployeeRaw,
-  Employee,
+  SchedulesRaw,
+  Schedules,
   AddShiftsPayload,
-  ShiftFormatted,
 } from "@/types/schedule";
 import AddShiftCell from "@/components/Schedule/AddPopover";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { scheduleService } from "@/services/schedule.service";
 
-// --- Mock Data ---
-
-const mockData: EmployeeRaw[] = [
-  {
-    id: "1",
-    name: "John Doe",
-    shifts: [
-      {
-        id: "s1",
-        start_time: "2026-04-14T09:00:00Z",
-        end_time: "2026-04-14T17:00:00Z",
-      },
-      {
-        id: "s2",
-        start_time: "2026-04-15T10:00:00Z",
-        end_time: "2026-04-15T18:00:00Z",
-      },
-      {
-        id: "s3",
-        start_time: "2026-04-17T08:00:00Z",
-        end_time: "2026-04-17T16:00:00Z",
-      },
-    ],
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    shifts: [
-      {
-        id: "s4",
-        start_time: "2026-04-14T12:00:00Z",
-        end_time: "2026-04-14T20:00:00Z",
-      },
-      {
-        id: "s5",
-        start_time: "2026-04-16T09:00:00Z",
-        end_time: "2026-04-16T17:00:00Z",
-      },
-      {
-        id: "s6",
-        start_time: "2026-04-18T07:00:00Z",
-        end_time: "2026-04-18T15:00:00Z",
-      },
-    ],
-  },
-  {
-    id: "3",
-    name: "Bob Johnson",
-    shifts: [
-      {
-        id: "s7",
-        start_time: "2026-04-14T06:00:00Z",
-        end_time: "2026-04-14T14:00:00Z",
-      },
-      {
-        id: "s8",
-        start_time: "2026-04-15T14:00:00Z",
-        end_time: "2026-04-15T22:00:00Z",
-      },
-      {
-        id: "s9",
-        start_time: "2026-04-19T09:00:00Z",
-        end_time: "2026-04-19T17:00:00Z",
-      },
-    ],
-  },
-];
+const DEFAULT_WEEK_START = startOfWeekMonday(new Date());
+const DEFAULT_WEEK_END = addDays(DEFAULT_WEEK_START, 6);
 
 export default function Schedule() {
   const queryClient = useQueryClient();
-  const today = new Date();
-
-  const weekStart = startOfWeekMonday(today);
-  const weekEnd = addDays(weekStart, 6);
 
   const [openCalendar, setOpenCalendar] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: weekStart,
-    to: weekEnd,
+    from: DEFAULT_WEEK_START,
+    to: DEFAULT_WEEK_END,
   });
+
   // Need click confirm to change date Range
   const [tempRange, setTempRange] = useState<DateRange | undefined>(dateRange);
-  const weekDays = useMemo(
-    () => buildWeekDays(dateRange?.from ?? weekStart, dateRange?.to ?? weekEnd),
-    [dateRange]
-  );
-  const employees: Employee[] = useMemo(
-    () =>
-      mockData.map((user) => ({
-        ...user,
-        schedule: groupShiftsByLocalDate(user.shifts),
-      })),
-    [mockData]
-  );
+  // key: yyyy-mm-dd, label: eee-dd
+  const weekDays = useMemo(() => {
+    const result = buildWeekDays(
+      dateRange?.from ?? DEFAULT_WEEK_START,
+      dateRange?.to ?? DEFAULT_WEEK_END
+    );
+
+    return result;
+  }, [dateRange]);
+
+  const fromISO = dateRange?.from?.toISOString();
+  const toISO = dateRange?.to?.toISOString();
+
+  // DO NOT USE SELECT FOR TRANSFORMING DATA
+  // Cause infintie re render when date range change
+  // Cost me 1 days to figure this out
+  const { data: rawData, isFetching } = useQuery<SchedulesRaw[]>({
+    queryKey: ["schedules", { fromISO, toISO }],
+    queryFn: () =>
+      scheduleService.getSchedules({
+        from: fromISO!,
+        to: toISO!,
+      }),
+    enabled: !!fromISO && !!toISO,
+  });
+
+  // If performance slow
+  // modify it to memoized per employee
+  // since this recompute everytime shifts added/edited --> modify rawData, or rawData is fetched
+  const schedules = useMemo(() => {
+    if (!rawData) return [];
+
+    const newD = rawData.map(({ shifts, ...employee }) => ({
+      ...employee,
+      schedule: groupShiftsByLocalDate(shifts ?? []),
+    }));
+    return newD;
+  }, [rawData]);
+
+  console.log(rawData);
+
+  // Modify cache data
+  const copyShifts = (payload: AddShiftsPayload & { user_id: string }) => {
+    queryClient.setQueryData<SchedulesRaw[]>(
+      ["schedules", { fromISO, toISO }],
+      (prev) => {
+        if (!prev) return prev;
+        return prev.map((emp) => {
+          // Only modified the selected employee shifts
+          if (emp.id !== payload.user_id) return emp;
+
+          const newShifts = payload.days.map((day) => {
+            // Conver HH:MM to ISO string
+            const start = new Date(
+              `${day}T${payload.start_time}`
+            ).toISOString();
+            const end = new Date(`${day}T${payload.end_time}`).toISOString();
+            return {
+              id: crypto.randomUUID(),
+              start_time: start,
+              end_time: end,
+              notes: payload.notes,
+            };
+          });
+          return {
+            ...emp,
+            shifts: [...(emp.shifts ?? []), ...newShifts],
+          };
+        });
+      }
+    );
+  };
+
+  const handleConfirm = (payload: AddShiftsPayload & { user_id: string }) => {
+    copyShifts(payload);
+  };
 
   const columns = useMemo(
-    (): ColumnDef<Employee>[] => [
+    (): ColumnDef<Schedules>[] => [
       {
-        accessorKey: "name",
+        accessorKey: "id",
         header: () => <span>Employee</span>,
+        size: 300,
         cell: ({ row }) => (
-          <div className="font-medium">{row.original.name}</div>
+          <div className="font-medium">
+            {row.original.first_name} {row.original.last_name}
+          </div>
         ),
       },
       ...weekDays.map(
-        (day): ColumnDef<Employee> => ({
+        (day): ColumnDef<Schedules> => ({
           id: day.key,
           size: 150,
           header: () => <div className="text-center">{day.label}</div>,
@@ -159,11 +158,14 @@ export default function Schedule() {
                     />
                   </div>
                 ) : (
-                  <div className="text-center">
+                  <div className="text-center flex flex-col gap-2">
                     {shifts.map((shift) => (
-                      <span key={shift.id} className="text-sm">
+                      <div
+                        key={shift.id}
+                        className="text-sm border-2 border-black border-dashed p-2"
+                      >
                         {shift.start_time} - {shift.end_time}
-                      </span>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -177,34 +179,37 @@ export default function Schedule() {
   );
 
   const table = useReactTable({
-    data: employees ?? [],
+    data: schedules,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const handleNextWeek = () => {
+  const handlePreviousWeek = useCallback(() => {
     setDateRange((prev) => {
       if (!prev?.from || !prev?.to) return prev;
       const length = differenceInDays(prev.to, prev.from) + 1;
-
-      return {
-        from: addDays(prev.from, length),
-        to: addDays(prev.to, length),
-      };
-    });
-  };
-
-  const handlePreviousWeek = () => {
-    setDateRange((prev) => {
-      if (!prev?.from || !prev?.to) return prev;
-      const length = differenceInDays(prev.to, prev.from) + 1;
-
-      return {
+      const next = {
         from: addDays(prev.from, -length),
         to: addDays(prev.to, -length),
       };
+      // Sync tempRange so the calendar doesn't "fight" the current view
+      setTempRange(next);
+      return next;
     });
-  };
+  }, []);
+
+  const handleNextWeek = useCallback(() => {
+    setDateRange((prev) => {
+      if (!prev?.from || !prev?.to) return prev;
+      const length = differenceInDays(prev.to, prev.from) + 1;
+      const next = {
+        from: addDays(prev.from, length),
+        to: addDays(prev.to, length),
+      };
+      setTempRange(next);
+      return next;
+    });
+  }, []);
 
   const handleWeekChange = () => {
     setDateRange(tempRange);
@@ -214,41 +219,6 @@ export default function Schedule() {
   const handleCancelWeekChange = () => {
     setTempRange(dateRange); // reset
     setOpenCalendar(false);
-  };
-
-  const handleConfirm = (payload: AddShiftsPayload & { user_id: string }) => {
-    copyShifts(payload);
-    console.log(employees);
-  };
-
-  // Modify cache data
-  const copyShifts = (payload: AddShiftsPayload & { user_id: string }) => {
-    queryClient.setQueryData<Employee[]>(
-      ["schedule"],
-      (prev) =>
-        prev?.map((emp) => {
-          if (emp.id !== payload.user_id) return emp;
-          return {
-            ...emp,
-            schedule: {
-              ...emp.schedule,
-              ...Object.fromEntries(
-                payload.days.map((day) => [
-                  day,
-                  [
-                    ...(emp.schedule[day] ?? []),
-                    {
-                      id: crypto.randomUUID(),
-                      start_time: payload.start_time,
-                      end_time: payload.end_time,
-                    },
-                  ],
-                ])
-              ),
-            },
-          };
-        }) ?? []
-    );
   };
 
   return (
@@ -341,6 +311,15 @@ export default function Schedule() {
                   ))}
                 </TableRow>
               ))
+            ) : isFetching ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  Fetching...
+                </TableCell>
+              </TableRow>
             ) : (
               <TableRow>
                 <TableCell

@@ -156,3 +156,13 @@ export const editAttendanceSchema = z.object({
     .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format (HH:MM)"),
   reason: z.string().trim().max(120, "Maximum 120 characters"),
 });
+
+// Schedule
+export const scheduleSchema = z
+  .object({
+    from: z.iso.datetime("Invalid date format"),
+    to: z.iso.datetime("Invalid date format"),
+  })
+  .refine((data) => new Date(data.from) < new Date(data.to), {
+    message: "from must be before to",
+  });

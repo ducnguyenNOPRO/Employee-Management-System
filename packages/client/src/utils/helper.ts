@@ -1,3 +1,4 @@
+import type { Shift } from "@/types/schedule";
 import { addDays, differenceInDays, format, startOfDay } from "date-fns";
 
 export function getButtonText(status: string) {
@@ -39,12 +40,6 @@ export function buildWeekDays(start: Date | string, end: Date | string) {
       key: format(date, "yyyy-MM-dd"),
     };
   });
-}
-
-interface Shift {
-  id: string;
-  start_time: string;
-  end_time: string;
 }
 
 export function groupShiftsByLocalDate(shifts: Shift[]) {

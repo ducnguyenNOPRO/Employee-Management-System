@@ -8,12 +8,13 @@ import { shiftSchema } from "@/lib/zodSchema";
 import type { ConfirmHandler } from "@/types/schedule";
 
 interface AddFormProps {
+  day: string; // yyyy-mm-dd
   weekDays: { key: string; label: string }[];
   onConfirm: ConfirmHandler;
 }
 
-export default function AddForm({ weekDays, onConfirm }: AddFormProps) {
-  const [selectedDays, setSelectedDays] = useState<string[]>([]);
+export default function AddForm({ day, weekDays, onConfirm }: AddFormProps) {
+  const [selectedDays, setSelectedDays] = useState<string[]>([day]);
   const noteRef = useRef<HTMLTextAreaElement>(null);
   const [inputTime, setInputTime] = useState({
     startTime: "08:00",

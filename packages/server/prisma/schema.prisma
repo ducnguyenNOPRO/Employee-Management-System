@@ -167,6 +167,8 @@ model shift {
   id                String    @id @default(cuid())
   user_id           String
   location_id       String
+
+  notes             String?   @db.VarChar(255)
   
   start_time        DateTime
   end_time          DateTime

@@ -11,6 +11,7 @@ import {
   employeeSchema,
   idSchmena,
   leaveSchema,
+  scheduleSchema,
 } from "../lib/zodSchema";
 import z from "zod";
 import {
@@ -1243,6 +1244,57 @@ export async function editTimeEntry(req: Request, res: Response) {
     return res.status(200).json({ message: "Update time entry successfully" });
   } catch (error) {
     console.log(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+/** Schedules */
+export async function getSchedules(req: Request, res: Response) {
+  const location_id = req.user?.location_id || "250387";
+  const result = scheduleSchema.safeParse({
+    from: req.query.from,
+    to: req.query.to,
+  });
+  console.log(req.query.from, req.query.to);
+
+  if (!result.success) {
+    console.log(z.treeifyError(result.error).properties);
+    return res.status(400).json({
+      message: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
+  }
+
+  const { from, to } = result.data;
+
+  try {
+    const schedules = await prisma.user.findMany({
+      where: {
+        location_id,
+      },
+      orderBy: { first_name: "asc" },
+      select: {
+        id: true,
+        first_name: true,
+        last_name: true,
+        shifts: {
+          select: {
+            start_time: true,
+            end_time: true,
+            id: true,
+            notes: true,
+          },
+          where: {
+            location_id,
+            start_time: { gte: new Date(from) },
+            end_time: { lte: new Date(to) },
+          },
+          orderBy: { start_time: "asc" },
+        },
+      },
+    });
+
+    return res.status(200).json({ schedules });
+  } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
   }
 }
