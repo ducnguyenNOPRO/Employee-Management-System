@@ -21,11 +21,11 @@ export interface Schedules {
 
 // type for adding a shift using popover
 // also use for copying shift
-export interface AddShiftsPayload {
+export interface ShiftsPayload {
   days: string[];
   start_time: string; // HH:MM
   end_time: string; // HH:MM
   notes: string | null;
 }
 
-export type ConfirmHandler = (payload: AddShiftsPayload) => void;
+export type ConfirmHandler = (payload: ShiftsPayload) => void;

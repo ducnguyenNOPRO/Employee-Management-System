@@ -2,17 +2,20 @@ import { cn } from "@/utils/utils";
 
 // DaySelector.tsx
 interface DaySelectorProps {
+  day: string;
   weekDays: { key: string; label: string }[]; // key = yyyy-mm-dd
   selected: string[]; // have current day
   onChange: (selected: string[]) => void;
 }
 
 export function DaySelector({
+  day,
   weekDays,
   selected,
   onChange,
 }: DaySelectorProps) {
   const toggle = (key: string) => {
+    if (key === day) return; // Can't deselec the original day
     if (selected.includes(key)) {
       onChange(selected.filter((d) => d !== key));
     } else {
@@ -27,6 +30,7 @@ export function DaySelector({
         return (
           <button
             key={d.key}
+            disabled={d.key === day}
             onClick={() => toggle(d.key)}
             className={cn(
               "w-9 h-9 rounded-full text-xs font-medium transition-colors",

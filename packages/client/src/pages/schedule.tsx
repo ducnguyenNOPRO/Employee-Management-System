@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { useCallback, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
-import { addDays, differenceInDays, format } from "date-fns";
+import { addDays, differenceInDays } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import {
   buildWeekDays,
@@ -27,18 +27,31 @@ import {
 import type {
   SchedulesRaw,
   Schedules,
-  AddShiftsPayload,
+  ShiftsPayload,
+  Shift,
 } from "@/types/schedule";
-import AddShiftCell from "@/components/Schedule/AddPopover";
+import ShiftCell from "@/components/Schedule/AddPopover";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { scheduleService } from "@/services/schedule.service";
 
 const DEFAULT_WEEK_START = startOfWeekMonday(new Date());
 const DEFAULT_WEEK_END = addDays(DEFAULT_WEEK_START, 6);
 
+// Changes for publish the schedule
+interface PendingChanges {
+  add: Record<string, Shift>; // shiftId -> shift (all new shifts, including extra_shifts from edit)
+  edit: Record<string, Shift>; // shiftId -> latest edited shift
+  delete: Set<string>; // shiftIds to delete
+}
+
 export default function Schedule() {
   const queryClient = useQueryClient();
 
+  const [pendingChanges, setPendingChanges] = useState<PendingChanges>({
+    add: {},
+    edit: {},
+    delete: new Set(),
+  });
   const [openCalendar, setOpenCalendar] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: DEFAULT_WEEK_START,
@@ -86,42 +99,109 @@ export default function Schedule() {
     return newD;
   }, [rawData]);
 
-  console.log(rawData);
+  const createShifts = (
+    payload: ShiftsPayload,
+    originalShiftId?: string
+  ): Shift[] => {
+    return payload.days.map((day, index) => ({
+      id:
+        index === 0 && originalShiftId ? originalShiftId : crypto.randomUUID(),
+      start_time: new Date(`${day}T${payload.start_time}`).toISOString(),
+      end_time: new Date(`${day}T${payload.end_time}`).toISOString(),
+      notes: payload.notes,
+    }));
+  };
 
-  // Modify cache data
-  const copyShifts = (payload: AddShiftsPayload & { user_id: string }) => {
+  const copyShifts = (
+    shifts: Shift[],
+    userId: string,
+    originalShiftId?: string
+  ) => {
     queryClient.setQueryData<SchedulesRaw[]>(
       ["schedules", { fromISO, toISO }],
       (prev) => {
         if (!prev) return prev;
         return prev.map((emp) => {
-          // Only modified the selected employee shifts
-          if (emp.id !== payload.user_id) return emp;
-
-          const newShifts = payload.days.map((day) => {
-            // Conver HH:MM to ISO string
-            const start = new Date(
-              `${day}T${payload.start_time}`
-            ).toISOString();
-            const end = new Date(`${day}T${payload.end_time}`).toISOString();
-            return {
-              id: crypto.randomUUID(),
-              start_time: start,
-              end_time: end,
-              notes: payload.notes,
-            };
-          });
+          if (emp.id !== userId) return emp;
           return {
             ...emp,
-            shifts: [...(emp.shifts ?? []), ...newShifts],
+            shifts: originalShiftId
+              ? [
+                  ...(emp.shifts?.filter((s) => s.id !== originalShiftId) ??
+                    []),
+                  ...shifts,
+                ]
+              : [...(emp.shifts ?? []), ...shifts],
           };
         });
       }
     );
   };
 
-  const handleConfirm = (payload: AddShiftsPayload & { user_id: string }) => {
-    copyShifts(payload);
+  const deleteShift = (shiftId: string, userId: string) => {
+    queryClient.setQueryData<SchedulesRaw[]>(
+      ["schedules", { fromISO, toISO }],
+      (prev) => {
+        if (!prev) return prev;
+        return prev.map((emp) => {
+          if (emp.id !== userId) return emp;
+          return {
+            ...emp,
+            shifts: emp.shifts.filter((s) => s.id !== shiftId),
+          };
+        });
+      }
+    );
+  };
+
+  const handleDelete = (shiftId: string, userId: string) => {
+    deleteShift(shiftId, userId);
+
+    setPendingChanges((prev) => {
+      const newAdd = { ...prev.add };
+      const newEdit = { ...prev.edit };
+      const newDelete = new Set(prev.delete);
+
+      if (shiftId in newAdd) {
+        delete newAdd[shiftId];
+      } else if (shiftId in newEdit) {
+        delete newEdit[shiftId];
+      } else {
+        newDelete.add(shiftId);
+      }
+
+      return { add: newAdd, edit: newEdit, delete: newDelete };
+    });
+  };
+
+  const handleConfirm = (
+    payload: ShiftsPayload,
+    userId: string,
+    originalShiftId?: string
+  ) => {
+    const newShifts = createShifts(payload, originalShiftId);
+    copyShifts(newShifts, userId, originalShiftId);
+
+    setPendingChanges((prev) => {
+      const newAdd = { ...prev.add };
+      const newEdit = { ...prev.edit };
+
+      if (originalShiftId) {
+        // updated = first shift ==> the edited version of original shift
+        // extras = shifts that are applied to other day
+        const [updated, ...extras] = newShifts;
+        newEdit[originalShiftId] = updated;
+        extras.forEach((s) => {
+          newAdd[s.id] = s;
+        });
+      } else {
+        newShifts.forEach((s) => {
+          newAdd[s.id] = s;
+        });
+      }
+
+      return { ...prev, add: newAdd, edit: newEdit };
+    });
   };
 
   const columns = useMemo(
@@ -140,7 +220,9 @@ export default function Schedule() {
         (day): ColumnDef<Schedules> => ({
           id: day.key,
           size: 150,
-          header: () => <div className="text-center">{day.label}</div>,
+          header: () => (
+            <div className="text-center text-lg font-bold">{day.label}</div>
+          ),
           cell: ({ row }) => {
             const shifts = row.original.schedule[day.key] ?? [];
             const userId = row.original.id;
@@ -149,23 +231,25 @@ export default function Schedule() {
               <div className="group">
                 {shifts.length === 0 ? (
                   <div className="invisible group-hover:visible">
-                    <AddShiftCell
+                    <ShiftCell
                       weekDays={weekDays}
                       day={day.key}
-                      onConfirm={(payload) =>
-                        handleConfirm({ ...payload, user_id: userId })
-                      }
+                      onConfirm={(payload) => handleConfirm(payload, userId)}
                     />
                   </div>
                 ) : (
-                  <div className="text-center flex flex-col gap-2">
+                  <div className="text-center font-semibold flex flex-col gap-2">
                     {shifts.map((shift) => (
-                      <div
+                      <ShiftCell
                         key={shift.id}
-                        className="text-sm border-2 border-black border-dashed p-2"
-                      >
-                        {shift.start_time} - {shift.end_time}
-                      </div>
+                        weekDays={weekDays}
+                        day={day.key}
+                        shift={shift}
+                        onConfirm={(payload) =>
+                          handleConfirm(payload, userId, shift.id)
+                        }
+                        onDelete={() => handleDelete(shift.id, userId)}
+                      />
                     ))}
                   </div>
                 )}
