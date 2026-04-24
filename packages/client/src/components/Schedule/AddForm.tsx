@@ -108,6 +108,7 @@ export default function Form({
         <Label>Shift Notes:</Label>
         <textarea
           ref={noteRef}
+          defaultValue={shift?.notes ?? ""}
           name="note"
           rows={3}
           maxLength={40}

@@ -6,7 +6,8 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ChangeEvent } from "react";
+import { createId } from "@paralleldrive/cuid2";
 import type { DateRange } from "react-day-picker";
 import { addDays, differenceInDays } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -17,12 +18,20 @@ import {
 } from "@/utils/helper";
 import { Button } from "@/components/ui/button";
 import { prettyFormatISODate } from "@/utils/format";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  CircleFadingArrowUp,
+} from "lucide-react";
 import {
   flexRender,
   getCoreRowModel,
+  getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type SortingState,
+  type VisibilityState,
 } from "@tanstack/react-table";
 import type {
   SchedulesRaw,
@@ -33,6 +42,7 @@ import type {
 import ShiftCell from "@/components/Schedule/AddPopover";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { scheduleService } from "@/services/schedule.service";
+import Select from "@/components/ui/select";
 
 const DEFAULT_WEEK_START = startOfWeekMonday(new Date());
 const DEFAULT_WEEK_END = addDays(DEFAULT_WEEK_START, 6);
@@ -56,6 +66,12 @@ export default function Schedule() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: DEFAULT_WEEK_START,
     to: DEFAULT_WEEK_END,
+  });
+
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    first_name: false,
+    last_name: false,
   });
 
   // Need click confirm to change date Range
@@ -104,11 +120,11 @@ export default function Schedule() {
     originalShiftId?: string
   ): Shift[] => {
     return payload.days.map((day, index) => ({
-      id:
-        index === 0 && originalShiftId ? originalShiftId : crypto.randomUUID(),
+      id: index === 0 && originalShiftId ? originalShiftId : createId(),
       start_time: new Date(`${day}T${payload.start_time}`).toISOString(),
       end_time: new Date(`${day}T${payload.end_time}`).toISOString(),
       notes: payload.notes,
+      isLocal: true,
     }));
   };
 
@@ -216,6 +232,17 @@ export default function Schedule() {
           </div>
         ),
       },
+      // Hidden sorting columns
+      {
+        accessorKey: "first_name",
+        header: "",
+        enableHiding: true,
+      },
+      {
+        accessorKey: "last_name",
+        header: "",
+        enableHiding: true,
+      },
       ...weekDays.map(
         (day): ColumnDef<Schedules> => ({
           id: day.key,
@@ -266,6 +293,13 @@ export default function Schedule() {
     data: schedules,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    state: {
+      sorting,
+      columnVisibility,
+    },
   });
 
   const handlePreviousWeek = useCallback(() => {
@@ -305,6 +339,17 @@ export default function Schedule() {
     setOpenCalendar(false);
   };
 
+  const handleSortChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value as "first_name" | "last_name" | "";
+
+    if (!value) {
+      setSorting([]);
+      return;
+    }
+
+    setSorting([{ id: value, desc: false }]);
+  };
+
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -315,7 +360,7 @@ export default function Schedule() {
         </p>
       </div>
       {/* Week Range */}
-      <div className="flex items-center gap-1">
+      <div className="flex flex-start items-center gap-1 border p-6 rounded-lg shadow">
         <div>
           <Button
             icon={<CalendarDays />}
@@ -349,6 +394,7 @@ export default function Schedule() {
         <div>
           <Button
             className="active:scale-125 transition-all"
+            title="Previous"
             variant="ghost"
             icon={<ChevronLeft color="blue" />}
             iconSize={24}
@@ -356,12 +402,25 @@ export default function Schedule() {
           />
           <Button
             className="active:scale-125 transition-all"
+            title="Next"
             variant="ghost"
             icon={<ChevronRight color="blue" />}
             iconSize={24}
             onClick={handleNextWeek}
           />
         </div>
+        <Select onChange={handleSortChange}>
+          <option value="">View By</option>
+          <option value="first_name">First Name</option>
+          <option value="last_name">Last Name</option>
+        </Select>
+        <Button
+          className="ml-auto"
+          variant="add"
+          icon={<CircleFadingArrowUp />}
+        >
+          Publish
+        </Button>
       </div>
       <div className="overflow-x-auto">
         <Table className="min-w-225 table-fixed border-2 border-border [&_th]:border-r-2 [&_td]:border-r-2 [&_th]:border-border [&_td]:border-border [&_tr]:border-b-2 [&_tr]:border-border">

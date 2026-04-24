@@ -27,12 +27,14 @@ export default function ShiftPopover({
 }: ShiftCellProps) {
   const [open, setOpen] = useState(false);
 
+  const isPublished = !shift?.isLocal ? "border-l-5" : "border-dashed";
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         {shift ? (
           <div
-            className={`truncate text-sm text- border-2 border-black border-dashed p-2 cursor-pointer ${open ? "border-3" : "border-2"}`}
+            className={`truncate text-sm border-black p-2 cursor-pointer ${open ? "border-3" : "border-2"} ${isPublished}`}
           >
             {shift.start_time} - {shift.end_time}
           </div>

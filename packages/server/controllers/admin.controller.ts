@@ -1271,7 +1271,6 @@ export async function getSchedules(req: Request, res: Response) {
       where: {
         location_id,
       },
-      orderBy: { first_name: "asc" },
       select: {
         id: true,
         first_name: true,

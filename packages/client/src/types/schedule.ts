@@ -1,22 +1,23 @@
 export interface Shift {
   id: string;
-  start_time: string; // ISO string
-  end_time: string; // ISO String
+  start_time: string;
+  end_time: string;
   notes: string | null;
+  isLocal?: boolean;
 }
 
 export interface SchedulesRaw {
   id: string;
   first_name: string;
   last_name: string;
-  shifts: Shift[];
+  shifts: Shift[]; // time is in ISO string
 }
 
 export interface Schedules {
   id: string;
   first_name: string;
   last_name: string;
-  schedule: Record<string, Shift[]>;
+  schedule: Record<string, Shift[]>; // time is in HH:MM
 }
 
 // type for adding a shift using popover
