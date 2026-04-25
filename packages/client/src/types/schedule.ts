@@ -10,6 +10,7 @@ export interface SchedulesRaw {
   id: string;
   first_name: string;
   last_name: string;
+  hourly_rate: string;
   shifts: Shift[]; // time is in ISO string
 }
 
@@ -17,6 +18,7 @@ export interface Schedules {
   id: string;
   first_name: string;
   last_name: string;
+  hourly_rate: string;
   schedule: Record<string, Shift[]>; // time is in HH:MM
 }
 

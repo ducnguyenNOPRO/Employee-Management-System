@@ -1275,6 +1275,7 @@ export async function getSchedules(req: Request, res: Response) {
         id: true,
         first_name: true,
         last_name: true,
+        hourly_rate: true,
         shifts: {
           select: {
             start_time: true,

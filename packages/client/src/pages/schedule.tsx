@@ -17,13 +17,8 @@ import {
   startOfWeekMonday,
 } from "@/utils/helper";
 import { Button } from "@/components/ui/button";
-import { prettyFormatISODate } from "@/utils/format";
-import {
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  CircleFadingArrowUp,
-} from "lucide-react";
+import { prettyFormatISODateYear } from "@/utils/format";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   flexRender,
   getCoreRowModel,
@@ -43,6 +38,7 @@ import ShiftCell from "@/components/Schedule/AddPopover";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { scheduleService } from "@/services/schedule.service";
 import Select from "@/components/ui/select";
+import PublicPopover from "@/components/Schedule/PublishPopover";
 
 const DEFAULT_WEEK_START = startOfWeekMonday(new Date());
 const DEFAULT_WEEK_END = addDays(DEFAULT_WEEK_START, 6);
@@ -89,6 +85,14 @@ export default function Schedule() {
   const fromISO = dateRange?.from?.toISOString();
   const toISO = dateRange?.to?.toISOString();
 
+  const changeCount = useMemo(
+    () =>
+      Object.keys(pendingChanges.add).length +
+      Object.keys(pendingChanges.edit).length +
+      pendingChanges.delete.size,
+    [pendingChanges]
+  );
+
   // DO NOT USE SELECT FOR TRANSFORMING DATA
   // Cause infintie re render when date range change
   // Cost me 1 days to figure this out
@@ -102,6 +106,8 @@ export default function Schedule() {
     enabled: !!fromISO && !!toISO,
   });
 
+  console.log(rawData);
+
   // If performance slow
   // modify it to memoized per employee
   // since this recompute everytime shifts added/edited --> modify rawData, or rawData is fetched
@@ -113,6 +119,28 @@ export default function Schedule() {
       schedule: groupShiftsByLocalDate(shifts ?? []),
     }));
     return newD;
+  }, [rawData]);
+
+  const publishSummary = useMemo(() => {
+    if (!rawData) return { totalShifts: 0, totalHours: 0, totalLaborCost: 0 };
+
+    let totalShifts = 0;
+    let totalHours = 0;
+    let totalLaborCost = 0;
+
+    for (const employee of rawData) {
+      for (const shift of employee.shifts) {
+        const start = new Date(shift.start_time);
+        const end = new Date(shift.end_time);
+        const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+
+        totalShifts += 1;
+        totalHours += hours;
+        totalLaborCost += hours * Number(employee.hourly_rate);
+      }
+    }
+
+    return { totalShifts, totalHours, totalLaborCost };
   }, [rawData]);
 
   const createShifts = (
@@ -368,7 +396,7 @@ export default function Schedule() {
             onClick={() => setOpenCalendar((prev) => !prev)}
           >
             {dateRange?.from && dateRange?.to
-              ? `${prettyFormatISODate(dateRange.from)} - ${prettyFormatISODate(dateRange.to)}`
+              ? `${prettyFormatISODateYear(dateRange.from)} - ${prettyFormatISODateYear(dateRange.to)}`
               : "No date chosen"}
           </Button>
           {openCalendar && (
@@ -414,13 +442,11 @@ export default function Schedule() {
           <option value="first_name">First Name</option>
           <option value="last_name">Last Name</option>
         </Select>
-        <Button
-          className="ml-auto"
-          variant="add"
-          icon={<CircleFadingArrowUp />}
-        >
-          Publish
-        </Button>
+        <PublicPopover
+          changeCount={changeCount}
+          dateRange={dateRange}
+          summary={publishSummary}
+        />
       </div>
       <div className="overflow-x-auto">
         <Table className="min-w-225 table-fixed border-2 border-border [&_th]:border-r-2 [&_td]:border-r-2 [&_th]:border-border [&_td]:border-border [&_tr]:border-b-2 [&_tr]:border-border">

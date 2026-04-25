@@ -65,7 +65,7 @@ export const employeeSchema = z.object({
   position: z.string().trim().min(1, "Position is required"),
   employment_type: z.enum(["FULL_TIME", "PART_TIME", "CONTRACT"]),
   role: z.enum(["EMPLOYEE", "MANAGER"]),
-  salary: z.number().min(0),
+  hourly_rate: z.number().min(0),
   start_date: z.iso.date().transform((val) => new Date(val)),
   department_id: z.cuid().nullable(),
   emergency_contact: z.string().trim().nullable(),
