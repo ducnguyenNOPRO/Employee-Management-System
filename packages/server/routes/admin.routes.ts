@@ -20,6 +20,7 @@ import {
   clockOut,
   editTimeEntry,
   getSchedules,
+  publishSchedules,
 } from "../controllers/admin.controller";
 
 const adminRouter = Router();
@@ -56,5 +57,6 @@ adminRouter.patch("/attendance/:id", editTimeEntry); // id = user_id
 
 // schedule
 adminRouter.get("/schedules", getSchedules);
+adminRouter.post("/schedules", publishSchedules);
 
 export default adminRouter;

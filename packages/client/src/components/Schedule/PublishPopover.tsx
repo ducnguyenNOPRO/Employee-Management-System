@@ -24,6 +24,7 @@ interface PublicPopoverProps {
     totalLaborCost: number;
   };
   pendingChanges: PendingChanges;
+  setPendingChanges: (pendingChanges: PendingChanges) => void;
 }
 
 export default function PublicPopover({
@@ -31,6 +32,7 @@ export default function PublicPopover({
   dateRange,
   getSummary,
   pendingChanges,
+  setPendingChanges,
 }: PublicPopoverProps) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmiting] = useState(false);
@@ -53,6 +55,12 @@ export default function PublicPopover({
     },
   ];
 
+  const handleReset = () => {
+    setPendingChanges({ add: {}, edit: {}, delete: [] });
+    queryClient.invalidateQueries(["schedules"]);
+    setOpen(false);
+  };
+
   const handlePublish = async () => {
     setIsSubmiting(true);
     const result = publishScheduleSchema.safeParse(pendingChanges);
@@ -63,7 +71,7 @@ export default function PublicPopover({
     }
     try {
       await scheduleService.publish(pendingChanges);
-      queryClient.invalidateQueries(["schedules"]);
+      handleReset();
     } catch {
     } finally {
       setIsSubmiting(false);

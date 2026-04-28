@@ -231,5 +231,5 @@ const publishShiftSchema = z.object({
 export const publishScheduleSchema = z.object({
   add: z.record(z.string(), publishShiftSchema),
   edit: z.record(z.string(), publishShiftSchema),
-  delete: z.set(z.string()),
+  delete: z.array(z.string()),
 });

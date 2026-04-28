@@ -11,6 +11,7 @@ import {
   employeeSchema,
   idSchmena,
   leaveSchema,
+  publishScheduleSchema,
   scheduleSchema,
 } from "../lib/zodSchema";
 import z from "zod";
@@ -28,6 +29,7 @@ import type { leave_balance } from "../generated/prisma/client";
 import crypto from "crypto";
 import { getFrontendBaseUrl } from "../lib/normalizeURL";
 import { sendInviteEmail } from "./email.controller";
+import ts from "typescript";
 
 const STATUS_PRIORITY = {
   PENDING: 1,
@@ -1255,7 +1257,6 @@ export async function getSchedules(req: Request, res: Response) {
     from: req.query.from,
     to: req.query.to,
   });
-  console.log(req.query.from, req.query.to);
 
   if (!result.success) {
     console.log(z.treeifyError(result.error).properties);
@@ -1294,6 +1295,45 @@ export async function getSchedules(req: Request, res: Response) {
     });
 
     return res.status(200).json({ schedules });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+export async function publishSchedules(req: Request, res: Response) {
+  const result = publishScheduleSchema.safeParse(req.body);
+  const location_id = req.user?.location_id || "250387";
+
+  if (!result.success) {
+    console.log(z.treeifyError(result.error).properties);
+    return res.status(400).json({
+      message: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await Promise.all([
+        // use auto generated id in DB
+        tx.shift.createMany({
+          data: Object.values(result.data.add).map(
+            ({ isLocal, id, ...shift }) => ({
+              ...shift,
+              location_id,
+            })
+          ),
+        }),
+        ...Object.values(result.data.edit).map(
+          ({ isLocal, id, user_id, ...shift }) =>
+            tx.shift.update({ where: { id }, data: shift })
+        ),
+        ...result.data.delete.map((shiftId) =>
+          tx.shift.delete({ where: { id: shiftId } })
+        ),
+      ]);
+    });
+
+    return res.status(200).json({ message: "Schedules published successfull" });
   } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
   }

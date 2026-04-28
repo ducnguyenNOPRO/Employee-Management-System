@@ -38,7 +38,7 @@ export interface ShiftsPayload {
 export interface PendingChanges {
   add: Record<string, ShiftWithUser>; // including extra_shifts from edit
   edit: Record<string, ShiftWithUser>;
-  delete: Set<string>; // shiftIds to delete
+  delete: string[]; // shiftIds to delete
 }
 
 export type ConfirmHandler = (payload: ShiftsPayload) => void;

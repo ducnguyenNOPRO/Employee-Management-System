@@ -166,3 +166,18 @@ export const scheduleSchema = z
   .refine((data) => new Date(data.from) < new Date(data.to), {
     message: "from must be before to",
   });
+
+const publishShiftSchema = z.object({
+  id: z.string(),
+  start_time: z.iso.datetime(),
+  end_time: z.iso.datetime(),
+  notes: z.string().trim().nullable(),
+  user_id: z.cuid(),
+  isLocal: z.boolean().optional(), // just allow and ignore it
+});
+
+export const publishScheduleSchema = z.object({
+  add: z.record(z.string(), publishShiftSchema),
+  edit: z.record(z.string(), publishShiftSchema),
+  delete: z.array(z.string()),
+});

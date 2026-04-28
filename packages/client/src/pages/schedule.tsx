@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { useCallback, useMemo, useState, type ChangeEvent } from "react";
 import type { DateRange } from "react-day-picker";
-import { addDays, differenceInDays, format } from "date-fns";
+import { addDays, differenceInDays, endOfDay, format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { buildWeekDays, startOfWeekMonday } from "@/utils/helper";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ import Select from "@/components/ui/select";
 import PublicPopover from "@/components/Schedule/PublishPopover";
 
 const DEFAULT_WEEK_START = startOfWeekMonday(new Date());
-const DEFAULT_WEEK_END = addDays(DEFAULT_WEEK_START, 6);
+const DEFAULT_WEEK_END = endOfDay(addDays(DEFAULT_WEEK_START, 6));
 
 export default function Schedule() {
   const queryClient = useQueryClient();
@@ -46,7 +46,7 @@ export default function Schedule() {
   const [pendingChanges, setPendingChanges] = useState<PendingChanges>({
     add: {},
     edit: {},
-    delete: new Set(),
+    delete: [],
   });
   const [openCalendar, setOpenCalendar] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -79,7 +79,7 @@ export default function Schedule() {
     () =>
       Object.keys(pendingChanges.add).length +
       Object.keys(pendingChanges.edit).length +
-      pendingChanges.delete.size,
+      pendingChanges.delete.length,
     [pendingChanges]
   );
 
@@ -233,14 +233,14 @@ export default function Schedule() {
     setPendingChanges((prev) => {
       const newAdd = { ...prev.add };
       const newEdit = { ...prev.edit };
-      const newDelete = new Set(prev.delete);
+      const newDelete = [...prev.delete];
 
       if (shiftId in newAdd) {
         delete newAdd[shiftId];
       } else if (shiftId in newEdit) {
         delete newEdit[shiftId];
       } else {
-        newDelete.add(shiftId);
+        newDelete.push(shiftId);
       }
 
       return { add: newAdd, edit: newEdit, delete: newDelete };
@@ -483,6 +483,7 @@ export default function Schedule() {
           dateRange={dateRange}
           getSummary={getSummary}
           pendingChanges={pendingChanges}
+          setPendingChanges={setPendingChanges}
         />
       </div>
       <div className="overflow-x-auto">
