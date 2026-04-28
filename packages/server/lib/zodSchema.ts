@@ -65,7 +65,7 @@ export const employeeSchema = z.object({
   position: z.string().trim().min(1, "Position is required"),
   employment_type: z.enum(["FULL_TIME", "PART_TIME", "CONTRACT"]),
   role: z.enum(["EMPLOYEE", "MANAGER"]),
-  salary: z.number().min(0),
+  hourly_rate: z.number().min(0),
   start_date: z.iso.date().transform((val) => new Date(val)),
   department_id: z.cuid().nullable(),
   emergency_contact: z.string().trim().nullable(),
@@ -155,4 +155,29 @@ export const editAttendanceSchema = z.object({
     .string()
     .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format (HH:MM)"),
   reason: z.string().trim().max(120, "Maximum 120 characters"),
+});
+
+// Schedule
+export const scheduleSchema = z
+  .object({
+    from: z.iso.datetime("Invalid date format"),
+    to: z.iso.datetime("Invalid date format"),
+  })
+  .refine((data) => new Date(data.from) < new Date(data.to), {
+    message: "from must be before to",
+  });
+
+const publishShiftSchema = z.object({
+  id: z.string(),
+  start_time: z.iso.datetime(),
+  end_time: z.iso.datetime(),
+  notes: z.string().trim().nullable(),
+  user_id: z.cuid(),
+  isLocal: z.boolean().optional(), // just allow and ignore it
+});
+
+export const publishScheduleSchema = z.object({
+  add: z.record(z.string(), publishShiftSchema),
+  edit: z.record(z.string(), publishShiftSchema),
+  delete: z.array(z.string()),
 });

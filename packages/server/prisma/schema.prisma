@@ -33,7 +33,7 @@ model user {
   employment_type   employement_type @default(FULL_TIME)
   status            status           @default(IN_ACTIVE)
   phone             String           @unique @db.VarChar(20)
-  salary            Decimal          @db.Decimal(10, 2)
+  hourly_rate       Decimal          @db.Decimal(10, 2)
   emergency_contact String?          @db.VarChar(100)
   emergency_phone   String?          @db.VarChar(20)
   start_date        DateTime?        @default(now())
@@ -167,6 +167,8 @@ model shift {
   id                String    @id @default(cuid())
   user_id           String
   location_id       String
+
+  notes             String?   @db.VarChar(255)
   
   start_time        DateTime
   end_time          DateTime

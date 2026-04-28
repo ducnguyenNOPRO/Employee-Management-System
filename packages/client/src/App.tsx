@@ -15,6 +15,7 @@ import { Toaster } from "sonner";
 import Forbidden from "./pages/404";
 import CreatePassword from "./pages/createPassword";
 import AttendanceDashboard from "./pages/attendance";
+import Schedule from "./pages/schedule";
 
 const router = createBrowserRouter([
   // Public routes
@@ -58,6 +59,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Dashboard /> },
       { path: "attendance", element: <AttendanceDashboard /> },
+      { path: "schedule", element: <Schedule /> },
       { path: "employees", element: <Employees /> },
       { path: "employees/:id", element: <EmployeeDetail /> },
       { path: "departments", element: <Departments /> },

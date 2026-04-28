@@ -11,6 +11,8 @@ import {
   employeeSchema,
   idSchmena,
   leaveSchema,
+  publishScheduleSchema,
+  scheduleSchema,
 } from "../lib/zodSchema";
 import z from "zod";
 import {
@@ -27,6 +29,7 @@ import type { leave_balance } from "../generated/prisma/client";
 import crypto from "crypto";
 import { getFrontendBaseUrl } from "../lib/normalizeURL";
 import { sendInviteEmail } from "./email.controller";
+import ts from "typescript";
 
 const STATUS_PRIORITY = {
   PENDING: 1,
@@ -1243,6 +1246,95 @@ export async function editTimeEntry(req: Request, res: Response) {
     return res.status(200).json({ message: "Update time entry successfully" });
   } catch (error) {
     console.log(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+/** Schedules */
+export async function getSchedules(req: Request, res: Response) {
+  const location_id = req.user?.location_id || "250387";
+  const result = scheduleSchema.safeParse({
+    from: req.query.from,
+    to: req.query.to,
+  });
+
+  if (!result.success) {
+    console.log(z.treeifyError(result.error).properties);
+    return res.status(400).json({
+      message: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
+  }
+
+  const { from, to } = result.data;
+
+  try {
+    const schedules = await prisma.user.findMany({
+      where: {
+        location_id,
+      },
+      select: {
+        id: true,
+        first_name: true,
+        last_name: true,
+        hourly_rate: true,
+        shifts: {
+          select: {
+            start_time: true,
+            end_time: true,
+            id: true,
+            notes: true,
+          },
+          where: {
+            location_id,
+            start_time: { gte: new Date(from) },
+            end_time: { lte: new Date(to) },
+          },
+          orderBy: { start_time: "asc" },
+        },
+      },
+    });
+
+    return res.status(200).json({ schedules });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+export async function publishSchedules(req: Request, res: Response) {
+  const result = publishScheduleSchema.safeParse(req.body);
+  const location_id = req.user?.location_id || "250387";
+
+  if (!result.success) {
+    console.log(z.treeifyError(result.error).properties);
+    return res.status(400).json({
+      message: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await Promise.all([
+        // use auto generated id in DB
+        tx.shift.createMany({
+          data: Object.values(result.data.add).map(
+            ({ isLocal, id, ...shift }) => ({
+              ...shift,
+              location_id,
+            })
+          ),
+        }),
+        ...Object.values(result.data.edit).map(
+          ({ isLocal, id, user_id, ...shift }) =>
+            tx.shift.update({ where: { id }, data: shift })
+        ),
+        ...result.data.delete.map((shiftId) =>
+          tx.shift.delete({ where: { id: shiftId } })
+        ),
+      ]);
+    });
+
+    return res.status(200).json({ message: "Schedules published successfull" });
+  } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
   }
 }

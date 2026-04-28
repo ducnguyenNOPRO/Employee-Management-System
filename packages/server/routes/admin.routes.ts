@@ -19,6 +19,8 @@ import {
   clockIn,
   clockOut,
   editTimeEntry,
+  getSchedules,
+  publishSchedules,
 } from "../controllers/admin.controller";
 
 const adminRouter = Router();
@@ -52,5 +54,9 @@ adminRouter.get("/attendance/live", getAttendanceLive); // Get data for live att
 adminRouter.post("/attendance/clock-in", clockIn); // Create
 adminRouter.post("/attendance/clock-out", clockOut);
 adminRouter.patch("/attendance/:id", editTimeEntry); // id = user_id
+
+// schedule
+adminRouter.get("/schedules", getSchedules);
+adminRouter.post("/schedules", publishSchedules);
 
 export default adminRouter;

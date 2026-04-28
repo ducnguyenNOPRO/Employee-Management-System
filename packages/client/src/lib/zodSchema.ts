@@ -208,3 +208,28 @@ export const editAttendanceSchema = z
   });
 
 export type EditAttendancePayload = z.infer<typeof editAttendanceSchema>;
+
+export const confirmShiftSchema = z.object({
+  start_time: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format (HH:MM)"),
+  end_time: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format (HH:MM)"),
+  notes: z.string().trim().nullable(),
+});
+
+const publishShiftSchema = z.object({
+  id: z.string(),
+  start_time: z.iso.datetime(),
+  end_time: z.iso.datetime(),
+  notes: z.string().trim().nullable(),
+  user_id: z.cuid(),
+  isLocal: z.boolean().optional(), // just allow and ignore it
+});
+
+export const publishScheduleSchema = z.object({
+  add: z.record(z.string(), publishShiftSchema),
+  edit: z.record(z.string(), publishShiftSchema),
+  delete: z.array(z.string()),
+});
