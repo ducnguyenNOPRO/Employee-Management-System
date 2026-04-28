@@ -9,23 +9,33 @@ import {
 import type { DateRange } from "react-day-picker";
 import { prettyFormatISODate } from "@/utils/format";
 import { useState } from "react";
+import type { PendingChanges } from "@/types/schedule";
+import { scheduleService } from "@/services/schedule.service";
+import { publishScheduleSchema } from "@/lib/zodSchema";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface PublicPopoverProps {
   changeCount: number;
   dateRange: DateRange | undefined;
-  summary: {
+  getSummary: () => {
     totalShifts: number;
     totalHours: number;
     totalLaborCost: number;
   };
+  pendingChanges: PendingChanges;
 }
 
 export default function PublicPopover({
   changeCount,
   dateRange,
-  summary,
+  getSummary,
+  pendingChanges,
 }: PublicPopoverProps) {
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmiting] = useState(false);
+  const queryClient = useQueryClient();
+  const summary = getSummary();
   const range =
     dateRange?.from && dateRange?.to
       ? `${prettyFormatISODate(dateRange.from)} - ${prettyFormatISODate(dateRange.to)}`
@@ -43,13 +53,31 @@ export default function PublicPopover({
     },
   ];
 
+  const handlePublish = async () => {
+    setIsSubmiting(true);
+    const result = publishScheduleSchema.safeParse(pendingChanges);
+    if (!result.success) {
+      toast.error("Publish schedule error. Contact IT support");
+      setIsSubmiting(false);
+      return;
+    }
+    try {
+      await scheduleService.publish(pendingChanges);
+      queryClient.invalidateQueries(["schedules"]);
+    } catch {
+    } finally {
+      setIsSubmiting(false);
+    }
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           className="ml-auto"
-          variant="add"
+          variant={changeCount > 0 ? "add" : "disable"}
           icon={<CircleFadingArrowUp />}
+          disabled={changeCount <= 0}
         >
           Publish ({changeCount})
         </Button>
@@ -71,14 +99,19 @@ export default function PublicPopover({
           <div className="grid grid-cols-2 text-sm text-gray-700 font-medium">
             {summaryItems.map((s) => (
               <>
-                <span>{s.label}</span>
+                <span>{s.label}:</span>
                 <span className="text-right">{s.value}</span>
               </>
             ))}
           </div>
         </div>
-        <Button variant="add" className="mt-10 w-full">
-          Publish
+        <Button
+          disabled={isSubmitting}
+          variant="add"
+          className="mt-10 w-full"
+          onClick={handlePublish}
+        >
+          {isSubmitting ? "Publishing..." : "Publish"}
         </Button>
       </PopoverContent>
     </Popover>

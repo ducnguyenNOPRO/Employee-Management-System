@@ -6,6 +6,10 @@ export interface Shift {
   isLocal?: boolean;
 }
 
+interface ShiftWithUser extends Shift {
+  user_id: string;
+}
+
 export interface SchedulesRaw {
   id: string;
   first_name: string;
@@ -29,6 +33,12 @@ export interface ShiftsPayload {
   start_time: string; // HH:MM
   end_time: string; // HH:MM
   notes: string | null;
+}
+
+export interface PendingChanges {
+  add: Record<string, ShiftWithUser>; // including extra_shifts from edit
+  edit: Record<string, ShiftWithUser>;
+  delete: Set<string>; // shiftIds to delete
 }
 
 export type ConfirmHandler = (payload: ShiftsPayload) => void;

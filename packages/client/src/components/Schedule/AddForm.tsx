@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 import { DaySelector } from "./DaySelector";
 import Label from "../ui/label";
 import ShiftPicker from "../TimePicker";
-import { shiftSchema } from "@/lib/zodSchema";
+import { confirmShiftSchema } from "@/lib/zodSchema";
 import type { ConfirmHandler, Shift } from "@/types/schedule";
 import { Trash2, X } from "lucide-react";
 
@@ -39,7 +39,7 @@ export default function Form({
 
   const handleConfirm = () => {
     const notes = noteRef.current?.value.trim() || null;
-    const result = shiftSchema.safeParse({
+    const result = confirmShiftSchema.safeParse({
       start_time: inputTime.startTime,
       end_time: inputTime.endTime,
       notes,

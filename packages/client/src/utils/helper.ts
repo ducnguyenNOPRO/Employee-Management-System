@@ -41,21 +41,3 @@ export function buildWeekDays(start: Date | string, end: Date | string) {
     };
   });
 }
-
-export function groupShiftsByLocalDate(shifts: Shift[]) {
-  const local: Record<string, Shift[]> = {};
-
-  for (const shift of shifts) {
-    // Convert server date  to local date
-    const localKey = format(new Date(shift.start_time), "yyyy-MM-dd");
-
-    if (!local[localKey]) local[localKey] = [];
-    local[localKey].push({
-      ...shift,
-      start_time: format(new Date(shift.start_time), "HH:mm"),
-      end_time: format(new Date(shift.end_time), "HH:mm"),
-    });
-  }
-
-  return local;
-}

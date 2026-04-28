@@ -5,17 +5,13 @@ import {
   TableRow,
   TableBody,
   TableCell,
+  TableFooter,
 } from "@/components/ui/table";
 import { useCallback, useMemo, useState, type ChangeEvent } from "react";
-import { createId } from "@paralleldrive/cuid2";
 import type { DateRange } from "react-day-picker";
-import { addDays, differenceInDays } from "date-fns";
+import { addDays, differenceInDays, format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  buildWeekDays,
-  groupShiftsByLocalDate,
-  startOfWeekMonday,
-} from "@/utils/helper";
+import { buildWeekDays, startOfWeekMonday } from "@/utils/helper";
 import { Button } from "@/components/ui/button";
 import { prettyFormatISODateYear } from "@/utils/format";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
@@ -33,6 +29,7 @@ import type {
   Schedules,
   ShiftsPayload,
   Shift,
+  PendingChanges,
 } from "@/types/schedule";
 import ShiftCell from "@/components/Schedule/AddPopover";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -42,13 +39,6 @@ import PublicPopover from "@/components/Schedule/PublishPopover";
 
 const DEFAULT_WEEK_START = startOfWeekMonday(new Date());
 const DEFAULT_WEEK_END = addDays(DEFAULT_WEEK_START, 6);
-
-// Changes for publish the schedule
-interface PendingChanges {
-  add: Record<string, Shift>; // shiftId -> shift (all new shifts, including extra_shifts from edit)
-  edit: Record<string, Shift>; // shiftId -> latest edited shift
-  delete: Set<string>; // shiftIds to delete
-}
 
 export default function Schedule() {
   const queryClient = useQueryClient();
@@ -106,22 +96,60 @@ export default function Schedule() {
     enabled: !!fromISO && !!toISO,
   });
 
-  console.log(rawData);
-
+  // Calculate everything in one go
+  // For shedules:
   // If performance slow
   // modify it to memoized per employee
   // since this recompute everytime shifts added/edited --> modify rawData, or rawData is fetched
-  const schedules = useMemo(() => {
-    if (!rawData) return [];
+  const derivedData = useMemo(() => {
+    if (!rawData)
+      return {
+        schedules: [],
+        dailyHourTotals: {},
+        dailyCostTotals: {},
+      };
 
-    const newD = rawData.map(({ shifts, ...employee }) => ({
-      ...employee,
-      schedule: groupShiftsByLocalDate(shifts ?? []),
-    }));
-    return newD;
+    // Total scheduled hours and labor cost per day in  yyyy-MM-dd
+    const dailyHourTotals: Record<string, number> = {};
+    const dailyCostTotals: Record<string, number> = {};
+
+    // Transforming raw schedules
+    const schedules: Schedules[] = rawData.map((employee) => {
+      const schedule: Record<string, Shift[]> = {};
+
+      for (const shift of employee.shifts) {
+        const start = new Date(shift.start_time);
+        const end = new Date(shift.end_time);
+        const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+        const cost = hours * Number(employee.hourly_rate);
+        const dayKey = format(start, "yyyy-MM-dd");
+
+        if (!schedule[dayKey]) schedule[dayKey] = [];
+        schedule[dayKey].push({
+          ...shift,
+          start_time: format(start, "HH:mm"),
+          end_time: format(end, "HH:mm"),
+        });
+
+        dailyHourTotals[dayKey] = (dailyHourTotals[dayKey] ?? 0) + hours;
+        dailyCostTotals[dayKey] = (dailyCostTotals[dayKey] ?? 0) + cost;
+      }
+
+      return {
+        ...employee,
+        schedule,
+      };
+    });
+
+    return {
+      schedules,
+      dailyHourTotals,
+      dailyCostTotals,
+    };
   }, [rawData]);
 
-  const publishSummary = useMemo(() => {
+  // Calculate summary on hitting publish button
+  const getSummary = useCallback(() => {
     if (!rawData) return { totalShifts: 0, totalHours: 0, totalLaborCost: 0 };
 
     let totalShifts = 0;
@@ -148,7 +176,8 @@ export default function Schedule() {
     originalShiftId?: string
   ): Shift[] => {
     return payload.days.map((day, index) => ({
-      id: index === 0 && originalShiftId ? originalShiftId : createId(),
+      id:
+        index === 0 && originalShiftId ? originalShiftId : crypto.randomUUID(),
       start_time: new Date(`${day}T${payload.start_time}`).toISOString(),
       end_time: new Date(`${day}T${payload.end_time}`).toISOString(),
       notes: payload.notes,
@@ -218,6 +247,7 @@ export default function Schedule() {
     });
   };
 
+  // Add/Edit shift locally
   const handleConfirm = (
     payload: ShiftsPayload,
     userId: string,
@@ -234,13 +264,19 @@ export default function Schedule() {
         // updated = first shift ==> the edited version of original shift
         // extras = shifts that are applied to other day
         const [updated, ...extras] = newShifts;
-        newEdit[originalShiftId] = updated;
+
+        // Locally added shift
+        if (newAdd[originalShiftId]) {
+          newAdd[originalShiftId] = { ...updated, user_id: userId };
+        } else {
+          newEdit[originalShiftId] = { ...updated, user_id: userId };
+        }
         extras.forEach((s) => {
-          newAdd[s.id] = s;
+          newAdd[s.id] = { ...s, user_id: userId };
         });
       } else {
         newShifts.forEach((s) => {
-          newAdd[s.id] = s;
+          newAdd[s.id] = { ...s, user_id: userId };
         });
       }
 
@@ -318,7 +354,7 @@ export default function Schedule() {
   );
 
   const table = useReactTable({
-    data: schedules,
+    data: derivedData.schedules,
     columns,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
@@ -445,7 +481,8 @@ export default function Schedule() {
         <PublicPopover
           changeCount={changeCount}
           dateRange={dateRange}
-          summary={publishSummary}
+          getSummary={getSummary}
+          pendingChanges={pendingChanges}
         />
       </div>
       <div className="overflow-x-auto">
@@ -500,6 +537,28 @@ export default function Schedule() {
               </TableRow>
             )}
           </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell>Total Hours</TableCell>
+              {weekDays.map((day) => (
+                <TableCell key={day.key} className="text-center font-bold">
+                  {derivedData.dailyHourTotals[day.key]
+                    ? derivedData.dailyHourTotals[day.key].toFixed(2)
+                    : "—"}
+                </TableCell>
+              ))}
+            </TableRow>
+            <TableRow>
+              <TableCell>Total Labor Cost</TableCell>
+              {weekDays.map((day) => (
+                <TableCell key={day.key} className="text-center font-bold">
+                  {derivedData.dailyCostTotals[day.key]
+                    ? `$${derivedData.dailyCostTotals[day.key].toFixed(2)}`
+                    : "—"}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableFooter>
         </Table>
       </div>
     </div>
