@@ -35,7 +35,7 @@ export interface EmployeeOverview extends BaseEmployee {}
 export interface EmployeeDetail extends BaseEmployee {
   address: string;
   role: "EMPLOYEE" | "MANAGER";
-  salary: number;
+  hourly_rate: string;
   emergency_contact?: string;
   emergency_phone?: string;
   start_date: string;

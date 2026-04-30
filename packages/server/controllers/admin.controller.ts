@@ -1271,6 +1271,7 @@ export async function getSchedules(req: Request, res: Response) {
     const schedules = await prisma.user.findMany({
       where: {
         location_id,
+        status: "ACTIVE",
       },
       select: {
         id: true,

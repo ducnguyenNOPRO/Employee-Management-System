@@ -1,4 +1,4 @@
-import { Activity, useState } from "react";
+import { useState } from "react";
 import EmployeeReadOnly from "@/components/modals/Employee/EmployeeReadOnly";
 import EditEmployeeForm from "@/components/modals/Employee/EditEmployeeForm";
 import { useParams } from "react-router-dom";
@@ -32,12 +32,11 @@ export default function EmployeeDetail() {
 
   return (
     <>
-      <Activity mode={isEditing ? "hidden" : "visible"}>
+      {!isEditing ? (
         <EmployeeReadOnly employee={employee} toggle={handleToggleMode} />
-      </Activity>
-      <Activity mode={isEditing ? "visible" : "hidden"}>
+      ) : (
         <EditEmployeeForm employee={employee} toggle={handleToggleMode} />
-      </Activity>
+      )}
     </>
   );
 }

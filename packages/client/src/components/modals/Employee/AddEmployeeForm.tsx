@@ -201,16 +201,16 @@ export default function AddEmployeeForm({ onSuccess }: AddFormProps) {
             <div className="relative">
               <DollarSign className="absolute left-3 top-1/2 translate-y-1/4 h-4 w-4 text-gray-400" />
               <Input
-                label="Annual Salary"
+                label="Hourly rate"
                 type="number"
                 step="0.01"
                 register={register}
                 id="salary"
-                name="salary"
+                name="hourly_rate"
                 required
                 className="pl-10"
-                placeholder="75000"
-                error={errors.salary?.message}
+                placeholder="14.00"
+                error={errors.hourly_rate?.message}
               />
             </div>
           </div>
