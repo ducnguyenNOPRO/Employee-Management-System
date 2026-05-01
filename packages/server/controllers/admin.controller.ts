@@ -24,12 +24,12 @@ import {
   getAttendanceStatus,
   getLateBy,
   timeToDate,
+  formatAttendanceExceptions,
 } from "../lib/helper";
 import type { leave_balance } from "../generated/prisma/client";
 import crypto from "crypto";
 import { getFrontendBaseUrl } from "../lib/normalizeURL";
 import { sendInviteEmail } from "./email.controller";
-import ts from "typescript";
 
 const STATUS_PRIORITY = {
   PENDING: 1,
@@ -39,6 +39,110 @@ const STATUS_PRIORITY = {
 
 const EARLY_CLOCK_IN_HOURS_ALLOWED = 2 * 60 * 60 * 1000;
 const LATE_CLOCK_OUT_HOURS_ALLOWED = 2 * 60 * 60 * 1000;
+
+export async function getDashboardSummary(req: Request, res: Response) {
+  const location_id = req.user?.location_id;
+  try {
+    const now = new Date();
+    const start = startOfDay(now);
+    const end = endOfDay(now);
+
+    const [
+      scheduledShifts,
+      clockedIn,
+      lateNoEntry,
+      lateButPresent,
+      absent,
+      shiftWithEntries,
+      pendingRequests,
+    ] = await Promise.all([
+      prisma.shift.count({
+        where: {
+          location_id,
+          start_time: { gte: start, lte: end },
+        },
+      }),
+      // Currently working - late counted
+      prisma.time_entry.count({
+        where: {
+          clock_out: null,
+          clock_in: { not: null },
+          shift: {
+            location_id,
+            end_time: { gte: now },
+            start_time: { lte: now },
+          },
+        },
+      }),
+      prisma.shift.count({
+        where: {
+          location_id,
+          start_time: { lte: now, gte: start },
+          end_time: { gte: now },
+          time_entries: { none: {} },
+        },
+      }),
+      prisma.$queryRaw<[{ count: number }]>`
+        SELECT COUNT(*)::int AS count
+        FROM time_entry te
+        JOIN shift s ON te.shift_id = s.id
+        WHERE s.location_id = ${location_id}
+          AND s.start_time  <= ${now}
+          AND s.start_time  >= ${start}
+          AND te.clock_in   >  s.start_time
+      `,
+      // ABSENT - absent/no show
+      prisma.shift.count({
+        where: {
+          location_id,
+          start_time: { gte: start },
+          end_time: { lt: now },
+          time_entries: { none: {} },
+        },
+      }),
+
+      prisma.shift.findMany({
+        where: {
+          location_id,
+          start_time: { gte: start, lte: end },
+        },
+        include: {
+          user: true,
+          time_entries: true,
+        },
+      }),
+      prisma.leave_request.findMany({
+        where: { status: "PENDING" },
+        select: {
+          requester: {
+            select: {
+              first_name: true,
+              last_name: true,
+            },
+          },
+          id: true,
+          start_date: true,
+          end_date: true,
+          type: true,
+        },
+      }),
+    ]);
+
+    const exceptions = formatAttendanceExceptions(shiftWithEntries, now);
+    return res.status(200).json({
+      stats: {
+        scheduledShifts,
+        clockedIn,
+        late: lateNoEntry + lateButPresent[0].count,
+        absent,
+      },
+      exceptions,
+      pendingRequests,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal Server error" });
+  }
+}
 
 export async function inviteEmployee(req: Request, res: Response) {
   const result = idSchmena.safeParse({ id: req.params.id });
@@ -791,11 +895,11 @@ export async function getAttendanceStats(req: Request, res: Response) {
         prisma.time_entry.count({
           where: {
             clock_out: null,
-            clock_in: { lte: now },
+            clock_in: { not: null },
             shift: {
               location_id,
               end_time: { gte: now },
-              start_time: { gte: start },
+              start_time: { lte: now },
             },
           },
         }),
@@ -813,7 +917,7 @@ export async function getAttendanceStats(req: Request, res: Response) {
           where: {
             location_id,
             start_time: { gte: start },
-            end_time: { lte: now },
+            end_time: { lt: now },
             time_entries: { none: {} },
           },
         }),

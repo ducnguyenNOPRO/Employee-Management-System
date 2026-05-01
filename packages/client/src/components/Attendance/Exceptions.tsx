@@ -68,11 +68,9 @@ export default function Exceptions({ data }: ExceptionsProps) {
               {incomplete.map((d) => {
                 const issue = !d.clock_out
                   ? "No Clock Out"
-                  : new Date(d.clock_out) > now
-                    ? "Future Clock Out"
-                    : new Date(d.clock_out) > new Date(d.shift.end_time)
-                      ? "Overtime"
-                      : "Early Clock Out";
+                  : new Date(d.clock_out) > new Date(d.shift.end_time)
+                    ? "Overtime"
+                    : "Early Clock Out";
                 return (
                   <div
                     key={d.employee.id}
