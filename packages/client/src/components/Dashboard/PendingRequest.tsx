@@ -5,6 +5,10 @@ import UserCharacters from "../ui/characters";
 import { differenceInDays, format } from "date-fns";
 import { formatSnakeCase } from "@/utils/format";
 import { Button } from "../ui/button";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuthStore } from "@/stores/useAuthStore";
+import { leaveService } from "@/services/leave.service";
+import type { UpdateRequestDecisionPayload } from "@/types/leave";
 
 interface Props {
   pendingRequests?: DashboardSummary["pendingRequests"];
@@ -12,6 +16,32 @@ interface Props {
 
 export default function PendignRequest({ pendingRequests }: Props) {
   if (!pendingRequests) return null;
+  const queryClient = useQueryClient();
+  const user = useAuthStore((s) => s.user);
+
+  // Update request decision
+  const { mutate: updateDecision } = useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: UpdateRequestDecisionPayload;
+    }) => leaveService.updateRequestDecision(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["dashboardSummary"]);
+    },
+  });
+
+  const handleDecision = (id: string, status: "APPROVED" | "REJECTED") => {
+    updateDecision({
+      id,
+      payload: {
+        status,
+        approver_id: user?.id ?? "cmoi6iiq00005x47kn0ufzg1n",
+      },
+    });
+  };
   return (
     <div className="bg-white rounded-lg shadow">
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
@@ -66,8 +96,18 @@ export default function PendignRequest({ pendingRequests }: Props) {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="approve">Approve</Button>
-                <Button variant="delete">Reject</Button>
+                <Button
+                  onClick={() => handleDecision(p.id, "APPROVED")}
+                  variant="approve"
+                >
+                  Approve
+                </Button>
+                <Button
+                  onClick={() => handleDecision(p.id, "REJECTED")}
+                  variant="delete"
+                >
+                  Reject
+                </Button>
               </div>
             </div>
           ))}

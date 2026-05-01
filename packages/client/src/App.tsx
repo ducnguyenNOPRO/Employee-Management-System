@@ -3,12 +3,10 @@ import "./App.css";
 import DashboardLayout from "./components/DashboardLayout";
 import Dashboard from "./pages/dashboard";
 import Employees from "./pages/employees";
-import Departments from "./pages/departments";
 import LeaveRequests from "./pages/leaveRequests";
 import EmployeeDetail from "./pages/employeeDetail";
 import Login from "./pages/login";
 import Register from "./pages/register";
-import ProtectedRoute from "./components/protectedRoutes";
 import DepartmentDetail from "./pages/departmentDetail";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
@@ -62,7 +60,6 @@ const router = createBrowserRouter([
       { path: "schedule", element: <Schedule /> },
       { path: "employees", element: <Employees /> },
       { path: "employees/:id", element: <EmployeeDetail /> },
-      { path: "departments", element: <Departments /> },
       { path: "departments/:id", element: <DepartmentDetail /> },
       { path: "leaves", element: <LeaveRequests /> },
     ],

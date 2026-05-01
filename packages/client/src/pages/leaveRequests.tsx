@@ -34,10 +34,12 @@ export default function LeaveRequests() {
   const { data: requests } = useQuery({
     queryKey: ["leaves"],
     queryFn: leaveService.getRequests,
+    refetchOnMount: "always",
   });
   const { data: stats } = useQuery({
     queryKey: ["leaveStats"],
     queryFn: leaveService.getStats,
+    refetchOnMount: "always",
   });
   const [openModal, setOpenModal] = useState(false);
 

@@ -12,8 +12,9 @@ export default function Dashboard() {
   // when other state change, component won't re-render
   const user = useAuthStore((s) => s.user);
   const { data } = useQuery<DashboardSummary>({
-    queryKey: ["summary"],
+    queryKey: ["dashboardSummary"],
     queryFn: dashboardService.getSummary,
+    refetchOnMount: "always",
   });
 
   const stats = data?.stats;
