@@ -9,7 +9,7 @@ export default function UserCharacters({
 }) {
   return (
     <div
-      className={`flex items-center justify-center font-semibold w-10 h-10 rounded-full ${color ? color : "text-blue-700  bg-blue-100"}`}
+      className={`flex items-center justify-center font-semibold w-10 h-10 rounded-full border ${color ? color : "text-blue-700  bg-blue-100 border-blue-200"}`}
     >
       <p>{firstName[0]}</p>
       <p>{lastName[0]}</p>

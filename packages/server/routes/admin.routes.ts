@@ -21,9 +21,13 @@ import {
   editTimeEntry,
   getSchedules,
   publishSchedules,
+  getDashboardSummary,
 } from "../controllers/admin.controller";
 
 const adminRouter = Router();
+
+// dashboard
+adminRouter.get("/dashboard/summary", getDashboardSummary);
 
 // employee
 adminRouter.get("/employees", getEmployees); // Get all employees or by role

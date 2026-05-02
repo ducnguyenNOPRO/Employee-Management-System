@@ -1,4 +1,12 @@
+import type { Decimal } from "@prisma/client/runtime/client";
+import type {
+  user_role,
+  employement_type,
+  status,
+  time_entry_type,
+} from "../generated/prisma/enums";
 import { prisma } from "../lib/prisma";
+import { format } from "date-fns";
 
 /**
  * Case 2.1: Transfer a manager (already managing another dept) from their current department to a new department
@@ -200,4 +208,109 @@ export function timeToDate(time: string, baseDate = new Date()) {
   d.setHours(hours!, minutes, 0, 0);
 
   return d;
+}
+
+type ExceptionType =
+  | "ABSENT"
+  | "NO_CLOCK_OUT"
+  | "OVER_TIME"
+  | "EARLY_CLOCK_OUT";
+type AttendanceException = {
+  type: ExceptionType;
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+  detail: string;
+};
+
+export function formatAttendanceExceptions(
+  shifts: ({
+    user: {
+      id: string;
+      department_id: string | null;
+      location_id: string;
+      email: string;
+      password_hash: string | null;
+      address: string;
+      position: string;
+      role: user_role;
+      first_name: string;
+      last_name: string;
+      employment_type: employement_type;
+      status: status;
+      phone: string;
+      hourly_rate: Decimal;
+      emergency_contact: string | null;
+      emergency_phone: string | null;
+      start_date: Date | null;
+      updated_at: Date | null;
+    };
+    time_entries: {
+      id: string;
+      updated_at: Date;
+      clock_out: Date | null;
+      user_id: string;
+      created_at: Date;
+      shift_id: string;
+      clock_in: Date | null;
+      type: time_entry_type;
+    }[];
+  } & {
+    id: string;
+    location_id: string;
+    updated_at: Date;
+    user_id: string;
+    notes: string | null;
+    start_time: Date;
+    end_time: Date;
+    created_at: Date;
+  })[],
+  now: number | Date
+) {
+  const result: AttendanceException[] = [];
+
+  for (const shift of shifts) {
+    const te = shift.time_entries[0];
+    const shiftEnded = shift.end_time < now;
+
+    const push = (type: ExceptionType, detail: string) =>
+      result.push({
+        type,
+        employeeId: shift.user_id,
+        firstName: shift.user.first_name,
+        lastName: shift.user.last_name,
+        detail,
+      });
+
+    console.log(shift.start_time);
+    console.log(new Date(shift.start_time));
+    console.log(shift.end_time);
+    console.log(new Date(shift.end_time));
+
+    if (!te && shiftEnded) {
+      push(
+        "ABSENT",
+        `Scheduled for ${format(shift.start_time, "HH:mm")} • No Clock In`
+      );
+      continue;
+    }
+    if (!te?.clock_out && shiftEnded) {
+      push(
+        "NO_CLOCK_OUT",
+        `Shift ended at ${format(shift.end_time, "HH:mm")} • No Clock out`
+      );
+      continue;
+    }
+    if (te?.clock_out && te.clock_out > shift.end_time) {
+      push("OVER_TIME", `Shift ended at ${format(shift.end_time, "HH:mm")}`);
+      continue;
+    }
+    if (te?.clock_out && te.clock_out < shift.end_time) {
+      push(
+        "EARLY_CLOCK_OUT",
+        `Clock out at ${format(te.clock_out, "HH:mm")} • Clock out early `
+      );
+    }
+  }
+  return result;
 }

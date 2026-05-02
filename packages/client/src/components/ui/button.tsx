@@ -10,8 +10,8 @@ export const buttonVariants = cva(
       variant: {
         default: "bg-white text-black hover:bg-gray-100",
         add: "bg-blue-500 text-white hover:bg-blue-700",
-        delete: "bg-white text-red-700 hover:bg-red-50 outline-red-200",
-        approve: "bg-green-50 text-green-900 hover:bg-green-200",
+        delete: "bg-red-50 text-red-700 hover:bg-red-100",
+        approve: "bg-green-50 text-green-700 hover:bg-green-100",
         disable: "bg-gray-100 text-gray-500 cursor-default",
         ghost: "outline-none",
       },

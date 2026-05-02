@@ -104,9 +104,7 @@ export default function EmployeeReadOnly({ employee, toggle }: EmployeeProps) {
                     Annual Salary
                   </label>
                   <div className="flex items-center gap-2 mt-1">
-                    <p className="text-gray-900">
-                      ${employee.salary.toLocaleString()}
-                    </p>
+                    <p className="text-gray-900">${employee.hourly_rate}</p>
                   </div>
                 </div>
               </div>

@@ -2,6 +2,14 @@ export function formatString(s: string) {
   return s.replace("_", " ");
 }
 
+export function formatSnakeCase(str: string) {
+  return str
+    .toLowerCase()
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 export function simpleFormatISODate(d: string) {
   return d.split("T")[0];
 }

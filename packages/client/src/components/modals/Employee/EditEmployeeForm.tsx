@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { EmployeeDetail } from "@/types/employee";
 import { departmentService } from "@/services/department.service";
 import type { DepartmentOverview } from "@/types/department";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ProfileCard from "./ProfileCard";
 import { employeeService } from "@/services/employee.service";
 
@@ -21,6 +21,7 @@ type EmployeeProps = {
 
 export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: departments } = useQuery<DepartmentOverview[]>({
     queryKey: ["departments"],
     queryFn: departmentService.getDepartments,
@@ -42,7 +43,7 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
       employment_type: employee.employment_type,
       position: employee.position,
       phone: employee.phone,
-      salary: employee.salary,
+      hourly_rate: employee.hourly_rate,
       role: employee.role,
       start_date: employee.start_date.split("T")[0], // BE return ISO format
     },
@@ -78,6 +79,8 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
 
     try {
       await employeeService.patchEmployee(employee.id, changedFields);
+      queryClient.invalidateQueries(["employee", employee.id]);
+      queryClient.invalidateQueries(["employees"]);
       toggle(); // Go back to ReadOnly Component
     } catch {
       // stay in edit mode
@@ -209,15 +212,16 @@ export default function EditEmployeeForm({ employee, toggle }: EmployeeProps) {
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-1/2 translate-y-1/4 h-4 w-4 text-gray-400" />
                     <Input
-                      label="Annual Salary"
+                      label="Hourly Rate"
                       type="number"
+                      step="0.01"
                       register={register}
                       id="salary"
-                      name="salary"
+                      name="hourly_rate"
                       required
                       className="pl-10"
                       placeholder="75000"
-                      error={errors.salary?.message}
+                      error={errors.hourly_rate?.message}
                     />
                   </div>
                 </div>

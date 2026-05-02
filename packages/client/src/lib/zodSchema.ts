@@ -63,7 +63,7 @@ export const employeeSchema = z.object({
   position: z.string().trim().min(1, "Position is required"),
   employment_type: z.enum(["FULL_TIME", "PART_TIME", "CONTRACT"]),
   role: z.enum(["EMPLOYEE", "MANAGER"]),
-  salary: z.coerce.number().min(0, "Must be a positive value > 0"),
+  hourly_rate: z.coerce.number().min(0, "Must be a positive value > 0"),
   start_date: z.iso.date(),
   department_id: z.preprocess(
     (val) => (val === "" || val === null || val === undefined ? null : val),
