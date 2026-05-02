@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import { allowRoles, AuthenticatedRoute } from "./middlewares/auth.middlewares";
 import cors from "cors";
 import mockDataRouter from "./routes/mockData-create.routes";
+import testRouter from "./routes/test.routes";
 
 const app = express();
 
@@ -19,6 +20,8 @@ app.use("/api/auth", authRouter);
 
 // Mock Data create routes
 app.use("/api/mock", mockDataRouter);
+
+app.use("/api/test", testRouter);
 
 // Authuticated routes
 // app.use(AuthenticatedRoute);  // Check for accessToken and refreshToken
