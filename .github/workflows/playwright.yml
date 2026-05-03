@@ -63,7 +63,7 @@ jobs:
         run: |
           cd packages/server
           bunx prisma migrate
-          bunx primsa seed
+          bunx primsa deploy
 
       - name: Run Playwright tests
         env: 
