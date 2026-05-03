@@ -11,6 +11,22 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: ems
+        ports:
+          - 5432:5432
+        # Wait for postgres to be ready before starting the job
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v5
 
@@ -41,19 +57,19 @@ jobs:
         run: |
           cd packages/tests
           bunx playwright install --with-deps
+
       - name: Run Migrations
         env: 
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: postgresql://user:password@localhost:5432/ems
         run: |
           cd packages/server
           bunx prisma migrate deploy
 
       - name: Run Playwright tests
         env: 
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DB_DATABASE_NAME: ${{ secrets.DB_DATABASE_NAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DATABASE_URL: postgresql://user:password@localhost:5432/ems
+          DB_PASSWORD: password
+          DB_USERNAME: user
         run: |
           cd packages/tests
           bunx playwright test
