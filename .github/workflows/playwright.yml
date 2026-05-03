@@ -41,6 +41,10 @@ jobs:
         run: |
           cd packages/tests
           bunx playwright install --with-deps
+      - name: Run Migrations
+        run: |
+          cd packages/server
+          bunx prisma migrate deploy
 
       - name: Run Playwright tests
         env: 

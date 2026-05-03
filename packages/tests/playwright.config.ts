@@ -8,7 +8,8 @@ export default defineConfig({
 
   use: {
     baseURL: "http://localhost:5173",
-    trace: "on-first-retry",
+    trace: "retain-on-failure",
+    video: "on-first-retry",
 
     // Screenshot on failure
     screenshot: "only-on-failure",
