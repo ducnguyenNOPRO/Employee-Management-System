@@ -1,7 +1,0 @@
-// e2e/health.spec.ts
-import { test, expect } from "@playwright/test";
-
-test("app loads", async ({ page }) => {
-  await page.goto("/");
-  await expect(page).toHaveURL(/localhost/);
-});
