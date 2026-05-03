@@ -28,7 +28,7 @@ jobs:
 
       - name: Run Playwright tests
         run: |
-          cd tests
+          cd packages/tests
           bunx playwright test
 
       - uses: actions/upload-artifact@v4
