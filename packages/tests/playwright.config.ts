@@ -40,10 +40,10 @@ export default defineConfig({
     // },
   ],
 
-  // Run both FE and BE using concurrently
   webServer: {
-    command: "cd ../../ && bun run dev",
+    command: "cd ../client && bun run dev",
     url: "http://localhost:5173",
+    timeout: 120_000,
     reuseExistingServer: !process.env.CI,
   },
 });
