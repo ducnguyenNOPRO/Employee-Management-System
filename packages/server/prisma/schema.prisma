@@ -202,8 +202,8 @@ model time_entry{
   updated_at       DateTime   @updatedAt
 
   // relation
-  user             user       @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  shift            shift      @relation(fields: [shift_id], references: [id], onDelete: Cascade)
+  user             user       @relation(fields: [user_id], references: [id], onDelete: Restrict)
+  shift            shift      @relation(fields: [shift_id], references: [id], onDelete: Restrict)
 
   time_entry_edit  time_entry_edit[]
 

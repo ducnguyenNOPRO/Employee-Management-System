@@ -1,4 +1,5 @@
 Run these query in DB for seeded
+## For /leaves
 INSERT INTO "user" (id, email, first_name, last_name, phone, address, position, role, employment_type, status, hourly_rate, location_id)
 VALUES (
   'ctest000000requester0000001',
@@ -100,6 +101,59 @@ VALUES (
   'Already rejected trip',
   'REJECTED',
   3,
+  NOW(),
+  NOW()
+);
+
+## For /schedules
+-- Shift to EDIT in tests
+INSERT INTO shift (id, user_id, location_id, start_time, end_time, notes, created_at, updated_at)
+VALUES (
+  'cshift000000000000000edit01',
+  'ctest000000requester0000001',
+  '250387',
+  '2025-09-01 09:00:00',
+  '2025-09-01 17:00:00',
+  'Seeded for edit test',
+  NOW(),
+  NOW()
+);
+
+-- Shift to DELETE in tests (no time_entries so it can be deleted)
+INSERT INTO shift (id, user_id, location_id, start_time, end_time, notes, created_at, updated_at)
+VALUES (
+  'cshift000000000000000del01x',
+  'ctest000000requester0000001',
+  '250387',
+  '2025-09-02 09:00:00',
+  '2025-09-02 17:00:00',
+  'Seeded for delete test',
+  NOW(),
+  NOW()
+);
+
+-- Shift that has a time entry (cannot be deleted)
+INSERT INTO shift (id, user_id, location_id, start_time, end_time, notes, created_at, updated_at)
+VALUES (
+  'cshift000000000000000has01x',
+  'ctest000000requester0000001',
+  '250387',
+  '2025-09-03 09:00:00',
+  '2025-09-03 17:00:00',
+  'Has time entry - cannot delete',
+  NOW(),
+  NOW()
+);
+
+-- Time entry attached to it
+INSERT INTO time_entry (id, user_id, shift_id, clock_in, clock_out, type, created_at, updated_at)
+VALUES (
+  'ctime0000000000000000entry1',
+  'ctest000000requester0000001',
+  'cshift000000000000000has01x',
+  '2025-09-03 09:00:00',
+  '2025-09-03 17:00:00',
+  'WORK',
   NOW(),
   NOW()
 );

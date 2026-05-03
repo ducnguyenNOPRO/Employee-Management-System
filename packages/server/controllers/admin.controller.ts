@@ -1439,7 +1439,31 @@ export async function publishSchedules(req: Request, res: Response) {
     });
 
     return res.status(200).json({ message: "Schedules published successfull" });
-  } catch (error) {
+  } catch (error: any) {
+    // Edit/delete targeted a shift id that doesn't exist
+    if (error.code === "P2025") {
+      return res
+        .status(404)
+        .json({
+          message:
+            "One or more shifts not found. They may have already been deleted.",
+        });
+    }
+
+    // add[] contained a user_id or location_id that doesn't exist (FK violation)
+    if (error.code === "P2003") {
+      return res
+        .status(400)
+        .json({
+          message: "Invalid user. One or more employees could not be found.",
+        });
+    }
+    // Tried to delete a shift that has time entries
+    if (error.cause?.code === "23001") {
+      return res
+        .status(409)
+        .json({ message: "Cannot delete a shift that has time entries." });
+    }
     return res.status(500).json({ message: "Internal server error" });
   }
 }

@@ -77,3 +77,41 @@ export async function resetLeave(req: Request, res: Response) {
     return res.status(500).json({ message: "Internal server error" });
   }
 }
+
+export async function resetShift(req: Request, res: Response) {
+  try {
+    await prisma.shift.update({
+      where: { id: req.params.id as string },
+      data: req.body,
+    });
+    return res.status(200).json({ message: "Reset Successfull" });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+// Re-insert the deleted shift
+export async function seedShift(req: Request, res: Response) {
+  try {
+    await prisma.shift.create({
+      data: req.body,
+    });
+    return res.status(200).json({ message: "Seed Successfull" });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+// Delete the added shift during tests
+export async function deleteShift(req: Request, res: Response) {
+  const notes = req.query.notes as string;
+  try {
+    await prisma.shift.deleteMany({
+      where: { notes },
+    });
+
+    return res.status(200).json({ message: "Deleted shift succesfully" });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
