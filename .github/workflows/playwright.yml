@@ -43,6 +43,11 @@ jobs:
           bunx playwright install --with-deps
 
       - name: Run Playwright tests
+        env: 
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DB_DATABASE_NAME: ${{ secrets.DB_DATABASE_NAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
         run: |
           cd packages/tests
           bunx playwright test
@@ -51,5 +56,5 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
-          path: playwright-report/
+          path: packages/tests/playwright-report/
           retention-days: 30

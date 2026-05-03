@@ -344,6 +344,10 @@ test.describe("POST /api/admin/schedules", () => {
         delete: [DELETE_SHIFT_ID],
       });
 
+      if (res.status() == 500) {
+        console.log("Error body", await res.text());
+      }
+
       expect(res.status()).toBe(200);
       const body = await res.json();
       expect(body.message).toBe("Schedules published successfull");
