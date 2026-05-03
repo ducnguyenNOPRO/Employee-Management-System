@@ -4,7 +4,7 @@ export default defineConfig({
   testDir: "./",
 
   // Reporter configuration
-  reporter: [["html"], ["list"]],
+  reporter: [["html"], ["list"], ["github"]],
 
   use: {
     baseURL: "http://localhost:5173",
