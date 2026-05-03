@@ -34,22 +34,15 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd tests
+          cd packages/tests
           bun install
 
       - name: Install Playwright Browsers
         run: |
-          cd tests
+          cd packages/tests
           bunx playwright install --with-deps
 
       - name: Run Playwright tests
         run: |
-          cd tests
+          cd packages/tests
           bunx playwright test
-
-      - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report
-          path: tests/playwright-report/
-          retention-days: 30
