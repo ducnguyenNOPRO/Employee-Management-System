@@ -1,9 +1,6 @@
 # dependencies (bun install)
 node_modules
 
-# prisma
-/prisma/migrations
-
 
 # output
 out
