@@ -16,19 +16,35 @@ jobs:
 
       - uses: oven-sh/setup-bun@v1
 
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            tests/node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('tests/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('tests/bun.lockb') }}
+
       - name: Install dependencies
         run: |
-          cd packages/tests
+          cd tests
           bun install
 
       - name: Install Playwright Browsers
         run: |
-          cd packages/tests
+          cd tests
           bunx playwright install --with-deps
 
       - name: Run Playwright tests
         run: |
-          cd packages/tests
+          cd tests
           bunx playwright test
 
       - uses: actions/upload-artifact@v4
