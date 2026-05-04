@@ -17,8 +17,6 @@ jobs:
         env:
           POSTGRES_PASSWORD: password
           POSTGRES_DB: ems
-        ports:
-          - 5432:5432
         # Wait for postgres to be ready before starting the job
         options: >-
           --health-cmd pg_isready
@@ -31,22 +29,6 @@ jobs:
 
       - uses: oven-sh/setup-bun@v1
 
-      - name: Cache Bun dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.bun/install/cache
-            tests/node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('tests/bun.lockb') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('tests/bun.lockb') }}
-
       - name: Install dependencies
         run: |
           cd packages/tests
@@ -57,12 +39,13 @@ jobs:
           cd packages/tests
           bunx playwright install --with-deps
 
-      - name: Run Migrations
+      - name: Setup database
         env: 
           DATABASE_URL: postgresql://postgres:password@localhost:5432/ems
         run: |
           cd packages/server
-          bunx prisma migrate deploy
+          bun run db:migrate
+          bun run db:seed
 
       - name: Run Playwright tests
         env: 

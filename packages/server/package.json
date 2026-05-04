@@ -3,13 +3,19 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "prisma": {
+    "seed": "bun prisma/seed.ts"
+  },
   "scripts": {
     "start": "bun run index.ts",
     "dev": "bun --watch run index.ts",
     "pull": "bunx prisma db pull",
     "migrate": "bunx prisma migrate dev",
     "generate": "bunx prisma generate",
-    "studio": "bunx prisma studio"
+    "studio": "bunx prisma studio",
+    "db:seed": "bunx prisma db seed",
+    "db:reset": "bunx prisma migrate reset",
+    "db:migrate": "bunx prisma migrate deploy"
   },
   "devDependencies": {
     "@types/bun": "latest",
