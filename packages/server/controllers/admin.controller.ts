@@ -1442,21 +1442,19 @@ export async function publishSchedules(req: Request, res: Response) {
   } catch (error: any) {
     // Edit/delete targeted a shift id that doesn't exist
     if (error.code === "P2025") {
-      return res
-        .status(404)
-        .json({
-          message:
-            "One or more shifts not found. They may have already been deleted.",
-        });
+      return res.status(404).json({
+        message:
+          "One or more shifts not found. They may have already been deleted.",
+        error: error,
+      });
     }
 
     // add[] contained a user_id or location_id that doesn't exist (FK violation)
     if (error.code === "P2003") {
-      return res
-        .status(400)
-        .json({
-          message: "Invalid user. One or more employees could not be found.",
-        });
+      return res.status(400).json({
+        message: "Invalid user. One or more employees could not be found.",
+        error: error,
+      });
     }
     // Tried to delete a shift that has time entries
     if (error.cause?.code === "23001") {
