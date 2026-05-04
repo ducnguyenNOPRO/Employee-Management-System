@@ -1451,10 +1451,18 @@ export async function publishSchedules(req: Request, res: Response) {
 
     // add[] contained a user_id or location_id that doesn't exist (FK violation)
     if (error.code === "P2003") {
-      return res.status(400).json({
-        message: "Invalid user. One or more employees could not be found.",
-        error: error,
-      });
+      const constraint =
+        (error.meta?.driverAdapterError as any)?.cause?.constraint?.index ?? "";
+      if (constraint === "time_entry_shift_id_fkey") {
+        return res
+          .status(409)
+          .json({ message: "Cannot delete a shift that has time entries." });
+      }
+      return res
+        .status(400)
+        .json({
+          message: "Invalid user. One or more employees could not be found.",
+        });
     }
     // Tried to delete a shift that has time entries
     if (error.cause?.code === "23001") {

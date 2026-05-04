@@ -40,15 +40,14 @@ jobs:
           cd packages/tests
           bunx playwright install --with-deps
 
-      - name: Setup database
+      - name: Migrate database
         env: 
           DATABASE_URL: postgresql://postgres:password@localhost:5432/ems
         run: |
           cd packages/server
           bun run db:migrate
-          bun run db:seed
 
-      - name: Run Playwright tests
+      - name: Seed and Run Playwright tests
         env: 
           DATABASE_URL: postgresql://postgres:password@localhost:5432/ems
         run: |

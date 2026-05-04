@@ -6,7 +6,7 @@ async function globalSetup(config: FullConfig) {
   console.log("🔄 Preparing the test environment...");
 
   // Reset and seed the database
-  execSync("bun run db:reset -- --force", {
+  execSync("bun run db:seed", {
     stdio: "inherit",
     cwd: path.resolve(__dirname, "../server"),
   });
