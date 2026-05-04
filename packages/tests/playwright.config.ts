@@ -4,7 +4,7 @@ export default defineConfig({
   testDir: "./",
 
   // Crucial config: global setup
-  globalSetup: require.resolve("./global-setup.ts"),
+  // globalSetup: require.resolve("./global-setup.ts"),
 
   // Reporter configuration
   reporter: [["html"], ["list"], ["github"]],
