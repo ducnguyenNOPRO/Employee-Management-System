@@ -205,7 +205,7 @@ function formatDuration(ms: number): string {
 export function timeToDate(time: string, baseDate = new Date()) {
   const [hours, minutes] = time.split(":").map(Number);
   const d = new Date(baseDate);
-  d.setHours(hours!, minutes, 0, 0);
+  d.setUTCHours(hours!, minutes, 0, 0);
 
   return d;
 }

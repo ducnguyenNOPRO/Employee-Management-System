@@ -58,6 +58,35 @@ async function main() {
         hourly_rate: 30.0,
         location_id: "250387",
       },
+      {
+        id: "ctest000000clockedin000001x",
+        email: "clockedin@test.com",
+        first_name: "Sam",
+        last_name: "ClockedIn",
+        phone: "+13334445555",
+        address: "321 Clocked St",
+        position: "Engineer",
+        role: "EMPLOYEE",
+        employment_type: "FULL_TIME",
+        status: "ACTIVE",
+        hourly_rate: 20.0,
+        location_id: "250387",
+      },
+      {
+        // Dedicated user for absent entry — avoids one_active_time_entry_per_user conflict
+        id: "ctest000000absent00000001x",
+        email: "absent@test.com",
+        first_name: "Bob",
+        last_name: "Absent",
+        phone: "+19998887777",
+        address: "789 Absent St",
+        position: "Engineer",
+        role: "EMPLOYEE",
+        employment_type: "FULL_TIME",
+        status: "ACTIVE",
+        hourly_rate: 20.0,
+        location_id: "250387",
+      },
     ],
   });
 
@@ -138,6 +167,7 @@ async function main() {
   // ── Shifts ─────────────────────────────────────────────────────────────────
   await prisma.shift.createMany({
     data: [
+      // ── Schedule tests ──────────────────────────────────────────────────────
       {
         id: "cshift000000000000000edit01",
         user_id: "ctest000000requester0000001",
@@ -162,19 +192,95 @@ async function main() {
         end_time: new Date("2025-09-03T17:00:00Z"),
         notes: "Has time entry - cannot delete",
       },
+      // ── Clock in/out tests ──────────────────────────────────────────────────
+      {
+        // Clean shift — no time entry, used for clock in happy path
+        id: "cshift00000000000clockin001",
+        user_id: "ctest000000requester0000001",
+        location_id: "250387",
+        start_time: new Date("2025-10-01T09:00:00Z"),
+        end_time: new Date("2025-10-01T17:00:00Z"),
+        notes: "Clock in happy path",
+      },
+      {
+        // Has WORK entry with clock_in only — for "already clocked in" + clock out tests
+        id: "cshift0000000000clockin002x",
+        user_id: "ctest000000clockedin000001x",
+        location_id: "250387",
+        start_time: new Date("2025-10-02T09:00:00Z"),
+        end_time: new Date("2025-10-02T17:00:00Z"),
+        notes: "Clock in002 - already has entry",
+      },
+      {
+        // Belongs to absent user — has ABSENT entry
+        id: "cshift0000000000clockin003x",
+        user_id: "ctest000000absent00000001x",
+        location_id: "250387",
+        start_time: new Date("2025-10-03T09:00:00Z"),
+        end_time: new Date("2025-10-03T17:00:00Z"),
+        notes: "Clock in003 - absent entry",
+      },
+      // ── Edit time entry tests ───────────────────────────────────────────────
+      {
+        // Has an existing WORK entry — for edit happy path
+        id: "cshift00000000000edittime01",
+        user_id: "ctest000000requester0000001",
+        location_id: "250387",
+        start_time: new Date("2025-10-04T09:00:00Z"),
+        end_time: new Date("2025-10-04T17:00:00Z"),
+        notes: "Edit time entry - has entry",
+      },
+      {
+        // No time entry — edit creates a new one
+        id: "cshift00000000000edittime02",
+        user_id: "ctest000000requester0000001",
+        location_id: "250387",
+        start_time: new Date("2025-10-05T09:00:00Z"),
+        end_time: new Date("2025-10-05T17:00:00Z"),
+        notes: "Edit time entry - no entry",
+      },
     ],
   });
 
-  // ── Time Entry (attached to the non-deletable shift) ───────────────────────
-  await prisma.time_entry.create({
-    data: {
-      id: "ctime0000000000000000entry1",
-      user_id: "ctest000000requester0000001",
-      shift_id: "cshift000000000000000has01x",
-      clock_in: new Date("2025-09-03T09:00:00Z"),
-      clock_out: new Date("2025-09-03T17:00:00Z"),
-      type: "WORK",
-    },
+  // ── Time Entries ───────────────────────────────────────────────────────────
+  // Each user can only have one active (clock_out = null) entry at a time
+  // due to the one_active_time_entry_per_user unique index.
+  await prisma.time_entry.createMany({
+    data: [
+      // requester — has01x: fully clocked out, not active
+      {
+        id: "ctime0000000000000000entry1",
+        user_id: "ctest000000requester0000001",
+        shift_id: "cshift000000000000000has01x",
+        clock_in: new Date("2025-09-03T09:00:00Z"),
+        clock_out: new Date("2025-09-03T17:00:00Z"),
+        type: "WORK",
+      },
+      // requester — edittime01: fully clocked out, not active
+      {
+        id: "ctime000000000000edit00001",
+        user_id: "ctest000000requester0000001",
+        shift_id: "cshift00000000000edittime01",
+        clock_in: new Date("2025-10-04T09:00:00Z"),
+        clock_out: new Date("2025-10-04T17:00:00Z"),
+        type: "WORK",
+      },
+      // requester — clockin002x: clock_in set, no clock_out (one active entry)
+      {
+        id: "ctime000000000000clkin0001",
+        user_id: "ctest000000clockedin000001x",
+        shift_id: "cshift0000000000clockin002x",
+        clock_in: new Date("2025-10-02T09:00:00Z"),
+        type: "WORK",
+      },
+      // absent user — clockin003x: ABSENT, no clock_in or clock_out (one active entry)
+      {
+        id: "ctime000000000000absent001",
+        user_id: "ctest000000absent00000001x",
+        shift_id: "cshift0000000000clockin003x",
+        type: "ABSENT",
+      },
+    ],
   });
 
   console.log("Seeding complete.");

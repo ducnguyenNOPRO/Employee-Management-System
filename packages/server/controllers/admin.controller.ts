@@ -1330,7 +1330,7 @@ export async function editTimeEntry(req: Request, res: Response) {
           old_clock_out: timeEntry.clock_out,
           new_clock_in: newClockIn,
           new_clock_out: newClockOut,
-          edited_by_id: req.user?.id || "cmnz7a87n000gr87k1w1apndx",
+          edited_by_id: req.user?.id || "ctest000000clockedin000001x", // just for local development
           reason,
         },
       });
@@ -1458,11 +1458,9 @@ export async function publishSchedules(req: Request, res: Response) {
           .status(409)
           .json({ message: "Cannot delete a shift that has time entries." });
       }
-      return res
-        .status(400)
-        .json({
-          message: "Invalid user. One or more employees could not be found.",
-        });
+      return res.status(400).json({
+        message: "Invalid user. One or more employees could not be found.",
+      });
     }
     // Tried to delete a shift that has time entries
     if (error.cause?.code === "23001") {

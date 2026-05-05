@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
-// for testing
+
+// ─── Leave ────────────────────────────────────────────────────────────────────
 export async function deleteRequest(req: Request, res: Response) {
   let reason = req.query.reason as string | null;
   reason = reason === "null" ? null : reason;
@@ -44,8 +45,7 @@ export async function resetLeave(req: Request, res: Response) {
 
       if (!re) throw { status: 404, message: "Request not found" };
 
-      // Reject will decrement it
-      // so reset will increment it back
+      // Rejection decrements used — re-increment it on reset
       if (re.status === "REJECTED") {
         await tx.leave_balance.update({
           where: {
@@ -59,7 +59,7 @@ export async function resetLeave(req: Request, res: Response) {
       }
 
       await tx.leave_request.update({
-        where: { id: req.params.id as string }, // was bare `id` — undefined
+        where: { id: req.params.id as string },
         data: {
           status: "PENDING",
           status_priority: 1,
@@ -69,7 +69,7 @@ export async function resetLeave(req: Request, res: Response) {
       });
     });
 
-    return res.status(200).json({ message: "Reset successful" }); // was missing
+    return res.status(200).json({ message: "Reset successful" });
   } catch (error: any) {
     if (error?.status) {
       return res.status(error.status).json({ message: error.message });
@@ -78,6 +78,7 @@ export async function resetLeave(req: Request, res: Response) {
   }
 }
 
+// ─── Shift ────────────────────────────────────────────────────────────────────
 export async function resetShift(req: Request, res: Response) {
   try {
     await prisma.shift.update({
@@ -90,7 +91,6 @@ export async function resetShift(req: Request, res: Response) {
   }
 }
 
-// Re-insert the deleted shift
 export async function seedShift(req: Request, res: Response) {
   try {
     await prisma.shift.create({
@@ -102,15 +102,43 @@ export async function seedShift(req: Request, res: Response) {
   }
 }
 
-// Delete the added shift during tests
 export async function deleteShift(req: Request, res: Response) {
   const notes = req.query.notes as string;
   try {
     await prisma.shift.deleteMany({
       where: { notes },
     });
-
     return res.status(200).json({ message: "Deleted shift succesfully" });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+// ─── Time Entry ───────────────────────────────────────────────────────────────
+
+// Delete a time entry by shift_id — used to clean up after clock in tests
+export async function deleteTimeEntry(req: Request, res: Response) {
+  const shift_id = req.query.shift_id as string;
+  try {
+    await prisma.time_entry.deleteMany({
+      where: { shift_id },
+    });
+    return res.status(200).json({ message: "Time entry deleted" });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+// Reset a time entry back to seeded state by shift_id
+// Body: { clock_in, clock_out, type }
+export async function resetTimeEntry(req: Request, res: Response) {
+  const shift_id = req.query.shift_id as string;
+  try {
+    await prisma.time_entry.updateMany({
+      where: { shift_id },
+      data: req.body,
+    });
+    return res.status(200).json({ message: "Time entry reset" });
   } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
   }
