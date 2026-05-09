@@ -183,7 +183,7 @@ export async function signIn(req: Request, res: Response) {
     });
   } catch (error) {
     console.log("Sign in error", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: error });
   }
 }
 

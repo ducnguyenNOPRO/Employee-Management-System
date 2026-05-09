@@ -50,6 +50,7 @@ jobs:
       - name: Seed and Run Playwright tests
         env: 
           DATABASE_URL: postgresql://postgres:password@localhost:5432/ems
+          ACCESS_TOKEN_SECRET: ${{ secrets.ACCESS_TOKEN_SECRET }}
         run: |
           cd packages/tests
           bunx playwright test
