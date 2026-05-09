@@ -52,10 +52,12 @@ export default function AttendanceDashboard() {
   const { data } = useQuery<AttendanceStats>({
     queryKey: ["attendanceStats"],
     queryFn: attendanceService.getStats,
+    refetchOnMount: "always",
   });
   const { data: rows } = useQuery<AttendaceLive[]>({
     queryKey: ["attendanceLive"],
     queryFn: attendanceService.getAttendance,
+    refetchOnMount: "always",
   });
 
   const columns = useMemo<ColumnDef<AttendaceLive>[]>(

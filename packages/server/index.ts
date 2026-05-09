@@ -24,12 +24,9 @@ app.use("/api/mock", mockDataRouter);
 app.use("/api/test", testRouter);
 
 // Authuticated routes
-// app.use(AuthenticatedRoute);  // Check for accessToken and refreshToken
-app.use(
-  "/api/users" /*, allowRoles(["employee", "manager", "admin"])*/,
-  userRouter
-);
-app.use("/api/admin" /*, allowRoles(["admin"])*/, adminRouter);
+app.use(AuthenticatedRoute); // Check for accessToken and refreshToken
+app.use("/api/users", allowRoles(["EMPLOYEE", "MANAGER", "ADMIN"]), userRouter);
+app.use("/api/admin", allowRoles(["MANAGER"]), adminRouter);
 
 const port = process.env.PORT || 3000;
 

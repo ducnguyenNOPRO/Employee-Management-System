@@ -14,17 +14,18 @@ import Forbidden from "./pages/404";
 import CreatePassword from "./pages/createPassword";
 import AttendanceDashboard from "./pages/attendance";
 import Schedule from "./pages/schedule";
+import ProtectedRoute from "./components/protectedRoutes";
 
 const router = createBrowserRouter([
   // Public routes
   {
-    path: "/login",
+    path: "/",
     element: <Login />,
   },
-  {
-    path: "/register",
-    element: <Register />,
-  },
+  // {
+  //   path: "/register",
+  //   element: <Register />,
+  // },
   {
     path: "/create-password",
     element: <CreatePassword />,
@@ -33,37 +34,38 @@ const router = createBrowserRouter([
   { path: "/Forbidden", element: <Forbidden /> },
 
   // Admin Routes
-  // {
-  //   element: <ProtectedRoute role="admin" />,
-  //   children: [
-  //     {
-  //       path: "/",
-  //       element: <DashboardLayout />,
-  //       children: [
-  //         { index: true, element: <Dashboard /> },
-  //         { path: "employees", element: <Employees /> },
-  //         { path: "employees/:id", element: <EmployeeDetail /> },
-  //         { path: "departments", element: <Departments /> },
-  //         { path: "departments/:id", element: <DepartmentDetail /> },
-  //         { path: "leaves", element: <LeaveRequests /> },
-  //       ],
-  //     },
-  //   ],
-  // },
-  // Dev mode
   {
-    path: "/",
-    element: <DashboardLayout />,
+    element: <ProtectedRoute role="MANAGER" />,
     children: [
-      { index: true, element: <Dashboard /> },
-      { path: "attendance", element: <AttendanceDashboard /> },
-      { path: "schedule", element: <Schedule /> },
-      { path: "employees", element: <Employees /> },
-      { path: "employees/:id", element: <EmployeeDetail /> },
-      { path: "departments/:id", element: <DepartmentDetail /> },
-      { path: "leaves", element: <LeaveRequests /> },
+      {
+        path: "/gm",
+        element: <DashboardLayout />,
+        children: [
+          { index: true, element: <Dashboard /> },
+          { path: "attendance", element: <AttendanceDashboard /> },
+          { path: "schedule", element: <Schedule /> },
+          { path: "employees", element: <Employees /> },
+          { path: "employees/:id", element: <EmployeeDetail /> },
+          { path: "departments/:id", element: <DepartmentDetail /> },
+          { path: "leaves", element: <LeaveRequests /> },
+        ],
+      },
     ],
   },
+  // Dev mode
+  // {
+  //   path: "/dashboard",
+  //   element: <DashboardLayout />,
+  // children: [
+  //   { index: true, element: <Dashboard /> },
+  //   { path: "attendance", element: <AttendanceDashboard /> },
+  //   { path: "schedule", element: <Schedule /> },
+  //   { path: "employees", element: <Employees /> },
+  //   { path: "employees/:id", element: <EmployeeDetail /> },
+  //   { path: "departments/:id", element: <DepartmentDetail /> },
+  //   { path: "leaves", element: <LeaveRequests /> },
+  // ],
+  // },
 ]);
 
 const queryClient = new QueryClient({

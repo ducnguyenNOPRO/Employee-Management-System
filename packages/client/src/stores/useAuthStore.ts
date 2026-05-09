@@ -2,6 +2,7 @@ import { authService } from "@/services/auth.service";
 import type { AuthState } from "@/types/store";
 import type { AuthUser } from "@/types/user";
 import { create } from "zustand";
+import { jwtDecode } from "jwt-decode";
 
 export const useAuthStore = create<AuthState<AuthUser>>((set, get) => ({
   accessToken: null,
@@ -31,12 +32,15 @@ export const useAuthStore = create<AuthState<AuthUser>>((set, get) => ({
       set({ loading: true });
       const { accessToken, message } = await authService.signIn(payload);
       get().setAccessToken(accessToken);
-
-      await get().fetchMe();
       alert(message);
+      await get().fetchMe();
+
+      // Decode and return role so caller can navigate
+      const { userRole } = jwtDecode<{ userRole: string }>(accessToken);
+      return userRole;
     } catch (error: any) {
       //console.error(error.response?.data?.message);
-      alert("Unable to sign in");
+      alert(error.response?.data?.message);
       throw error; // Throw error to outer catch to prevent navigation to /dashboard
     } finally {
       set({ loading: false });
@@ -57,7 +61,7 @@ export const useAuthStore = create<AuthState<AuthUser>>((set, get) => ({
       const { user } = await authService.fetchMe();
       set({ user });
     } catch (error: any) {
-      //console.error(error.response?.data?.message);
+      console.error(error);
       set({ user: null, accessToken: null });
       alert("Unable to get user information");
     } finally {

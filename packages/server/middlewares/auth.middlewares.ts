@@ -66,7 +66,7 @@ export function AuthenticatedRoute(
               id: decodedUser.userId,
             },
           });
-        } else if (decodedUser.userRole === "EMPLOYEE") {
+        } else if (["EMPLOYEE", "MANAGER"].includes(decodedUser.userRole)) {
           userWithPassword = await prisma.user.findUnique({
             where: {
               id: decodedUser.userId,

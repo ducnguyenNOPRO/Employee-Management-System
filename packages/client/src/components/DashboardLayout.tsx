@@ -12,12 +12,12 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "@/stores/useAuthStore";
 
 const navigation = [
-  { name: "Dashboard", path: "/", icon: LayoutDashboard },
-  { name: "Employees", path: "/employees", icon: Users },
-  { name: "Departments", path: "/departments", icon: Building2 },
-  { name: "Leave Requests", path: "/leaves", icon: Calendar },
-  { name: "Attendance", path: "/attendance", icon: ClipboardCheck },
-  { name: "Schedule", path: "/schedule", icon: CalendarDays },
+  { name: "Dashboard", path: "/gm", icon: LayoutDashboard },
+  { name: "Employees", path: "/gm/employees", icon: Users },
+  // { name: "Departments", path: "/gm/departments", icon: Building2 },
+  { name: "Leave Requests", path: "/gm/leaves", icon: Calendar },
+  { name: "Attendance", path: "/gm/attendance", icon: ClipboardCheck },
+  { name: "Schedule", path: "/gm/schedule", icon: CalendarDays },
 ];
 
 export default function DashboardLayout() {
@@ -43,7 +43,7 @@ export default function DashboardLayout() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/login");
+    navigate("/");
   };
 
   return (
@@ -74,7 +74,7 @@ export default function DashboardLayout() {
 
           {!collapsed && (
             <h1 className="text-xl font-bold text-gray-900 whitespace-nowrap">
-              Admin
+              Manager
             </h1>
           )}
         </div>
@@ -85,6 +85,7 @@ export default function DashboardLayout() {
               <NavLink
                 key={item.name}
                 to={item.path}
+                end={item.path === "/gm"}
                 className={({ isActive }) =>
                   `flex gap-2 items-center rounded-lg px-3 py-2 font-semibold text-sm ${
                     isActive
