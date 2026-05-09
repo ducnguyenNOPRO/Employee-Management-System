@@ -1,4 +1,6 @@
 import { test, expect } from "@playwright/test";
+import { authHeader } from "../auth";
+import { formatAttendanceExceptions } from "../../server/lib/helper";
 
 const BASE_URL = "http://localhost:3000";
 
@@ -26,14 +28,22 @@ const EDIT_SHIFT_ORIGINAL = {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-async function getSchedules(request: any, from: string, to: string) {
+async function getSchedules(
+  request: any,
+  from: string | null,
+  to: string | null
+) {
   return request.get(`${BASE_URL}/api/admin/schedules`, {
+    headers: authHeader(),
     params: { from, to },
   });
 }
 
 async function publishSchedules(request: any, body: Record<string, unknown>) {
-  return request.post(`${BASE_URL}/api/admin/schedules`, { data: body });
+  return request.post(`${BASE_URL}/api/admin/schedules`, {
+    data: body,
+    headers: authHeader(),
+  });
 }
 
 async function resetShift(
@@ -79,16 +89,12 @@ test.describe("GET /api/admin/schedules", () => {
   });
 
   test("400 - missing from", async ({ request }) => {
-    const res = await request.get(`${BASE_URL}/api/admin/schedules`, {
-      params: { to: TO },
-    });
+    const res = await getSchedules(request, null, TO);
     expect(res.status()).toBe(400);
   });
 
   test("400 - missing to", async ({ request }) => {
-    const res = await request.get(`${BASE_URL}/api/admin/schedules`, {
-      params: { from: FROM },
-    });
+    const res = await getSchedules(request, FROM, null);
     expect(res.status()).toBe(400);
   });
 

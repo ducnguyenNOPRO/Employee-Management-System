@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { authHeader } from "../auth";
 
 const BASE_URL = "http://localhost:3000";
 
@@ -13,7 +14,10 @@ const REJECTED_ID = "creq0000000vacation0rejected"; // 16h VACATION  REJECTED �
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 async function postLeave(request: any, body: Record<string, unknown>) {
-  return request.post(`${BASE_URL}/api/admin/leaves`, { data: body });
+  return request.post(`${BASE_URL}/api/admin/leaves`, {
+    data: body,
+    headers: authHeader(),
+  });
 }
 
 async function patchLeave(
@@ -21,11 +25,16 @@ async function patchLeave(
   id: string,
   body: Record<string, unknown>
 ) {
-  return request.patch(`${BASE_URL}/api/admin/leaves/${id}`, { data: body });
+  return request.patch(`${BASE_URL}/api/admin/leaves/${id}`, {
+    data: body,
+    headers: authHeader(),
+  });
 }
 
 async function getBalance(request: any, id: string) {
-  return request.get(`${BASE_URL}/api/admin/employees/${id}/balances`);
+  return request.get(`${BASE_URL}/api/admin/employees/${id}/balances`, {
+    headers: authHeader(),
+  });
 }
 
 async function deleteLeaveByReason(

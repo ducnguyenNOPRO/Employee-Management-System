@@ -7,7 +7,7 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { consumeInvitation } from "../lib/helper";
 
-const ACCESS_TOKEN_TTL = "5s";
+const ACCESS_TOKEN_TTL = "10m";
 const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000; // 14 days in ms
 
 // Local dev only

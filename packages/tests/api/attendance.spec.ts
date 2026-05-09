@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { authHeader } from "../auth";
 
 const BASE_URL = "http://localhost:3000";
 
@@ -21,12 +22,14 @@ const NO_ENTRY_SHIFT_ID = "cshift00000000000edittime02"; // no entry
 async function clockIn(request: any, body: Record<string, unknown>) {
   return request.post(`${BASE_URL}/api/admin/attendance/clock-in`, {
     data: body,
+    headers: authHeader(),
   });
 }
 
 async function clockOut(request: any, body: Record<string, unknown>) {
   return request.post(`${BASE_URL}/api/admin/attendance/clock-out`, {
     data: body,
+    headers: authHeader(),
   });
 }
 
@@ -37,6 +40,7 @@ async function editTimeEntry(
 ) {
   return request.patch(`${BASE_URL}/api/admin/attendance/${userId}`, {
     data: body,
+    headers: authHeader(),
   });
 }
 
