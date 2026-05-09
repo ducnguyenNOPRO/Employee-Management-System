@@ -20,11 +20,6 @@ export function AuthenticatedRoute(
     const authHeader = req.headers["authorization"];
     // Authorization: Bearer  <accessToken>--string
     const accessToken = authHeader && authHeader.split(" ")[1];
-    const refreshToken = req.cookies?.refreshToken;
-
-    if (!refreshToken) {
-      res.status(401).json({ message: "No refresh token found" });
-    }
 
     if (!accessToken) {
       return res.status(401).json({ message: "Access token undefined" });
@@ -44,20 +39,6 @@ export function AuthenticatedRoute(
         // jwt payload
         const decodedUser = decoded as DecodedUser;
 
-        // Case: accessToken is valid but refreshToken expired or null
-        // Reject immediately withou retry (calling /refresh in axios interceptor)
-        const session = await prisma.session.findUnique({
-          where: {
-            refresh_token: refreshToken,
-          },
-        });
-
-        if (!session || session.expires_at < new Date()) {
-          return res.status(403).json({
-            code: "REFRESH_TOKEN_EXPIRED",
-            message: "Refresh Token is expired or session not found",
-          });
-        }
         let userWithPassword;
 
         if (decodedUser.userRole === "ADMIN") {
@@ -66,7 +47,7 @@ export function AuthenticatedRoute(
               id: decodedUser.userId,
             },
           });
-        } else if (decodedUser.userRole === "EMPLOYEE") {
+        } else if (["EMPLOYEE", "MANAGER"].includes(decodedUser.userRole)) {
           userWithPassword = await prisma.user.findUnique({
             where: {
               id: decodedUser.userId,

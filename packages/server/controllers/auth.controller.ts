@@ -7,10 +7,11 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { consumeInvitation } from "../lib/helper";
 
-const ACCESS_TOKEN_TTL = "5s";
+const ACCESS_TOKEN_TTL = "10m";
 const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000; // 14 days in ms
 
-export async function signUp(req: Request, res: Response) {
+// Local dev only
+export async function signUpAdmin(req: Request, res: Response) {
   const result = signUpSchema.safeParse(req.body);
   if (!result.success) {
     return res.status(400).json({
@@ -19,7 +20,7 @@ export async function signUp(req: Request, res: Response) {
   }
 
   try {
-    const { firstName, lastName, email, password, role } = result.data;
+    const { first_name, last_name, email, password, role } = result.data;
     // Check if email exist
     const duplicate = await prisma.admin.findUnique({
       where: {
@@ -36,15 +37,62 @@ export async function signUp(req: Request, res: Response) {
     // Create user
     await prisma.admin.create({
       data: {
-        first_name: firstName,
-        last_name: lastName,
+        first_name: first_name,
+        last_name: last_name,
         email: email,
         password_hash: hashedPassword,
         role: role,
       },
     });
 
-    res.sendStatus(204);
+    return res.sendStatus(204);
+  } catch (error) {
+    console.log("Sign up error", error);
+    res.status(500).json({ message: "Server error" });
+  }
+}
+
+export async function signUpEmployee(req: Request, res: Response) {
+  const result = signUpSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({
+      message: `Error validation ${z.treeifyError(result.error).properties}`,
+    });
+  }
+
+  try {
+    const { first_name, last_name, email, password, role } = result.data;
+    // Check if email exist
+    const duplicate = await prisma.admin.findUnique({
+      where: {
+        email,
+      },
+    });
+    if (duplicate) {
+      res.status(400).json({ message: "email is existed" });
+    }
+
+    // Hasing password
+    const hashedPassword = await bcrypt.hash(password, 10); // salt = 10
+
+    // Create user
+    await prisma.user.create({
+      data: {
+        first_name: first_name,
+        last_name: last_name,
+        email: email,
+        password_hash: hashedPassword,
+        role: role,
+        address: "123 Main St",
+        position: "General Manager",
+        status: "ACTIVE",
+        phone: "+15556667766",
+        location_id: "250387",
+        hourly_rate: 50.0,
+      },
+    });
+
+    return res.sendStatus(204);
   } catch (error) {
     console.log("Sign up error", error);
     res.status(500).json({ message: "Server error" });
@@ -67,28 +115,33 @@ export async function signIn(req: Request, res: Response) {
     const { email, password } = result.data;
 
     // Check if this is admin signIN
-    let user = await prisma.admin.findUnique({
+    let admin = await prisma.admin.findUnique({
       where: {
         email,
       },
     });
+    const isAdmin = !!admin;
+    const account =
+      admin ?? (await prisma.user.findUnique({ where: { email } }));
+    if (!account) {
+      return res
+        .status(401)
+        .json({ message: "Email or password is incorrect" });
+    }
 
-    // Not admin ? Check employee Table
-    if (!user) {
-      user = await prisma.user.findUnique({
-        where: {
-          email,
-        },
+    // Only user.password_hash is nullable (requires activation)
+    if (!account.password_hash) {
+      return res.status(401).json({
+        message:
+          "Account is not activated. Please activate your account using the link in email",
       });
-      if (!user) {
-        return res
-          .status(401)
-          .json({ message: "Email or password is incorrect" });
-      }
     }
 
     // Check password
-    const passwordCorrect = await bcrypt.compare(password, user.password_hash);
+    const passwordCorrect = await bcrypt.compare(
+      password,
+      account.password_hash
+    );
     if (!passwordCorrect) {
       return res
         .status(401)
@@ -97,7 +150,7 @@ export async function signIn(req: Request, res: Response) {
 
     // Create accessToken with JWT
     const accessToken = jwt.sign(
-      { userId: user.id, userRole: user.role },
+      { userId: account.id, userRole: account.role },
       secret,
       {
         expiresIn: ACCESS_TOKEN_TTL,
@@ -106,25 +159,15 @@ export async function signIn(req: Request, res: Response) {
 
     // Create and save refreshToken with JST
     const refreshToken = crypto.randomBytes(64).toString("hex");
-    if (user.role === "admin") {
-      await prisma.session.create({
-        data: {
-          owner_type: "admin",
-          admin_id: user.id,
-          refresh_token: refreshToken,
-          expires_at: new Date(Date.now() + REFRESH_TOKEN_TTL),
-        },
-      });
-    } else if (["employee", "manager"].includes(user.role)) {
-      await prisma.session.create({
-        data: {
-          owner_type: user.role,
-          user_id: user.id,
-          refresh_token: refreshToken,
-          expires_at: new Date(Date.now() + REFRESH_TOKEN_TTL),
-        },
-      });
-    }
+    await prisma.session.create({
+      data: {
+        owner_type: isAdmin ? "ADMIN" : account.role, // ADMIN | MANAGER | EMPLOYEE
+        admin_id: isAdmin ? account.id : null,
+        user_id: isAdmin ? null : account.id,
+        refresh_token: refreshToken,
+        expires_at: new Date(Date.now() + REFRESH_TOKEN_TTL),
+      },
+    });
 
     // Return refresh token to cooki
     res.cookie("refreshToken", refreshToken, {
@@ -135,12 +178,12 @@ export async function signIn(req: Request, res: Response) {
     });
 
     return res.status(200).json({
-      message: `User ${user.first_name} ${user.last_name} logged in!`,
+      message: `User ${account.first_name} ${account.last_name} logged in!`,
       accessToken,
     });
   } catch (error) {
     console.log("Sign in error", error);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: error });
   }
 }
 
@@ -191,7 +234,7 @@ export async function refreshToken(req: Request, res: Response) {
     }
 
     const id =
-      session.owner_type === "admin" ? session.admin_id : session.user_id;
+      session.owner_type === "ADMIN" ? session.admin_id : session.user_id;
     // Create accessToken with JWT
     const accessToken = jwt.sign(
       { userId: id, userRole: session.owner_type },
@@ -222,13 +265,11 @@ export async function validateInvitaion(req: Request, res: Response) {
       },
     });
     if (!invitation) {
-      return res
-        .status(200)
-        .json({
-          valid: false,
-          message:
-            "Invalid, expired, used or revoked invitation. Please contact your manager for a new invitation",
-        });
+      return res.status(200).json({
+        valid: false,
+        message:
+          "Invalid, expired, used or revoked invitation. Please contact your manager for a new invitation",
+      });
     }
 
     return res.status(200).json({ valid: true });

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
-  signUp,
+  signUpAdmin,
+  signUpEmployee,
   signOut,
   refreshToken,
   signIn,
@@ -13,7 +14,10 @@ const authRouter = Router();
 // signIn for both employee and admin
 authRouter.post("/signin", signIn);
 
-authRouter.post("/signup", signUp);
+// No option to create accounts
+// authRouter.post("/signup/admin", signUpAdmin);
+// authRouter.post("/signup/employee", signUpEmployee);
+
 authRouter.post("/signout", signOut);
 authRouter.post("/refresh", refreshToken);
 authRouter.get("/invitation/validate", validateInvitaion);

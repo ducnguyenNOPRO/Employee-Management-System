@@ -6,6 +6,9 @@ export default defineConfig({
   // Crucial config: global setup
   globalSetup: require.resolve("./global-setup.ts"),
 
+  fullyParallel: false,
+  timeout: 10000,
+
   // Reporter configuration
   reporter: [["html"], ["list"], ["github"]],
 

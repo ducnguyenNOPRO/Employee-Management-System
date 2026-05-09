@@ -9,7 +9,7 @@ export interface AuthState<AuthUser> {
   setAccessToken: (token: string) => void;
 
   signUp: (payload: RegisterPayload) => Promise<void>;
-  signIn: (payload: SignInPayload) => Promise<void>;
+  signIn: (payload: SignInPayload) => Promise<string>;
   signOut: () => Promise<void>;
   fetchMe: () => Promise<void>;
   refresh: () => Promise<void>;

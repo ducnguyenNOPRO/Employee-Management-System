@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma";
+import bcrypt from "bcrypt";
 
 async function main() {
   console.log("Resetting DB...");
@@ -27,6 +28,8 @@ async function main() {
     },
   });
 
+  const passwordHashed = await bcrypt.hash("123456789@Aa", 10);
+
   // ── Users ──────────────────────────────────────────────────────────────────
   await prisma.user.createMany({
     data: [
@@ -54,6 +57,7 @@ async function main() {
         position: "Manager",
         role: "MANAGER",
         employment_type: "FULL_TIME",
+        password_hash: passwordHashed,
         status: "ACTIVE",
         hourly_rate: 30.0,
         location_id: "250387",
