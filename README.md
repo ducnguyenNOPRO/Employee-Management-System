@@ -2,12 +2,6 @@
 
 A full-stack EMS application supporting admin and employee role authentication.
 
-## In Progress
-
-1. Finish JWT Authentication
-2. Admin with 4 pages: Dashboard, Employees, Department, Leave Request (only FE)
-3. Haven't touched role-based authentication yet
-
 ## Installation
 
 **Required:**
@@ -46,17 +40,5 @@ bun run dev
 ```bash
 bunx prisma studio
 ```
-
-## API Routes
-
-| Category |      Endpoint       |  Method  |     Description      |
-|----------|---------------------|----------|----------------------|
-| **Auth** | `/api/auth/signin`  |   POST   | Sign in              |
-| **Auth** | `/api/auth/signout` |   POST   | Sign out             |
-| **Auth** | `/api/auth/signup`  |   POST   | Sign up              |
-| **Auth** | `/api/auth/refresh` |   POST   | Refresh access token |
-| **User** | `/api/users/me`     |   GET    | Get current user     |
-
----
 
 This project was created using `bun init` in bun v1.3.5. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
