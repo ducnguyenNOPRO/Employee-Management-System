@@ -1,3 +1,11 @@
+// Employee View
+export interface EmployeeShift {
+  id: string;
+  start_time: Date | string;
+  end_time: Date | string;
+  notes: string | null;
+}
+
 export interface Shift {
   id: string;
   start_time: string;

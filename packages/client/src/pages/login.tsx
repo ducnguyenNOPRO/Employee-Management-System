@@ -1,7 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { signInSchema, type SignInPayload } from "@/lib/zodSchema";
-import { authService } from "@/services/auth.service";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EyeOff, Eye } from "lucide-react";
@@ -18,27 +17,40 @@ export default function Login() {
           <TabsList variant="line" className="w-full mb-3">
             <TabsTrigger value="crew">Crew Member</TabsTrigger>
             <TabsTrigger value="gm">General Manager</TabsTrigger>
-            <TabsTrigger value="hr">HR</TabsTrigger>
+            {/* <TabsTrigger value="hr">HR</TabsTrigger> */}
           </TabsList>
 
           <TabsContent value="crew">
-            <LoginForm />
+            <LoginForm userRole="crew" />
           </TabsContent>
 
           <TabsContent value="gm">
-            <LoginForm />
+            <LoginForm userRole="gm" />
           </TabsContent>
 
-          <TabsContent value="hr">
-            <LoginForm />
-          </TabsContent>
+          {/* <TabsContent value="hr">
+            <LoginForm userRole="hr" />
+          </TabsContent> */}
         </Tabs>
       </div>
     </div>
   );
 }
 
-function LoginForm() {
+type Role = "crew" | "gm";
+
+const demoAccount: Record<Role, { email: string; password: string }> = {
+  crew: {
+    email: "schedule@test.com",
+    password: "123456789@Aa",
+  },
+  gm: {
+    email: "approver@test.com",
+    password: "123456789@Aa",
+  },
+};
+
+function LoginForm({ userRole }: { userRole: Role }) {
   const { signIn } = useAuthStore();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -101,8 +113,8 @@ function LoginForm() {
       </Link>
       <div>
         <div>Demo account</div>
-        <div>Email: approver@test.com</div>
-        <div>Password: 123456789@Aa</div>
+        <div>Email: {demoAccount[userRole].email}</div>
+        <div>Password: {demoAccount[userRole].password}</div>
       </div>
       <button
         className="bg-blue-500 text-white hover:bg-blue-700 px-3 py-2 rounded-md cursor-pointer"

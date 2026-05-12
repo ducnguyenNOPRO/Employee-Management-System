@@ -15,6 +15,9 @@ import CreatePassword from "./pages/createPassword";
 import AttendanceDashboard from "./pages/attendance";
 import Schedule from "./pages/schedule";
 import ProtectedRoute from "./components/protectedRoutes";
+import TopBarLayout from "./components/EmpTopBarLayout";
+import Shifts from "./pages/shifts";
+import EmployeeProfile from "./pages/employeeProfile";
 
 const router = createBrowserRouter([
   // Public routes
@@ -33,7 +36,32 @@ const router = createBrowserRouter([
 
   { path: "/Forbidden", element: <Forbidden /> },
 
-  // Admin Routes
+  // Employee Routes
+  {
+    element: <ProtectedRoute role="EMPLOYEE" />,
+    children: [
+      {
+        path: "/emp",
+        element: <TopBarLayout />,
+        children: [
+          { index: true, element: <Shifts /> },
+          { path: "/emp/profile", element: <EmployeeProfile /> },
+        ],
+      },
+    ],
+  },
+
+  // // Dev mode
+  // {
+  //   path: "emp",
+  //   element: <TopBarLayout />,
+  //   children: [
+  //     { index: true, element: <Shifts /> },
+  //     {path: "/emp/profile", element: <EmployeeProfile />}
+  //   ]
+  // },
+
+  // Manager Routes
   {
     element: <ProtectedRoute role="MANAGER" />,
     children: [
