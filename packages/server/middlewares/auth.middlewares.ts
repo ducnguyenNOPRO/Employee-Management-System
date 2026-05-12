@@ -62,6 +62,7 @@ export function AuthenticatedRoute(
         const { password_hash, ...user } = userWithPassword;
         // Now 'user' has everything except hashedPassword
         req.user = user;
+        req.location_id = "location_id" in user ? user.location_id : undefined;
         next();
       }
     );

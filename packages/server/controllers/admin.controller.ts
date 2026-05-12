@@ -41,7 +41,12 @@ const EARLY_CLOCK_IN_HOURS_ALLOWED = 2 * 60 * 60 * 1000;
 const LATE_CLOCK_OUT_HOURS_ALLOWED = 2 * 60 * 60 * 1000;
 
 export async function getDashboardSummary(req: Request, res: Response) {
-  const location_id = req.user?.location_id;
+  const location_id = req.location_id;
+  if (!location_id) {
+    return res
+      .status(403)
+      .json({ message: "No location associated with this account" });
+  }
   try {
     const now = new Date();
     const start = startOfDay(now);
@@ -392,7 +397,12 @@ export async function addEmployee(req: Request, res: Response) {
     });
   }
   try {
-    const location_id = req.user?.location_id || "250387";
+    const location_id = req.location_id;
+    if (!location_id) {
+      return res
+        .status(403)
+        .json({ message: "No location associated with this account" });
+    }
     await prisma.user.create({
       data: {
         ...result.data,
@@ -757,7 +767,12 @@ export async function createRequest(req: Request, res: Response) {
     });
   }
   try {
-    const location_id = req.user?.location_id || "250387";
+    const location_id = req.location_id;
+    if (!location_id) {
+      return res
+        .status(403)
+        .json({ message: "No location associated with this account" });
+    }
     await prisma.$transaction(async (tx) => {
       // Lock the row
       const balances = await tx.$queryRaw<leave_balance[]>`
@@ -879,7 +894,12 @@ export async function updateRequest(req: Request, res: Response) {
 }
 
 export async function getAttendanceStats(req: Request, res: Response) {
-  const location_id = req.user?.location_id || "250387";
+  const location_id = req.location_id;
+  if (!location_id) {
+    return res
+      .status(403)
+      .json({ message: "No location associated with this account" });
+  }
   try {
     const now = new Date();
     const start = startOfDay(now);
@@ -1008,7 +1028,12 @@ export async function getAttendanceStats(req: Request, res: Response) {
 }
 
 export async function getAttendanceLive(req: Request, res: Response) {
-  const location_id = req.user?.location_id || "250387";
+  const location_id = req.location_id;
+  if (!location_id) {
+    return res
+      .status(403)
+      .json({ message: "No location associated with this account" });
+  }
   const now = new Date();
 
   try {
@@ -1065,7 +1090,12 @@ export async function getAttendanceLive(req: Request, res: Response) {
 
 // Allowed clock in early for 2 hours
 export async function clockIn(req: Request, res: Response) {
-  const location_id = req.user?.location_id || "250387";
+  const location_id = req.location_id;
+  if (!location_id) {
+    return res
+      .status(403)
+      .json({ message: "No location associated with this account" });
+  }
   const result = clockSchema.safeParse(req.body);
   if (!result.success) {
     console.log(z.treeifyError(result.error).properties);
@@ -1145,7 +1175,12 @@ export async function clockIn(req: Request, res: Response) {
 }
 
 export async function clockOut(req: Request, res: Response) {
-  const location_id = req.user?.location_id || "250387";
+  const location_id = req.location_id;
+  if (!location_id) {
+    return res
+      .status(403)
+      .json({ message: "No location associated with this account" });
+  }
   const result = clockSchema.safeParse(req.body);
   if (!result.success) {
     console.log(z.treeifyError(result.error).properties);
@@ -1240,7 +1275,12 @@ export async function clockOut(req: Request, res: Response) {
 
 // Allow absent edit
 export async function editTimeEntry(req: Request, res: Response) {
-  const location_id = req.user?.location_id || "250387";
+  const location_id = req.location_id;
+  if (!location_id) {
+    return res
+      .status(403)
+      .json({ message: "No location associated with this account" });
+  }
   const result = editAttendanceSchema.safeParse({
     ...req.body,
     user_id: req.params.id,
@@ -1356,7 +1396,12 @@ export async function editTimeEntry(req: Request, res: Response) {
 
 /** Schedules */
 export async function getSchedules(req: Request, res: Response) {
-  const location_id = req.user?.location_id || "250387";
+  const location_id = req.location_id;
+  if (!location_id) {
+    return res
+      .status(403)
+      .json({ message: "No location associated with this account" });
+  }
   const result = scheduleSchema.safeParse({
     from: req.query.from,
     to: req.query.to,
@@ -1407,7 +1452,12 @@ export async function getSchedules(req: Request, res: Response) {
 
 export async function publishSchedules(req: Request, res: Response) {
   const result = publishScheduleSchema.safeParse(req.body);
-  const location_id = req.user?.location_id || "250387";
+  const location_id = req.location_id;
+  if (!location_id) {
+    return res
+      .status(403)
+      .json({ message: "No location associated with this account" });
+  }
 
   if (!result.success) {
     console.log(z.treeifyError(result.error).properties);
