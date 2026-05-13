@@ -83,7 +83,7 @@ export default function Shifts() {
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
           Upcoming Shifts
         </h2>
-        <div className="space-y-4">
+        <div className="space-y-4 mb-4">
           {upcomingShifts ? (
             upcomingShifts.map((shift) => (
               <Card key={shift.id}>

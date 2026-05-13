@@ -181,3 +181,26 @@ export const publishScheduleSchema = z.object({
   edit: z.record(z.string(), publishShiftSchema),
   delete: z.array(z.string()),
 });
+
+// Crew member schemas
+export const editableProfileSchema = z
+  .object({
+    email: z.email("Invalid email address"),
+    phone: z.string().regex(/^\+1\d{10}$/, "Must be +1 followed by 10 digits"),
+    emergency_contact: z
+      .string()
+      .trim()
+      .transform((v) => (v === "" ? null : v))
+      .nullable(),
+    emergency_phone: z
+      .string()
+      .trim()
+      .transform((v) => (v === "" ? null : v))
+      .pipe(
+        z
+          .string()
+          .regex(/^\+1\d{10}$/, "Must be +1 followed by 10 digits")
+          .nullable()
+      ),
+  })
+  .partial(); // partial so each field validates independently

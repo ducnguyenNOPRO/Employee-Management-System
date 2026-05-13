@@ -8,16 +8,22 @@ interface BaseAuth {
   role: Role;
 }
 
-interface UserAuth extends BaseAuth {
+export interface UserAuth extends BaseAuth {
   role: "EMPLOYEE" | "MANAGER";
-  phone?: string;
-  salary?: number;
-  department_id?: String;
-  created_at?: string;
-  updated_at?: string;
+  phone: string;
+  email: string;
+  hourly_rate: number;
+  location_id: string;
+  emergency_contact?: string | null;
+  emergency_phone?: string | null;
 }
 interface AdminAuth extends BaseAuth {
   role: "ADMIN";
 }
 
 export type AuthUser = AdminAuth | UserAuth;
+
+export type MutableUserFields = Pick<
+  UserAuth,
+  "email" | "phone" | "emergency_contact" | "emergency_phone"
+>;

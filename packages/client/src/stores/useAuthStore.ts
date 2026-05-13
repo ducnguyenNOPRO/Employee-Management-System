@@ -16,6 +16,13 @@ export const useAuthStore = create<AuthState<AuthUser>>((set, get) => ({
     set({ accessToken: token });
   },
 
+  updateUser: (data) => {
+    set((state) => {
+      if (!state.user) return state;
+      return { user: { ...state.user, ...data } as AuthUser };
+    });
+  },
+
   signUp: async (payload) => {
     try {
       set({ loading: true });
