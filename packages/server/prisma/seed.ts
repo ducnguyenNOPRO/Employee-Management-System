@@ -126,6 +126,19 @@ async function main() {
         total: 40,
         used: 8,
       },
+      // ── Demo Account ─────────────────────────────────────────────────────────
+      {
+        user_id: "ctest000000schedule000001x",
+        type: "SICK_LEAVE",
+        total: 40,
+        used: 8,
+      },
+      {
+        user_id: "ctest000000schedule000001x",
+        type: "VACATION",
+        total: 40,
+        used: 8,
+      },
     ],
   });
 

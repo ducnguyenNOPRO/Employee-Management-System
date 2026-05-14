@@ -1,11 +1,12 @@
 import { useAuthStore } from "@/stores/useAuthStore";
-import { Calendar, Menu, User } from "lucide-react";
+import { Calendar, Calendar1, Menu, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 
 const navigation = [
   { name: "Shifts", path: "/emp", icon: Calendar },
   { name: "Profile", path: "/emp/profile", icon: User },
+  { name: "Leaves", path: "/emp/leave", icon: Calendar1 },
 ];
 
 export default function TopBarLayout() {

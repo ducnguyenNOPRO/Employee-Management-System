@@ -151,7 +151,10 @@ export const leaveRequestSchema = z.object({
   requester_id: z.cuid("Employee is required"),
   type: z.enum(["VACATION", "SICK_LEAVE"]),
   start_date: z.iso.date(),
-  end_date: z.iso.date(),
+  end_date: z.preprocess(
+    (val) => (val === "" ? null : val),
+    z.iso.date().nullable()
+  ),
   reason: z.preprocess(
     (val) => (val === "" || val === null || val === undefined ? null : val),
     z.string().trim().max(255, "Maximum 255 characters").nullable()
@@ -233,3 +236,8 @@ export const publishScheduleSchema = z.object({
   edit: z.record(z.string(), publishShiftSchema),
   delete: z.array(z.string()),
 });
+
+export const empLeaveRequestSchema = leaveRequestSchema.omit({
+  requester_id: true,
+});
+export type EmpAddLeaveRequestPayload = z.infer<typeof empLeaveRequestSchema>;

@@ -128,7 +128,13 @@ export const leaveSchema = z.object({
     .min(0, "Must be a positive value > 0")
     .max(160, "Max 4 weeks or 160 hours"),
   start_date: z.iso.date().transform((val) => new Date(val)),
-  end_date: z.iso.date().transform((val) => new Date(val)),
+  end_date: z.preprocess(
+    (val) =>
+      val === "" || val === null || val === undefined
+        ? null
+        : new Date(val as string),
+    z.date().nullable()
+  ),
   reason: z.string().trim().max(40, "Maximum 40 characters").nullable(),
 });
 

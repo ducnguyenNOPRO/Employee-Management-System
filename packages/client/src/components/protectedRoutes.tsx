@@ -32,12 +32,14 @@ export default function ProtectedRoute({ role }: { role: string }) {
     );
   }
 
-  if (user?.role !== role) {
-    return <Navigate to="/unauthorized" />;
-  }
-
+  // ORDER MATTER
+  // check access token first
   if (!accessToken) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user?.role !== role) {
+    return <Navigate to="/unauthorized" />;
   }
 
   return <Outlet />;

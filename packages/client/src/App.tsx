@@ -6,7 +6,7 @@ import Employees from "./pages/employees";
 import LeaveRequests from "./pages/leaveRequests";
 import EmployeeDetail from "./pages/employeeDetail";
 import Login from "./pages/login";
-import Register from "./pages/register";
+import EmpLeaveRequest from "./pages/Employee/leaveRequest";
 import DepartmentDetail from "./pages/departmentDetail";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
@@ -16,8 +16,8 @@ import AttendanceDashboard from "./pages/attendance";
 import Schedule from "./pages/schedule";
 import ProtectedRoute from "./components/protectedRoutes";
 import TopBarLayout from "./components/EmpTopBarLayout";
-import Shifts from "./pages/shifts";
-import EmployeeProfile from "./pages/employeeProfile";
+import Shifts from "./pages/Employee/shifts";
+import EmployeeProfile from "./pages/Employee/employeeProfile";
 
 const router = createBrowserRouter([
   // Public routes
@@ -46,6 +46,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <Shifts /> },
           { path: "/emp/profile", element: <EmployeeProfile /> },
+          { path: "/emp/leave", element: <EmpLeaveRequest /> },
         ],
       },
     ],

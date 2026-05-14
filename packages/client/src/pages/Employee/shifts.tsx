@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { type EmployeeShift } from "../types/schedule";
+import { type EmployeeShift } from "../../types/schedule";
 import { shiftService } from "@/services/Employee/shift.service";
 import {
   Card,
