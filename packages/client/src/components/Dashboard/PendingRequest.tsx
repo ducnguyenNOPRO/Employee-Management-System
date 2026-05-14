@@ -3,12 +3,13 @@ import { Calendar, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import UserCharacters from "../ui/characters";
 import { differenceInDays, format } from "date-fns";
-import { formatSnakeCase } from "@/utils/format";
+import { formatDateRange, formatSnakeCase } from "@/utils/format";
 import { Button } from "../ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { leaveService } from "@/services/leave.service";
 import type { UpdateRequestDecisionPayload } from "@/types/leave";
+import { getTypeColor } from "@/utils/utils";
 
 interface Props {
   pendingRequests?: DashboardSummary["pendingRequests"];
@@ -83,15 +84,15 @@ export default function PendignRequest({ pendingRequests }: Props) {
                     <div className="font-medium text-gray-900">
                       {p.requester.first_name} {p.requester.last_name}
                     </div>
-                    <div className="text-xs p-1 rounded-full border border-purple-200 bg-purple-50 text-purple-700">
+                    <div
+                      className={`text-xs p-1 rounded-full border ${getTypeColor(p.type)}`}
+                    >
                       {formatSnakeCase(p.type)}
                     </div>
                   </div>
 
                   <div className="text-sm text-gray-500">
-                    {differenceInDays(p.end_date, p.start_date)} days •{" "}
-                    {format(p.start_date, "MM/dd/yyyy")} -{" "}
-                    {format(p.end_date, "MM/dd/yyyy")}
+                    {p.hours} hrs • {formatDateRange(p.start_date, p.end_date)}
                   </div>
                 </div>
               </div>

@@ -24,7 +24,6 @@ export default function DashboardLayout() {
   const { signOut } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const navigate = useNavigate();
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 1280) {
@@ -41,9 +40,9 @@ export default function DashboardLayout() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Protected route will navigtae to login automatically
   const handleSignOut = async () => {
     await signOut();
-    navigate("/");
   };
 
   return (

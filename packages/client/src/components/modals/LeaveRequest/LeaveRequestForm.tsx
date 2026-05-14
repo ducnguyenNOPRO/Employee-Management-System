@@ -12,7 +12,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Select from "@/components/ui/select";
 import { employeeService } from "@/services/employee.service";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { EmployeeBalance, EmployeeOverview } from "@/types/employee";
+import type { EmployeeOverview } from "@/types/employee";
+import type { LeaveBalance } from "@/types/leave";
 import { leaveService } from "@/services/leave.service";
 import { toast } from "sonner";
 
@@ -66,7 +67,7 @@ export default function LeaveRequestForm({ onSuccess }: AddFormProps) {
     data: balances,
     isFetching,
     isError,
-  } = useQuery<EmployeeBalance[]>({
+  } = useQuery<LeaveBalance[]>({
     queryKey: ["leaveBalance", selectedEmployee],
     queryFn: () => employeeService.getSelectedEmployeeBalance(selectedEmployee),
     enabled: !!selectedEmployee,
@@ -215,7 +216,6 @@ export default function LeaveRequestForm({ onSuccess }: AddFormProps) {
               type="date"
               name="end_date"
               min={selectedStartDate}
-              required
               register={register}
               error={errors.end_date?.message}
             />

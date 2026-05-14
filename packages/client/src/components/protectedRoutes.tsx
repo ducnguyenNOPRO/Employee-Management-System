@@ -35,7 +35,7 @@ export default function ProtectedRoute({ role }: { role: string }) {
   // ORDER MATTER
   // check access token first
   if (!accessToken) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   if (user?.role !== role) {

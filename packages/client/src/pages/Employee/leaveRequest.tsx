@@ -13,7 +13,6 @@ import type { EmpHistoryRequest } from "@/types/leave";
 import { formatDateRange } from "@/utils/format";
 import { getLeaveRequestStatus } from "@/utils/utils";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
 import { Calendar } from "lucide-react";
 
 const LEAVE_LABELS: Record<LeaveType, string> = {

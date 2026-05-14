@@ -57,7 +57,6 @@ export const useAuthStore = create<AuthState<AuthUser>>((set, get) => ({
     try {
       get().clearState();
       await authService.signOut();
-      alert("Log Out successfully");
     } catch (error: any) {
       //console.error(error.response?.data?.message);
     }

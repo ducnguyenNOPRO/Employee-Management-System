@@ -129,6 +129,7 @@ export async function getDashboardSummary(req: Request, res: Response) {
           start_date: true,
           end_date: true,
           type: true,
+          hours: true,
         },
       }),
     ]);
