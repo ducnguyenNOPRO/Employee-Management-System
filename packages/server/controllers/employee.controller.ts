@@ -156,6 +156,7 @@ export async function getLeaves(req: Request, res: Response) {
         end_date: true,
         hours: true,
       },
+      orderBy: { created_at: "desc" },
     });
 
     return res.status(200).json({ leaves });

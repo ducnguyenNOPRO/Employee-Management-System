@@ -30,12 +30,16 @@ export default function EmpLeaveRequest() {
     queryFn: EmpLeaveService.getLeaves,
   });
 
+  const order = ["VACATION", "SICK_LEAVE"];
+
   const safeBalances =
     balances && balances.length > 0
-      ? balances
+      ? [...balances].sort(
+          (a, b) => order.indexOf(a.type) - order.indexOf(b.type)
+        )
       : ([
-          { type: "SICK_LEAVE", remaining: 0 },
           { type: "VACATION", remaining: 0 },
+          { type: "SICK_LEAVE", remaining: 0 },
         ] as LeaveBalance[]);
   return (
     <div className="space-y-6">
@@ -49,7 +53,7 @@ export default function EmpLeaveRequest() {
           {/* Leave Balance */}
           <div className="grid gap-4 md:grid-cols-2">
             {safeBalances.map((b) => (
-              <Card>
+              <Card key={b.type}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-md">
                     {LEAVE_LABELS[b.type]}
@@ -84,7 +88,7 @@ export default function EmpLeaveRequest() {
           <Card>
             <CardContent>
               {historyLeaves && historyLeaves.length > 0 ? (
-                <div className="grid gap-4">
+                <div className="grid md:grid-cols-2 gap-4">
                   {historyLeaves.map((request) => (
                     <div
                       key={request.id}
