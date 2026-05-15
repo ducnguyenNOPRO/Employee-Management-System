@@ -254,7 +254,7 @@ export type Leave_requestGroupByOutputType = {
   location_id: string;
   type: $Enums.LeaveType;
   start_date: Date;
-  end_date: Date;
+  end_date: Date | null;
   hours: number;
   reason: string | null;
   status: $Enums.LeaveRequestStatus;
@@ -293,7 +293,11 @@ export type leave_requestWhereInput = {
   location_id?: Prisma.StringFilter<"leave_request"> | string;
   type?: Prisma.EnumLeaveTypeFilter<"leave_request"> | $Enums.LeaveType;
   start_date?: Prisma.DateTimeFilter<"leave_request"> | Date | string;
-  end_date?: Prisma.DateTimeFilter<"leave_request"> | Date | string;
+  end_date?:
+    | Prisma.DateTimeNullableFilter<"leave_request">
+    | Date
+    | string
+    | null;
   hours?: Prisma.FloatFilter<"leave_request"> | number;
   reason?: Prisma.StringNullableFilter<"leave_request"> | string | null;
   status?:
@@ -328,7 +332,7 @@ export type leave_requestOrderByWithRelationInput = {
   location_id?: Prisma.SortOrder;
   type?: Prisma.SortOrder;
   start_date?: Prisma.SortOrder;
-  end_date?: Prisma.SortOrder;
+  end_date?: Prisma.SortOrderInput | Prisma.SortOrder;
   hours?: Prisma.SortOrder;
   reason?: Prisma.SortOrderInput | Prisma.SortOrder;
   status?: Prisma.SortOrder;
@@ -352,7 +356,11 @@ export type leave_requestWhereUniqueInput = Prisma.AtLeast<
     location_id?: Prisma.StringFilter<"leave_request"> | string;
     type?: Prisma.EnumLeaveTypeFilter<"leave_request"> | $Enums.LeaveType;
     start_date?: Prisma.DateTimeFilter<"leave_request"> | Date | string;
-    end_date?: Prisma.DateTimeFilter<"leave_request"> | Date | string;
+    end_date?:
+      | Prisma.DateTimeNullableFilter<"leave_request">
+      | Date
+      | string
+      | null;
     hours?: Prisma.FloatFilter<"leave_request"> | number;
     reason?: Prisma.StringNullableFilter<"leave_request"> | string | null;
     status?:
@@ -389,7 +397,7 @@ export type leave_requestOrderByWithAggregationInput = {
   location_id?: Prisma.SortOrder;
   type?: Prisma.SortOrder;
   start_date?: Prisma.SortOrder;
-  end_date?: Prisma.SortOrder;
+  end_date?: Prisma.SortOrderInput | Prisma.SortOrder;
   hours?: Prisma.SortOrder;
   reason?: Prisma.SortOrderInput | Prisma.SortOrder;
   status?: Prisma.SortOrder;
@@ -427,9 +435,10 @@ export type leave_requestScalarWhereWithAggregatesInput = {
     | Date
     | string;
   end_date?:
-    | Prisma.DateTimeWithAggregatesFilter<"leave_request">
+    | Prisma.DateTimeNullableWithAggregatesFilter<"leave_request">
     | Date
-    | string;
+    | string
+    | null;
   hours?: Prisma.FloatWithAggregatesFilter<"leave_request"> | number;
   reason?:
     | Prisma.StringNullableWithAggregatesFilter<"leave_request">
@@ -458,7 +467,7 @@ export type leave_requestCreateInput = {
   id?: string;
   type: $Enums.LeaveType;
   start_date: Date | string;
-  end_date: Date | string;
+  end_date?: Date | string | null;
   hours: number;
   reason?: string | null;
   status?: $Enums.LeaveRequestStatus;
@@ -478,7 +487,7 @@ export type leave_requestUncheckedCreateInput = {
   location_id: string;
   type: $Enums.LeaveType;
   start_date: Date | string;
-  end_date: Date | string;
+  end_date?: Date | string | null;
   hours: number;
   reason?: string | null;
   status?: $Enums.LeaveRequestStatus;
@@ -492,7 +501,11 @@ export type leave_requestUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string;
   type?: Prisma.EnumLeaveTypeFieldUpdateOperationsInput | $Enums.LeaveType;
   start_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
-  end_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  end_date?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   hours?: Prisma.FloatFieldUpdateOperationsInput | number;
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   status?:
@@ -518,7 +531,11 @@ export type leave_requestUncheckedUpdateInput = {
   location_id?: Prisma.StringFieldUpdateOperationsInput | string;
   type?: Prisma.EnumLeaveTypeFieldUpdateOperationsInput | $Enums.LeaveType;
   start_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
-  end_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  end_date?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   hours?: Prisma.FloatFieldUpdateOperationsInput | number;
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   status?:
@@ -541,7 +558,7 @@ export type leave_requestCreateManyInput = {
   location_id: string;
   type: $Enums.LeaveType;
   start_date: Date | string;
-  end_date: Date | string;
+  end_date?: Date | string | null;
   hours: number;
   reason?: string | null;
   status?: $Enums.LeaveRequestStatus;
@@ -555,7 +572,11 @@ export type leave_requestUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string;
   type?: Prisma.EnumLeaveTypeFieldUpdateOperationsInput | $Enums.LeaveType;
   start_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
-  end_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  end_date?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   hours?: Prisma.FloatFieldUpdateOperationsInput | number;
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   status?:
@@ -578,7 +599,11 @@ export type leave_requestUncheckedUpdateManyInput = {
   location_id?: Prisma.StringFieldUpdateOperationsInput | string;
   type?: Prisma.EnumLeaveTypeFieldUpdateOperationsInput | $Enums.LeaveType;
   start_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
-  end_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  end_date?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   hours?: Prisma.FloatFieldUpdateOperationsInput | number;
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   status?:
@@ -1003,7 +1028,7 @@ export type leave_requestCreateWithoutRequesterInput = {
   id?: string;
   type: $Enums.LeaveType;
   start_date: Date | string;
-  end_date: Date | string;
+  end_date?: Date | string | null;
   hours: number;
   reason?: string | null;
   status?: $Enums.LeaveRequestStatus;
@@ -1021,7 +1046,7 @@ export type leave_requestUncheckedCreateWithoutRequesterInput = {
   location_id: string;
   type: $Enums.LeaveType;
   start_date: Date | string;
-  end_date: Date | string;
+  end_date?: Date | string | null;
   hours: number;
   reason?: string | null;
   status?: $Enums.LeaveRequestStatus;
@@ -1050,7 +1075,7 @@ export type leave_requestCreateWithoutApproverInput = {
   id?: string;
   type: $Enums.LeaveType;
   start_date: Date | string;
-  end_date: Date | string;
+  end_date?: Date | string | null;
   hours: number;
   reason?: string | null;
   status?: $Enums.LeaveRequestStatus;
@@ -1068,7 +1093,7 @@ export type leave_requestUncheckedCreateWithoutApproverInput = {
   location_id: string;
   type: $Enums.LeaveType;
   start_date: Date | string;
-  end_date: Date | string;
+  end_date?: Date | string | null;
   hours: number;
   reason?: string | null;
   status?: $Enums.LeaveRequestStatus;
@@ -1135,7 +1160,11 @@ export type leave_requestScalarWhereInput = {
   location_id?: Prisma.StringFilter<"leave_request"> | string;
   type?: Prisma.EnumLeaveTypeFilter<"leave_request"> | $Enums.LeaveType;
   start_date?: Prisma.DateTimeFilter<"leave_request"> | Date | string;
-  end_date?: Prisma.DateTimeFilter<"leave_request"> | Date | string;
+  end_date?:
+    | Prisma.DateTimeNullableFilter<"leave_request">
+    | Date
+    | string
+    | null;
   hours?: Prisma.FloatFilter<"leave_request"> | number;
   reason?: Prisma.StringNullableFilter<"leave_request"> | string | null;
   status?:
@@ -1183,7 +1212,7 @@ export type leave_requestCreateWithoutLocationInput = {
   id?: string;
   type: $Enums.LeaveType;
   start_date: Date | string;
-  end_date: Date | string;
+  end_date?: Date | string | null;
   hours: number;
   reason?: string | null;
   status?: $Enums.LeaveRequestStatus;
@@ -1201,7 +1230,7 @@ export type leave_requestUncheckedCreateWithoutLocationInput = {
   approver_id?: string | null;
   type: $Enums.LeaveType;
   start_date: Date | string;
-  end_date: Date | string;
+  end_date?: Date | string | null;
   hours: number;
   reason?: string | null;
   status?: $Enums.LeaveRequestStatus;
@@ -1260,7 +1289,7 @@ export type leave_requestCreateManyRequesterInput = {
   location_id: string;
   type: $Enums.LeaveType;
   start_date: Date | string;
-  end_date: Date | string;
+  end_date?: Date | string | null;
   hours: number;
   reason?: string | null;
   status?: $Enums.LeaveRequestStatus;
@@ -1276,7 +1305,7 @@ export type leave_requestCreateManyApproverInput = {
   location_id: string;
   type: $Enums.LeaveType;
   start_date: Date | string;
-  end_date: Date | string;
+  end_date?: Date | string | null;
   hours: number;
   reason?: string | null;
   status?: $Enums.LeaveRequestStatus;
@@ -1290,7 +1319,11 @@ export type leave_requestUpdateWithoutRequesterInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string;
   type?: Prisma.EnumLeaveTypeFieldUpdateOperationsInput | $Enums.LeaveType;
   start_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
-  end_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  end_date?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   hours?: Prisma.FloatFieldUpdateOperationsInput | number;
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   status?:
@@ -1314,7 +1347,11 @@ export type leave_requestUncheckedUpdateWithoutRequesterInput = {
   location_id?: Prisma.StringFieldUpdateOperationsInput | string;
   type?: Prisma.EnumLeaveTypeFieldUpdateOperationsInput | $Enums.LeaveType;
   start_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
-  end_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  end_date?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   hours?: Prisma.FloatFieldUpdateOperationsInput | number;
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   status?:
@@ -1336,7 +1373,11 @@ export type leave_requestUncheckedUpdateManyWithoutRequesterInput = {
   location_id?: Prisma.StringFieldUpdateOperationsInput | string;
   type?: Prisma.EnumLeaveTypeFieldUpdateOperationsInput | $Enums.LeaveType;
   start_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
-  end_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  end_date?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   hours?: Prisma.FloatFieldUpdateOperationsInput | number;
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   status?:
@@ -1356,7 +1397,11 @@ export type leave_requestUpdateWithoutApproverInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string;
   type?: Prisma.EnumLeaveTypeFieldUpdateOperationsInput | $Enums.LeaveType;
   start_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
-  end_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  end_date?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   hours?: Prisma.FloatFieldUpdateOperationsInput | number;
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   status?:
@@ -1380,7 +1425,11 @@ export type leave_requestUncheckedUpdateWithoutApproverInput = {
   location_id?: Prisma.StringFieldUpdateOperationsInput | string;
   type?: Prisma.EnumLeaveTypeFieldUpdateOperationsInput | $Enums.LeaveType;
   start_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
-  end_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  end_date?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   hours?: Prisma.FloatFieldUpdateOperationsInput | number;
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   status?:
@@ -1402,7 +1451,11 @@ export type leave_requestUncheckedUpdateManyWithoutApproverInput = {
   location_id?: Prisma.StringFieldUpdateOperationsInput | string;
   type?: Prisma.EnumLeaveTypeFieldUpdateOperationsInput | $Enums.LeaveType;
   start_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
-  end_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  end_date?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   hours?: Prisma.FloatFieldUpdateOperationsInput | number;
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   status?:
@@ -1424,7 +1477,7 @@ export type leave_requestCreateManyLocationInput = {
   approver_id?: string | null;
   type: $Enums.LeaveType;
   start_date: Date | string;
-  end_date: Date | string;
+  end_date?: Date | string | null;
   hours: number;
   reason?: string | null;
   status?: $Enums.LeaveRequestStatus;
@@ -1438,7 +1491,11 @@ export type leave_requestUpdateWithoutLocationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string;
   type?: Prisma.EnumLeaveTypeFieldUpdateOperationsInput | $Enums.LeaveType;
   start_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
-  end_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  end_date?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   hours?: Prisma.FloatFieldUpdateOperationsInput | number;
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   status?:
@@ -1462,7 +1519,11 @@ export type leave_requestUncheckedUpdateWithoutLocationInput = {
   approver_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   type?: Prisma.EnumLeaveTypeFieldUpdateOperationsInput | $Enums.LeaveType;
   start_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
-  end_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  end_date?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   hours?: Prisma.FloatFieldUpdateOperationsInput | number;
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   status?:
@@ -1484,7 +1545,11 @@ export type leave_requestUncheckedUpdateManyWithoutLocationInput = {
   approver_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   type?: Prisma.EnumLeaveTypeFieldUpdateOperationsInput | $Enums.LeaveType;
   start_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
-  end_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  end_date?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   hours?: Prisma.FloatFieldUpdateOperationsInput | number;
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   status?:
@@ -1658,7 +1723,7 @@ export type $leave_requestPayload<
       location_id: string;
       type: $Enums.LeaveType;
       start_date: Date;
-      end_date: Date;
+      end_date: Date | null;
       hours: number;
       reason: string | null;
       status: $Enums.LeaveRequestStatus;

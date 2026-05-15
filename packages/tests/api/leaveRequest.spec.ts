@@ -185,13 +185,6 @@ test.describe("POST /api/admin/leaves", () => {
     expect(res.status()).toBe(400);
   });
 
-  test("400 - missing end_date", async ({ request }) => {
-    const { end_date, ...body } = validLeaveBody;
-    const res = await postLeave(request, body);
-
-    expect(res.status()).toBe(400);
-  });
-
   test("400 - invalid date format", async ({ request }) => {
     const res = await postLeave(request, {
       ...validLeaveBody,

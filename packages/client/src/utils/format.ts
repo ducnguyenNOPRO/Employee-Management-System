@@ -1,3 +1,5 @@
+import { format } from "date-fns";
+
 export function formatString(s: string) {
   return s.replace("_", " ");
 }
@@ -58,4 +60,20 @@ export function prettyFormatISODateTime(d: string | Date) {
   }).format(new Date(d));
 
   return `${datePart} • ${timePart}`;
+}
+
+export function formatDateRange(start: string, end?: string | null): string {
+  const startDate = new Date(start);
+
+  if (!end || end === start) {
+    return format(startDate, "MMM dd, yyyy"); // Mar 21, 2026
+  }
+
+  const endDate = new Date(end);
+
+  if (startDate.getFullYear() === endDate.getFullYear()) {
+    return `${format(startDate, "MMM dd")} - ${format(endDate, "MMM dd, yyyy")}`; // Mar 21 - Apr 01, 2026
+  }
+
+  return `${format(startDate, "MMM dd, yyyy")} - ${format(endDate, "MMM dd, yyyy")}`; // Mar 21, 2025 - Jan 01, 2026
 }

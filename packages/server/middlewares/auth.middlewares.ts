@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
+import type { AdminSelect, UserSelect } from "../types/express";
 
 type Role = "ADMIN" | "EMPLOYEE" | "MANAGER";
 
@@ -39,29 +40,49 @@ export function AuthenticatedRoute(
         // jwt payload
         const decodedUser = decoded as DecodedUser;
 
-        let userWithPassword;
+        let user;
 
         if (decodedUser.userRole === "ADMIN") {
-          userWithPassword = await prisma.admin.findUnique({
+          user = await prisma.admin.findUnique({
             where: {
               id: decodedUser.userId,
+            },
+            select: {
+              first_name: true,
+              last_name: true,
+              email: true,
+              role: true,
+              id: true,
             },
           });
         } else if (["EMPLOYEE", "MANAGER"].includes(decodedUser.userRole)) {
-          userWithPassword = await prisma.user.findUnique({
+          user = await prisma.user.findUnique({
             where: {
               id: decodedUser.userId,
+            },
+            select: {
+              id: true,
+              role: true,
+              emergency_contact: true,
+              emergency_phone: true,
+              email: true,
+              hourly_rate: true,
+              location_id: true,
+              first_name: true,
+              last_name: true,
+              phone: true,
             },
           });
         }
 
-        if (!userWithPassword) {
+        if (!user) {
           return res.status(404).json({ message: "User does not exist" });
         }
 
-        const { password_hash, ...user } = userWithPassword;
-        // Now 'user' has everything except hashedPassword
-        req.user = user;
+        // Case type since user is unknown here
+        req.user = user as UserSelect | AdminSelect;
+        req.location_id =
+          "location_id" in req.user ? req.user.location_id : undefined;
         next();
       }
     );

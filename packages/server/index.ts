@@ -1,5 +1,11 @@
 import express from "express";
-import { authRouter, defaultRouter, adminRouter, userRouter } from "./routes";
+import {
+  authRouter,
+  defaultRouter,
+  adminRouter,
+  userRouter,
+  employeeRouter,
+} from "./routes";
 import cookieParser from "cookie-parser";
 import { allowRoles, AuthenticatedRoute } from "./middlewares/auth.middlewares";
 import cors from "cors";
@@ -27,6 +33,7 @@ app.use("/api/test", testRouter);
 app.use(AuthenticatedRoute); // Check for accessToken and refreshToken
 app.use("/api/users", allowRoles(["EMPLOYEE", "MANAGER", "ADMIN"]), userRouter);
 app.use("/api/admin", allowRoles(["MANAGER"]), adminRouter);
+app.use("/api/employee", allowRoles(["EMPLOYEE"]), employeeRouter);
 
 const port = process.env.PORT || 3000;
 

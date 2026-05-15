@@ -1,4 +1,10 @@
-import { addDays, differenceInDays, format, startOfDay } from "date-fns";
+import {
+  addDays,
+  differenceInDays,
+  differenceInMinutes,
+  format,
+  startOfDay,
+} from "date-fns";
 
 export function getButtonText(status: string) {
   let text: string;
@@ -39,4 +45,32 @@ export function buildWeekDays(start: Date | string, end: Date | string) {
       key: format(date, "yyyy-MM-dd"),
     };
   });
+}
+
+function calculateShiftDuration(
+  start_time: Date | string,
+  end_time: Date | string
+) {
+  const start = new Date(start_time);
+  const end = new Date(end_time);
+
+  if (end < start) {
+    end.setDate(end.getDate() + 1);
+  }
+
+  const totalMinutes = differenceInMinutes(end, start);
+
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+
+  return { h, m };
+}
+
+export function formatShiftDuration(
+  start_time: Date | string,
+  end_time: Date | string
+) {
+  const { h, m } = calculateShiftDuration(start_time, end_time);
+  if (m === 0) return `${h} hours`;
+  return `${h}h ${m}m`;
 }

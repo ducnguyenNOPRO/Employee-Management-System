@@ -4,11 +4,6 @@ export interface DepartmentOverview {
   manager_id: string;
 }
 
-export interface EmployeeBalance {
-  type: "VACATION" | "SICK_LEAVE";
-  remaining: number;
-}
-
 export interface Invitation {
   invitation_status: "ACCEPTED" | "NOT_SENT" | "EXPIRED" | "PENDING";
   expires_at: string;

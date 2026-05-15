@@ -110,7 +110,7 @@ model leave_request {
 
   type            LeaveType
   start_date      DateTime
-  end_date        DateTime
+  end_date        DateTime?
   hours           Float // Total hours requested
   reason          String?            @db.VarChar(255)
   status          LeaveRequestStatus @default(PENDING)
@@ -264,6 +264,7 @@ enum LeaveRequestStatus {
   PENDING
   APPROVED
   REJECTED
+  CANCELLED
 }
 
 enum time_entry_type{

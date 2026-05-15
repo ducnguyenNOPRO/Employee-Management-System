@@ -37,10 +37,19 @@ export const Button: React.FC<ButtonProps> = ({
   icon,
   iconSize = 15, // New: destructure iconSize
   variant,
+  disabled,
   ...props
 }) => {
   return (
-    <button className={cn(buttonVariants({ variant, className }))} {...props}>
+    <button
+      disabled={disabled}
+      className={cn(
+        buttonVariants({ variant, className }),
+        disabled &&
+          "bg-gray-100 text-gray-500 cursor-default pointer-events-none opacity-60"
+      )}
+      {...props}
+    >
       {icon && (
         <span
           className="shrink-0 inline-flex items-center justify-center"

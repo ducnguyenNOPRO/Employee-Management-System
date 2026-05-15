@@ -125,8 +125,12 @@ export default function LeaveRequests() {
           return (
             <div>
               <p>{leave.start_date.split("T")[0]}</p>
-              <p className="text-gray-500">to</p>
-              <p>{leave.end_date.split("T")[0]}</p>
+              {leave.end_date && (
+                <>
+                  <p className="text-gray-500">to</p>
+                  <p>{leave.end_date.split("T")[0]}</p>
+                </>
+              )}
             </div>
           );
         },

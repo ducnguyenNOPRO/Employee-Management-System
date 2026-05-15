@@ -17,6 +17,7 @@ interface PendingRequest {
   start_date: string;
   end_date: string;
   type: string;
+  hours: number;
   requester: {
     first_name: string;
     last_name: string;

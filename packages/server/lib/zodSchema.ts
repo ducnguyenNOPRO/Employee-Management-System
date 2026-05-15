@@ -128,7 +128,13 @@ export const leaveSchema = z.object({
     .min(0, "Must be a positive value > 0")
     .max(160, "Max 4 weeks or 160 hours"),
   start_date: z.iso.date().transform((val) => new Date(val)),
-  end_date: z.iso.date().transform((val) => new Date(val)),
+  end_date: z.preprocess(
+    (val) =>
+      val === "" || val === null || val === undefined
+        ? null
+        : new Date(val as string),
+    z.date().nullable()
+  ),
   reason: z.string().trim().max(40, "Maximum 40 characters").nullable(),
 });
 
@@ -181,3 +187,26 @@ export const publishScheduleSchema = z.object({
   edit: z.record(z.string(), publishShiftSchema),
   delete: z.array(z.string()),
 });
+
+// Crew member schemas
+export const editableProfileSchema = z
+  .object({
+    email: z.email("Invalid email address"),
+    phone: z.string().regex(/^\+1\d{10}$/, "Must be +1 followed by 10 digits"),
+    emergency_contact: z
+      .string()
+      .trim()
+      .transform((v) => (v === "" ? null : v))
+      .nullable(),
+    emergency_phone: z
+      .string()
+      .trim()
+      .transform((v) => (v === "" ? null : v))
+      .pipe(
+        z
+          .string()
+          .regex(/^\+1\d{10}$/, "Must be +1 followed by 10 digits")
+          .nullable()
+      ),
+  })
+  .partial(); // partial so each field validates independently

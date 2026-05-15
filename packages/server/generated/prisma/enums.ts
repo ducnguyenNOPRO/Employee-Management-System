@@ -53,6 +53,7 @@ export const LeaveRequestStatus = {
   PENDING: "PENDING",
   APPROVED: "APPROVED",
   REJECTED: "REJECTED",
+  CANCELLED: "CANCELLED",
 } as const;
 
 export type LeaveRequestStatus =
