@@ -43,7 +43,7 @@ export default function LeaveRequestForm({ balances }: Props) {
     try {
       await EmpLeaveService.createRequest(data);
       invalidateQueries();
-      reset;
+      reset();
     } catch {}
   };
 

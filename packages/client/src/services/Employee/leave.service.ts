@@ -33,4 +33,17 @@ export const EmpLeaveService = {
       toast.error(error.response?.data?.message);
     }
   },
+  cancelRequest: async (id: string) => {
+    try {
+      const res = await api.patch(
+        `/employee/leaves/${id}/cancel`,
+        {},
+        { withCredentials: true }
+      );
+      toast.success(res.data.message);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message);
+      throw error;
+    }
+  },
 };

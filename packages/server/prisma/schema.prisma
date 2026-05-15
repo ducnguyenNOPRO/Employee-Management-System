@@ -264,6 +264,7 @@ enum LeaveRequestStatus {
   PENDING
   APPROVED
   REJECTED
+  CANCELLED
 }
 
 enum time_entry_type{

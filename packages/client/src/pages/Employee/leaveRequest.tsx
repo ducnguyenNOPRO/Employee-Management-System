@@ -1,3 +1,4 @@
+import HistoryRequests from "@/components/Crew/HistoryRequest";
 import LeaveRequestForm from "@/components/Crew/LeaveRequestForm";
 import {
   Card,
@@ -9,9 +10,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmpLeaveService } from "@/services/Employee/leave.service";
 import type { LeaveBalance, LeaveType } from "@/types/leave";
-import type { EmpHistoryRequest } from "@/types/leave";
-import { formatDateRange } from "@/utils/format";
-import { getLeaveRequestStatus } from "@/utils/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar } from "lucide-react";
 
@@ -24,10 +22,6 @@ export default function EmpLeaveRequest() {
   const { data: balances } = useQuery<LeaveBalance[]>({
     queryKey: ["balances"],
     queryFn: EmpLeaveService.getLeaveBalance,
-  });
-  const { data: historyLeaves } = useQuery<EmpHistoryRequest[]>({
-    queryKey: ["leaves"],
-    queryFn: EmpLeaveService.getLeaves,
   });
 
   const order = ["VACATION", "SICK_LEAVE"];
@@ -87,41 +81,7 @@ export default function EmpLeaveRequest() {
         <TabsContent value="history" className="mt-6">
           <Card>
             <CardContent>
-              {historyLeaves && historyLeaves.length > 0 ? (
-                <div className="grid md:grid-cols-2 gap-4">
-                  {historyLeaves.map((request) => (
-                    <div
-                      key={request.id}
-                      className="bg-white shadow-md border rounded-lg p-4"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-lg font-bold">
-                          {LEAVE_LABELS[request.type]}
-                        </span>
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getLeaveRequestStatus(
-                            request.status
-                          )}`}
-                        >
-                          {request.status}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>
-                          {" "}
-                          {formatDateRange(
-                            request.start_date,
-                            request.end_date
-                          )}
-                        </span>
-                        <span>{request.hours} hours</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div>No Previous Leave Requests</div>
-              )}
+              <HistoryRequests />
             </CardContent>
           </Card>
         </TabsContent>

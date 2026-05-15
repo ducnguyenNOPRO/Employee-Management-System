@@ -1,9 +1,21 @@
 import type { Request, Response } from "express";
 import { addDays, startOfDay } from "date-fns";
 import { prisma } from "../lib/prisma";
-import { editableProfileSchema, leaveSchema } from "../lib/zodSchema";
+import {
+  editableProfileSchema,
+  idSchmena,
+  leaveSchema,
+} from "../lib/zodSchema";
 import z from "zod";
 import type { leave_balance } from "../generated/prisma/client";
+import { CANCELLED } from "node:dns";
+
+const STATUS_PRIORITY = {
+  PENDING: 1,
+  APPROVED: 2,
+  REJECTED: 3,
+  CANCELLED: 4,
+};
 
 export async function getShifts(req: Request, res: Response) {
   const userId = req.user!.id;
@@ -147,7 +159,7 @@ export async function createLeaveRequest(req: Request, res: Response) {
 export async function getLeaves(req: Request, res: Response) {
   try {
     const leaves = await prisma.leave_request.findMany({
-      where: { requester_id: req.user!.id },
+      where: { requester_id: req.user!.id, status: { not: "CANCELLED" } },
       select: {
         id: true,
         type: true,
@@ -162,6 +174,67 @@ export async function getLeaves(req: Request, res: Response) {
     return res.status(200).json({ leaves });
   } catch (error) {
     console.log(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+export async function cancelRequest(req: Request, res: Response) {
+  const idCheck = idSchmena.safeParse({ id: req.params.id });
+  if (!idCheck.success) {
+    console.log(z.treeifyError(idCheck.error).properties);
+    return res.status(400).json({
+      message: `Error validation ${z.treeifyError(idCheck.error).properties}`,
+    });
+  }
+  try {
+    const request = await prisma.leave_request.findUnique({
+      where: { id: idCheck.data.id },
+    });
+
+    if (!request) {
+      return res
+        .status(404)
+        .json({ message: "Request not found. Please try again later" });
+    }
+
+    if (request.status !== "PENDING") {
+      return res
+        .status(409)
+        .json({ message: "Only PENDING requests can be cancelled" });
+    }
+
+    if (request.requester_id !== req.user!.id) {
+      return res
+        .status(400)
+        .json({ message: "Unauthorized to modify others leave requests" });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await Promise.all([
+        tx.leave_request.update({
+          where: { id: idCheck.data.id },
+          data: {
+            status: "CANCELLED",
+            status_priority: STATUS_PRIORITY["CANCELLED"],
+          },
+        }),
+
+        tx.leave_balance.update({
+          where: {
+            user_id_type: {
+              user_id: req.user!.id,
+              type: request.type,
+            },
+          },
+          data: {
+            used: { decrement: request.hours },
+          },
+        }),
+      ]);
+    });
+
+    return res.status(200).json({ message: "Request cancelled" });
+  } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
   }
 }
