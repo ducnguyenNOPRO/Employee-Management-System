@@ -12,8 +12,11 @@ import {
 } from "@/components/ui/table";
 import { getLeaveRequestStatus, getTypeColor } from "@/utils/utils";
 import { leaveService } from "@/services/leave.service";
-import { useAuthStore } from "@/stores/useAuthStore";
-import type { BaseRequest, UpdateRequestDecisionPayload } from "@/types/leave";
+import type {
+  BaseRequest,
+  StatusFilter,
+  UpdateRequestDecisionPayload,
+} from "@/types/leave";
 import { formatString } from "@/utils/format";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -22,25 +25,102 @@ import {
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
-import { Check, Filter, Plus, X } from "lucide-react";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Plus,
+  X,
+} from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+
+type PageSize = 5 | 10 | 15 | 20;
+
+const PAGE_SIZE_OPTIONS: PageSize[] = [5, 10, 15, 20];
+
+/** Build an array of page numbers + "..." ellipsis markers to render. */
+function buildPageRange(current: number, total: number): (number | "...")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+
+  const pages: (number | "...")[] = [1];
+
+  // Add ellipsis if there at least 2 hidden page next to 1
+  if (current > 3) pages.push("...");
+
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  for (let i = start; i <= end; i++) pages.push(i);
+
+  if (current < total - 2) pages.push("...");
+
+  pages.push(total);
+  return pages;
+}
 
 export default function LeaveRequests() {
-  const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState<
-    "All" | "Pending" | "Approved" | "Rejected"
-  >("All");
-  const { data: requests } = useQuery({
-    queryKey: ["leaves"],
-    queryFn: leaveService.getRequests,
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const page = parseInt(searchParams.get("page") ?? "1", 10);
+  const pageSize = (
+    PAGE_SIZE_OPTIONS.includes(
+      parseInt(searchParams.get("pageSize") ?? "10", 10) as PageSize
+    )
+      ? parseInt(searchParams.get("pageSize") ?? "10", 10)
+      : 10
+  ) as PageSize;
+  const statusFilter = (searchParams.get("status") ?? "All") as StatusFilter;
+
+  // Params Helpers
+  const setPage = (next: number) => {
+    setSearchParams((prev) => {
+      prev.set("page", String(next));
+      return prev;
+    });
+  };
+
+  const setPageSize = (next: PageSize) => {
+    setSearchParams((prev) => {
+      prev.set("pageSize", String(next));
+      return prev;
+    });
+  };
+
+  const setStatusFilter = (next: StatusFilter) => {
+    setSearchParams((prev) => {
+      prev.set("status", String(next));
+      return prev;
+    });
+  };
+
+  // Data fetching
+  const { data, isLoading } = useQuery({
+    queryKey: ["leaves", page, pageSize, statusFilter],
+    queryFn: () =>
+      leaveService.getRequests({
+        page,
+        pageSize,
+        status:
+          statusFilter === "All"
+            ? undefined
+            : (statusFilter.toUpperCase() as StatusFilter),
+      }),
     refetchOnMount: "always",
   });
+
   const { data: stats } = useQuery({
     queryKey: ["leaveStats"],
     queryFn: leaveService.getStats,
     refetchOnMount: "always",
   });
+
+  const requests: BaseRequest[] = data?.requests ?? [];
+  const total: number = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
   const [openModal, setOpenModal] = useState(false);
 
   // Update request decision
@@ -63,7 +143,6 @@ export default function LeaveRequests() {
         id,
         payload: {
           status,
-          approver_id: user?.id ?? "cmncfac4y00011c7kh16ulx3r",
         },
       }); // temporary using a manager_id
     },
@@ -125,7 +204,7 @@ export default function LeaveRequests() {
           return (
             <div>
               <p>{leave.start_date.split("T")[0]}</p>
-              {leave.end_date && (
+              {leave.end_date && leave.end_date !== leave.start_date && (
                 <>
                   <p className="text-gray-500">to</p>
                   <p>{leave.end_date.split("T")[0]}</p>
@@ -208,10 +287,14 @@ export default function LeaveRequests() {
     [handleDecision]
   );
   const table = useReactTable({
-    data: requests ?? [],
+    data: requests,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
+
+  const pageRange = buildPageRange(page, totalPages);
+  const firstRow = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const lastRow = Math.min(page * pageSize, total);
 
   return (
     <div className="space-y-6 p-6">
@@ -240,46 +323,21 @@ export default function LeaveRequests() {
         <div className="flex items-center gap-4">
           <Filter className="h-5 w-5 text-gray-400" />
           <div className="flex gap-2">
-            <button
-              onClick={() => setStatusFilter("All")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                statusFilter === "All"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setStatusFilter("Pending")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                statusFilter === "Pending"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              Pending
-            </button>
-            <button
-              onClick={() => setStatusFilter("Approved")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                statusFilter === "Approved"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              Approved
-            </button>
-            <button
-              onClick={() => setStatusFilter("Rejected")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                statusFilter === "Rejected"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              Rejected
-            </button>
+            {(["All", "Pending", "Approved", "Rejected"] as StatusFilter[]).map(
+              (s) => (
+                <button
+                  key={s}
+                  onClick={() => setStatusFilter(s)}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    statusFilter === s
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  {s}
+                </button>
+              )
+            )}
           </div>
         </div>
       </div>
@@ -317,6 +375,15 @@ export default function LeaveRequests() {
                   ))}
                 </TableRow>
               ))
+            ) : isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  Loading...
+                </TableCell>
+              </TableRow>
             ) : (
               <TableRow>
                 <TableCell
@@ -329,6 +396,73 @@ export default function LeaveRequests() {
             )}
           </TableBody>
         </Table>
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        {/* Left: row count + page size selector */}
+        <div className="flex items-center gap-3 text-sm text-gray-600">
+          <span>
+            {total === 0
+              ? "No results"
+              : `${firstRow}-${lastRow} of ${total} result${total !== 1 ? "s" : ""}`}
+          </span>
+          <span className="text-gray-300">|</span>
+          <span>Rows per page</span>
+          <select
+            value={pageSize}
+            onChange={(e) => setPageSize(Number(e.target.value) as PageSize)}
+            className="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {PAGE_SIZE_OPTIONS.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </div>
+        {/* Right: Previous / page numbers / Next */}
+        <div className="flex items-center gap-3">
+          {/* Previous */}
+          <Button onClick={() => setPage(page - 1)} disabled={page === 1}>
+            <ChevronLeft className="h-4 w-4" />
+            Previous
+          </Button>
+
+          {/* Page numbers */}
+          <div className="flex items-center gap-1">
+            {pageRange.map((item, idx) =>
+              item === "..." ? (
+                <span
+                  key={`ellipsis-${idx}`}
+                  className="px-2 py-1.5 text-sm text-gray-400 select-none"
+                >
+                  …
+                </span>
+              ) : (
+                <button
+                  key={item}
+                  onClick={() => setPage(item)}
+                  className={`min-w-9 py-1.5 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
+                    item === page
+                      ? "bg-black text-white"
+                      : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  {item}
+                </button>
+              )
+            )}
+          </div>
+
+          {/* Next */}
+          <Button
+            onClick={() => setPage(page + 1)}
+            disabled={page >= totalPages}
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       <AddLeaveRequestModal isOpen={openModal} setOpenModal={setOpenModal} />

@@ -5,7 +5,6 @@ const BASE_URL = "http://localhost:3000";
 
 // ─── Seeded IDs (must exist in DB before running) ────────────────────────────
 const REQUESTER_ID = "ctest000000requester0000001";
-const APPROVER_ID = "ctest000000approver0000001x";
 
 const PENDING_VACATION_ID = "creq0000000vacation00pending"; // 16h VACATION  PENDING  → use for approve/reject success path
 const PENDING_SICK_ID = "creq0000000sickleav0pending"; //  8h SICK_LEAVE PENDING  → burn for 409 test
@@ -246,7 +245,6 @@ test.describe("PATCH /api/admin/leaves/:id", () => {
 
     test("approves and returns 200", async ({ request }) => {
       const res = await patchLeave(request, PENDING_VACATION_ID, {
-        approver_id: APPROVER_ID,
         status: "APPROVED",
       });
       expect(res.status()).toBe(200);
@@ -267,7 +265,6 @@ test.describe("PATCH /api/admin/leaves/:id", () => {
       request,
     }) => {
       const res = await patchLeave(request, PENDING_SICK_ID, {
-        approver_id: APPROVER_ID,
         status: "REJECTED",
       });
       expect(res.status()).toBe(200);
@@ -290,7 +287,6 @@ test.describe("PATCH /api/admin/leaves/:id", () => {
   // ── Validation errors (400) ──────────────────────────────────────────────────
   test("400 - invalid ID format in URL param", async ({ request }) => {
     const res = await patchLeave(request, "not-a-valid-id", {
-      approver_id: APPROVER_ID,
       status: "APPROVED",
     });
 
@@ -299,27 +295,8 @@ test.describe("PATCH /api/admin/leaves/:id", () => {
     expect(body.message).toBe("Missing or Invalid ID format");
   });
 
-  test("400 - missing approver_id", async ({ request }) => {
-    const res = await patchLeave(request, PENDING_VACATION_ID, {
-      status: "APPROVED",
-    });
-
-    expect(res.status()).toBe(400);
-  });
-
-  test("400 - invalid approver_id (not a cuid)", async ({ request }) => {
-    const res = await patchLeave(request, PENDING_VACATION_ID, {
-      approver_id: "not-a-cuid",
-      status: "APPROVED",
-    });
-
-    expect(res.status()).toBe(400);
-  });
-
   test("400 - missing status", async ({ request }) => {
-    const res = await patchLeave(request, PENDING_VACATION_ID, {
-      approver_id: APPROVER_ID,
-    });
+    const res = await patchLeave(request, PENDING_VACATION_ID, {});
 
     expect(res.status()).toBe(400);
   });
@@ -328,7 +305,6 @@ test.describe("PATCH /api/admin/leaves/:id", () => {
     request,
   }) => {
     const res = await patchLeave(request, PENDING_VACATION_ID, {
-      approver_id: APPROVER_ID,
       status: "PENDING", // editLeaveSchema only allows APPROVED | REJECTED
     });
 
@@ -337,7 +313,6 @@ test.describe("PATCH /api/admin/leaves/:id", () => {
 
   test("400 - invalid status value (random string)", async ({ request }) => {
     const res = await patchLeave(request, PENDING_VACATION_ID, {
-      approver_id: APPROVER_ID,
       status: "MAYBE",
     });
 
@@ -347,7 +322,6 @@ test.describe("PATCH /api/admin/leaves/:id", () => {
   // ── Not found (404) ──────────────────────────────────────────────────────────
   test("404 - leave request does not exist", async ({ request }) => {
     const res = await patchLeave(request, "cnonexistent0leave00000001", {
-      approver_id: APPROVER_ID,
       status: "APPROVED",
     });
 
@@ -361,7 +335,6 @@ test.describe("PATCH /api/admin/leaves/:id", () => {
     request,
   }) => {
     const res = await patchLeave(request, APPROVED_ID, {
-      approver_id: APPROVER_ID,
       status: "REJECTED",
     });
 
@@ -374,7 +347,6 @@ test.describe("PATCH /api/admin/leaves/:id", () => {
     request,
   }) => {
     const res = await patchLeave(request, REJECTED_ID, {
-      approver_id: APPROVER_ID,
       status: "APPROVED",
     });
 

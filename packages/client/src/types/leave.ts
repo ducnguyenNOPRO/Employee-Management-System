@@ -31,5 +31,12 @@ interface Approver extends Omit<Requester, "id"> {}
 
 export interface UpdateRequestDecisionPayload {
   status: "APPROVED" | "REJECTED";
-  approver_id: string;
+}
+
+export type StatusFilter = "All" | "Pending" | "Approved" | "Rejected";
+
+export interface GetRequestPayload {
+  page: number;
+  pageSize: number;
+  status?: StatusFilter;
 }
