@@ -38,6 +38,8 @@ const STATUS_PRIORITY = {
   CANCELLED: 4,
 };
 
+const PAGE_SIZE = [5, 10, 15, 20];
+
 const EARLY_CLOCK_IN_HOURS_ALLOWED = 2 * 60 * 60 * 1000;
 const LATE_CLOCK_OUT_HOURS_ALLOWED = 2 * 60 * 60 * 1000;
 
@@ -718,38 +720,62 @@ export async function getRequestStats(req: Request, res: Response) {
 }
 
 export async function getRequests(req: Request, res: Response) {
-  try {
-    const requests = await prisma.leave_request.findMany({
-      orderBy: [
-        { status_priority: "asc" },
-        { start_date: "asc" },
-        { created_at: "desc" },
-      ],
-      select: {
-        id: true,
-        type: true,
-        hours: true,
-        start_date: true,
-        end_date: true,
-        reason: true,
-        status: true,
-        requester: {
-          select: {
-            id: true,
-            first_name: true,
-            last_name: true,
-          },
-        },
-        approver: {
-          select: {
-            first_name: true,
-            last_name: true,
-          },
-        },
-      },
-    });
+  const page = parseInt((req.query.page as string) ?? "1");
+  const pageSize = PAGE_SIZE.includes(
+    parseInt(req.query.pageSize as string, 10)
+  )
+    ? parseInt(req.query.pageSize as string, 10)
+    : 10;
+  // ALL - undefined, PENDING | APPROVED | REJECTED
+  const rawStatus = (req.query.status as string | undefined)?.toUpperCase();
+  const VALID_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
+  type ValidStatus = (typeof VALID_STATUSES)[number];
+  const statusFilter: ValidStatus | undefined = VALID_STATUSES.includes(
+    rawStatus as ValidStatus
+  )
+    ? (rawStatus as ValidStatus)
+    : undefined;
 
-    return res.status(200).json({ requests });
+  const where = statusFilter ? { status: statusFilter } : {};
+  const skip = (page - 1) * pageSize;
+  try {
+    const [total, requests] = await Promise.all([
+      prisma.leave_request.count({ where }),
+      prisma.leave_request.findMany({
+        where,
+        orderBy: [
+          { status_priority: "asc" },
+          { start_date: "asc" },
+          { created_at: "desc" },
+        ],
+        skip,
+        take: pageSize,
+        select: {
+          id: true,
+          type: true,
+          hours: true,
+          start_date: true,
+          end_date: true,
+          reason: true,
+          status: true,
+          requester: {
+            select: {
+              id: true,
+              first_name: true,
+              last_name: true,
+            },
+          },
+          approver: {
+            select: {
+              first_name: true,
+              last_name: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    return res.status(200).json({ requests, total });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -843,7 +869,10 @@ export async function updateRequest(req: Request, res: Response) {
       message: `Missing or Invalid ID format`,
     });
   }
-  const result = editLeaveSchema.safeParse(req.body);
+  const result = editLeaveSchema.safeParse({
+    status: req.body.status,
+    approver_id: req.user!.id,
+  });
   if (!result.success) {
     return res.status(400).json({
       message: `Error validation ${z.treeifyError(result.error).properties}`,

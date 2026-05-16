@@ -1,15 +1,19 @@
 import api from "@/lib/axios";
 import type { AddLeaveRequestPayload } from "@/lib/zodSchema";
-import type { UpdateRequestDecisionPayload } from "@/types/leave";
+import type {
+  GetRequestPayload,
+  UpdateRequestDecisionPayload,
+} from "@/types/leave";
 import { toast } from "sonner";
 
 export const leaveService = {
-  getRequests: async () => {
+  getRequests: async (payload: GetRequestPayload) => {
     try {
       const res = await api.get("/admin/leaves", {
+        params: payload,
         withCredentials: true,
       });
-      return res.data.requests;
+      return res.data;
     } catch (error: any) {
       throw error; // tell react query this failed
     }

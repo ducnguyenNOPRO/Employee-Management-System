@@ -125,11 +125,10 @@ model leave_request {
   requester user  @relation("Requester", fields: [requester_id], references: [id], onDelete: Cascade)
   approver  user? @relation("Approver", fields: [approver_id], references: [id], onDelete: SetNull)
   location  location @relation(fields: [location_id], references: [id])
-
-  @@index([requester_id])
-  @@index([status])
-  @@index([start_date])
-  @@index([location_id])
+  
+  @@index([location_id, status, status_priority, start_date, created_at])             // GM: all requests + status filter
+  @@index([location_id, requester_id, status, status_priority, start_date, created_at]) // GM: filter by employee
+  @@index([requester_id, status, created_at])    // Crew
 }
 
 model invitation {
