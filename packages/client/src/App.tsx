@@ -10,7 +10,7 @@ import EmpLeaveRequest from "./pages/Employee/leaveRequest";
 import DepartmentDetail from "./pages/departmentDetail";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
-import Forbidden from "./pages/404";
+import Forbidden from "./pages/403";
 import CreatePassword from "./pages/createPassword";
 import AttendanceDashboard from "./pages/attendance";
 import Schedule from "./pages/schedule";
@@ -18,6 +18,7 @@ import ProtectedRoute from "./components/protectedRoutes";
 import TopBarLayout from "./components/EmpTopBarLayout";
 import Shifts from "./pages/Employee/shifts";
 import EmployeeProfile from "./pages/Employee/employeeProfile";
+import ToManyRequests from "./pages/429";
 
 const router = createBrowserRouter([
   // Public routes
@@ -35,6 +36,7 @@ const router = createBrowserRouter([
   },
 
   { path: "/Forbidden", element: <Forbidden /> },
+  { path: "/too-many-requests", element: <ToManyRequests /> },
 
   // Employee Routes
   {
