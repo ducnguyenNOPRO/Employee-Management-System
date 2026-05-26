@@ -35,13 +35,8 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Check for refreshToken in BE: auth.middlewaree.ts
-    // reject immediately without retry
-    if (error.response.data.code === "REFRESH_TOKEN_EXPIRED") {
-      console.log("reject before retry");
-      // trigger protectedRoute re render with accessToken  == null => go to /login
-      useAuthStore.getState().clearState();
-      return Promise.reject(error);
+    if (error.response?.status === 429) {
+      window.location.href = "/too-many-requests";
     }
 
     // Probably never need retryCount
