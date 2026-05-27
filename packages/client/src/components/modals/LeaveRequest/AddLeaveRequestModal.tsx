@@ -26,7 +26,7 @@ export default function AddLeaveRequestModal({
     <Dialog open={isOpen} onOpenChange={setOpenModal}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Department</DialogTitle>
+          <DialogTitle>Add New Request</DialogTitle>
           <DialogDescription>
             Fill in the department information below
           </DialogDescription>

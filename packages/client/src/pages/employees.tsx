@@ -58,7 +58,7 @@ export default function Employees() {
                 firstName={employee.first_name}
                 lastName={employee.last_name}
               />
-              <Link to={`/employees/${employee.id}`}>
+              <Link to={`/gm/employees/${employee.id}`}>
                 <p className="text-sm font-medium text-gray-900 hover:text-blue-500">
                   {employee.first_name} {employee.last_name}
                 </p>
