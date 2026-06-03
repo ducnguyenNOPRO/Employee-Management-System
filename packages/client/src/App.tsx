@@ -19,11 +19,16 @@ import TopBarLayout from "./components/EmpTopBarLayout";
 import Shifts from "./pages/Employee/shifts";
 import EmployeeProfile from "./pages/Employee/employeeProfile";
 import ToManyRequests from "./pages/429";
+import HomePage from "./pages/Home";
 
 const router = createBrowserRouter([
   // Public routes
   {
     path: "/",
+    element: <HomePage />,
+  },
+  {
+    path: "/login",
     element: <Login />,
   },
   // {
