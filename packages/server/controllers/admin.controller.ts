@@ -489,7 +489,7 @@ export async function getDepartment(req: Request, res: Response) {
   const result = idSchmena.safeParse({ id: req.params.id });
   if (!result.success) {
     console.log(z.treeifyError(result.error).properties);
-    res.status(400).json({ message: "Missing or Invalid ID format" });
+    return res.status(400).json({ message: "Missing or Invalid ID format" });
   }
 
   try {

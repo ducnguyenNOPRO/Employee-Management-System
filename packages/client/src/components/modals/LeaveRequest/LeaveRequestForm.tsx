@@ -277,7 +277,7 @@ export default function LeaveRequestForm({ onSuccess }: AddFormProps) {
       {/* Footer */}
       <DialogFooter>
         <DialogClose asChild>
-          <Button>Cancle</Button>
+          <Button>Cancel</Button>
         </DialogClose>
         <Button type="submit" variant="add" disabled={isSubmitting}>
           {isSubmitting ? "Loading..." : "New Request"}

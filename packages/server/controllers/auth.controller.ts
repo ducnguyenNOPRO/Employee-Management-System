@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import { signUpSchema, signInSchema, activateSchema } from "../lib/zodSchema";
+import { signInSchema, activateSchema } from "../lib/zodSchema";
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import z from "zod";
@@ -9,95 +9,6 @@ import { consumeInvitation } from "../lib/helper";
 
 const ACCESS_TOKEN_TTL = "10m";
 const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000; // 14 days in ms
-
-// Local dev only
-export async function signUpAdmin(req: Request, res: Response) {
-  const result = signUpSchema.safeParse(req.body);
-  if (!result.success) {
-    return res.status(400).json({
-      message: `Error validation ${z.treeifyError(result.error).properties}`,
-    });
-  }
-
-  try {
-    const { first_name, last_name, email, password, role } = result.data;
-    // Check if email exist
-    const duplicate = await prisma.admin.findUnique({
-      where: {
-        email,
-      },
-    });
-    if (duplicate) {
-      res.status(400).json({ message: "email is existed" });
-    }
-
-    // Hasing password
-    const hashedPassword = await bcrypt.hash(password, 10); // salt = 10
-
-    // Create user
-    await prisma.admin.create({
-      data: {
-        first_name: first_name,
-        last_name: last_name,
-        email: email,
-        password_hash: hashedPassword,
-        role: role,
-      },
-    });
-
-    return res.sendStatus(204);
-  } catch (error) {
-    console.log("Sign up error", error);
-    res.status(500).json({ message: "Server error" });
-  }
-}
-
-export async function signUpEmployee(req: Request, res: Response) {
-  const result = signUpSchema.safeParse(req.body);
-  if (!result.success) {
-    return res.status(400).json({
-      message: `Error validation ${z.treeifyError(result.error).properties}`,
-    });
-  }
-
-  try {
-    const { first_name, last_name, email, password, role } = result.data;
-    // Check if email exist
-    const duplicate = await prisma.admin.findUnique({
-      where: {
-        email,
-      },
-    });
-    if (duplicate) {
-      res.status(400).json({ message: "email is existed" });
-    }
-
-    // Hasing password
-    const hashedPassword = await bcrypt.hash(password, 10); // salt = 10
-
-    // Create user
-    await prisma.user.create({
-      data: {
-        first_name: first_name,
-        last_name: last_name,
-        email: email,
-        password_hash: hashedPassword,
-        role: role,
-        address: "123 Main St",
-        position: "General Manager",
-        status: "ACTIVE",
-        phone: "+15556667766",
-        location_id: "250387",
-        hourly_rate: 50.0,
-      },
-    });
-
-    return res.sendStatus(204);
-  } catch (error) {
-    console.log("Sign up error", error);
-    res.status(500).json({ message: "Server error" });
-  }
-}
 
 export async function signIn(req: Request, res: Response) {
   const result = signInSchema.safeParse(req.body);
@@ -201,7 +112,7 @@ export async function signOut(req: Request, res: Response) {
       res.clearCookie("refreshToken");
     }
 
-    return res.status(204);
+    return res.sendStatus(204);
   } catch (error) {
     console.log("Sign out error", error);
     res.status(500).json({ message: "Server error" });
@@ -212,7 +123,7 @@ export async function refreshToken(req: Request, res: Response) {
   const refreshToken = req.cookies?.refreshToken;
 
   if (!refreshToken) {
-    res.status(401).json({ message: "No refresh token found" });
+    return res.status(401).json({ message: "No refresh token found" });
   }
 
   try {

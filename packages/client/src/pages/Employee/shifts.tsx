@@ -8,17 +8,18 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import { format } from "date-fns";
+import { format, isToday } from "date-fns";
 import { formatShiftDuration } from "@/utils/helper";
 
 export default function Shifts() {
   const { data: shifts } = useQuery<EmployeeShift[]>({
-    queryKey: ["attendanceStats"],
+    queryKey: ["shifts"],
     queryFn: shiftService.getShifts,
   });
 
-  const todayShift = shifts ? shifts[0] : null;
-  const upcomingShifts = shifts ? shifts.slice(1) : null;
+  const todayShift =
+    shifts?.find((s) => isToday(new Date(s.start_time))) ?? null;
+  const upcomingShifts = shifts?.filter((s) => s.id !== todayShift?.id) ?? [];
   return (
     <div className="space-y-8">
       {/* Today Shift */}
@@ -84,7 +85,7 @@ export default function Shifts() {
           Upcoming Shifts
         </h2>
         <div className="space-y-4 mb-4">
-          {upcomingShifts ? (
+          {upcomingShifts.length > 0 ? (
             upcomingShifts.map((shift) => (
               <Card key={shift.id}>
                 <CardHeader>

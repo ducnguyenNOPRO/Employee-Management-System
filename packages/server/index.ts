@@ -9,7 +9,6 @@ import {
 import cookieParser from "cookie-parser";
 import { allowRoles, AuthenticatedRoute } from "./middlewares/auth.middlewares";
 import cors from "cors";
-import mockDataRouter from "./routes/mockData-create.routes";
 import testRouter from "./routes/test.routes";
 import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 
@@ -46,10 +45,9 @@ app.use(defaultRouter);
 // Public routes
 app.use("/api/auth", authLimiter, authRouter);
 
-// Mock Data create routes
-app.use("/api/mock", mockDataRouter);
-
-app.use("/api/test", testRouter);
+if (process.env.ENABLE_TEST_ROUTES === "true") {
+  app.use("/api/test", testRouter);
+}
 
 // Authuticated routes
 app.use(AuthenticatedRoute);

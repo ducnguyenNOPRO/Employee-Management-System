@@ -282,10 +282,10 @@ export default function AddForm({ onSuccess }: AddFormProps) {
         {/* Footer */}
         <DialogFooter>
           <DialogClose asChild>
-            <Button>Cancle</Button>
+            <Button>Cancel</Button>
           </DialogClose>
           <Button type="submit" variant="add" disabled={isSubmitting}>
-            {isSubmitting ? "Loading..." : "Add Deparment"}
+            {isSubmitting ? "Loading..." : "Add Department"}
           </Button>
         </DialogFooter>
       </form>

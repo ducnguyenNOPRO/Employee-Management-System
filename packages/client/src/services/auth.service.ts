@@ -1,18 +1,8 @@
 import api from "@/lib/axios";
-import type {
-  ActivatePayload,
-  RegisterPayload,
-  SignInPayload,
-} from "../lib/zodSchema";
+import type { ActivatePayload, SignInPayload } from "../lib/zodSchema";
 import { toast } from "sonner";
 
 export const authService = {
-  signUp: async (payload: RegisterPayload) => {
-    const res = await api.post("/auth/signup", payload, {
-      withCredentials: true,
-    });
-    return res.data;
-  },
   activate: async (payload: ActivatePayload) => {
     try {
       const res = await api.post("/auth/activate", payload, {

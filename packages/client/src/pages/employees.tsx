@@ -4,7 +4,6 @@ import {
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
-import { mockEmployees } from "@/lib/mockData";
 import { useMemo, useState } from "react";
 import UserCharacters from "@/components/ui/characters";
 import { Download, Plus, Search, Send } from "lucide-react";
@@ -25,7 +24,6 @@ import type { EmployeeOverview } from "@/types/employee";
 import { formatString } from "@/utils/format";
 import { getButtonText } from "@/utils/helper";
 
-const departments = Array.from(new Set(mockEmployees.map((e) => e.department)));
 export default function Employees() {
   const { data } = useQuery({
     queryKey: ["employees"],
@@ -192,18 +190,6 @@ export default function Employees() {
             className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <select
-          value={department}
-          onChange={(e) => setDepartment(e.target.value)}
-          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="all">All Departments</option>
-          {departments.map((dept) => (
-            <option key={dept} value={dept}>
-              {dept}
-            </option>
-          ))}
-        </select>
 
         <select
           value={status}

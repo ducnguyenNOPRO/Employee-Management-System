@@ -37,7 +37,7 @@ export default function AttendanceExceptions({ exceptions }: Props) {
           </div>
         </div>
         <Link
-          to="/attendance"
+          to="/gm/attendance"
           className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
         >
           View all

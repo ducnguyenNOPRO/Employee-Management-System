@@ -39,7 +39,7 @@ export default function ProtectedRoute({ role }: { role: string }) {
   }
 
   if (user?.role !== role) {
-    return <Navigate to="/unauthorized" />;
+    return <Navigate to="/Forbidden" />;
   }
 
   return <Outlet />;

@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma";
 import bcrypt from "bcrypt";
+import { addDays, startOfDay } from "date-fns";
 
 async function main() {
   console.log("Resetting DB...");
@@ -196,6 +197,22 @@ async function main() {
     ],
   });
 
+  const today = startOfDay(new Date());
+  const at = (offsetDays: number, hour: number) => {
+    const d = addDays(today, offsetDays);
+    d.setHours(hour, 0, 0, 0);
+    return d;
+  };
+  const demoShifts = Array.from({ length: 14 }, (_, i) => {
+    const offset = i - 3;
+    return {
+      user_id: "ctest000000schedule000001x",
+      location_id: "250387",
+      start_time: at(offset, 9),
+      end_time: at(offset, 17),
+      notes: offset === 0 ? "Today's shift" : `Demo shift (day ${offset})`,
+    };
+  });
   // ── Shifts ─────────────────────────────────────────────────────────────────
   await prisma.shift.createMany({
     data: [
@@ -271,87 +288,7 @@ async function main() {
         end_time: new Date("2025-10-05T17:00:00"),
         notes: "Edit time entry - no entry",
       },
-      {
-        id: "cshift0000000000sched00today",
-        user_id: "ctest000000schedule000001x",
-        location_id: "250387",
-        start_time: new Date("2026-05-11T09:00:00"),
-        end_time: new Date("2026-05-11T17:00:00"),
-        notes: "Schedule test - today",
-      },
-      // ── Upcoming (days +1 through +9) ──────────────────────────────────────
-      {
-        id: "cshift0000000000sched00day01",
-        user_id: "ctest000000schedule000001x",
-        location_id: "250387",
-        start_time: new Date("2026-05-12T09:00:00"),
-        end_time: new Date("2026-05-12T17:00:00"),
-        notes: "Schedule test - day 1",
-      },
-      {
-        id: "cshift0000000000sched00day02",
-        user_id: "ctest000000schedule000001x",
-        location_id: "250387",
-        start_time: new Date("2026-05-13T09:00:00"),
-        end_time: new Date("2026-05-13T17:00:00"),
-        notes: "Schedule test - day 2",
-      },
-      {
-        id: "cshift0000000000sched00day03",
-        user_id: "ctest000000schedule000001x",
-        location_id: "250387",
-        start_time: new Date("2026-05-14T09:00:00"),
-        end_time: new Date("2026-05-14T17:00:00"),
-        notes: "Schedule test - day 3",
-      },
-      {
-        id: "cshift0000000000sched00day04",
-        user_id: "ctest000000schedule000001x",
-        location_id: "250387",
-        start_time: new Date("2026-05-15T09:00:00"),
-        end_time: new Date("2026-05-15T17:00:00"),
-        notes: "Schedule test - day 4",
-      },
-      {
-        id: "cshift0000000000sched00day05",
-        user_id: "ctest000000schedule000001x",
-        location_id: "250387",
-        start_time: new Date("2026-05-16T09:00:00"),
-        end_time: new Date("2026-05-16T17:00:00"),
-        notes: "Schedule test - day 5",
-      },
-      {
-        id: "cshift0000000000sched00day06",
-        user_id: "ctest000000schedule000001x",
-        location_id: "250387",
-        start_time: new Date("2026-05-17T09:00:00"),
-        end_time: new Date("2026-05-17T17:00:00"),
-        notes: "Schedule test - day 6",
-      },
-      {
-        id: "cshift0000000000sched00day07",
-        user_id: "ctest000000schedule000001x",
-        location_id: "250387",
-        start_time: new Date("2026-05-18T09:00:00"),
-        end_time: new Date("2026-05-18T17:00:00"),
-        notes: "Schedule test - day 7",
-      },
-      {
-        id: "cshift0000000000sched00day08",
-        user_id: "ctest000000schedule000001x",
-        location_id: "250387",
-        start_time: new Date("2026-05-19T09:00:00"),
-        end_time: new Date("2026-05-19T17:00:00"),
-        notes: "Schedule test - day 8",
-      },
-      {
-        id: "cshift0000000000sched00day09",
-        user_id: "ctest000000schedule000001x",
-        location_id: "250387",
-        start_time: new Date("2026-05-20T09:00:00"),
-        end_time: new Date("2026-05-20T17:00:00"),
-        notes: "Schedule test - day 9",
-      },
+      ...demoShifts,
     ],
   });
 
