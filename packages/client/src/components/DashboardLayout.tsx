@@ -1,8 +1,7 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
-  Building2,
   Calendar,
   Menu,
   ClipboardCheck,
@@ -21,7 +20,7 @@ const navigation = [
 ];
 
 export default function DashboardLayout() {
-  const { signOut } = useAuthStore();
+  const { signOut, user } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -117,9 +116,9 @@ export default function DashboardLayout() {
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">
-                Admin User
+                Manager
               </p>
-              <p className="text-xs text-gray-500 truncate">admin@gmail.com</p>
+              <p className="text-xs text-gray-500 truncate">{user?.email}</p>
             </div>
           )}
         </div>

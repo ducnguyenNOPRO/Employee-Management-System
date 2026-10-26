@@ -51,6 +51,7 @@ jobs:
         env: 
           DATABASE_URL: postgresql://postgres:password@localhost:5432/ems
           ACCESS_TOKEN_SECRET: ${{ secrets.ACCESS_TOKEN_SECRET }}
+          ENABLE_TEST_ROUTES: "true"
         run: |
           cd packages/tests
           bunx playwright test

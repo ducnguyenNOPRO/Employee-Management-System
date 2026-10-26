@@ -3,6 +3,7 @@ import type { AuthState } from "@/types/store";
 import type { AuthUser } from "@/types/user";
 import { create } from "zustand";
 import { jwtDecode } from "jwt-decode";
+import { queryClient } from "@/lib/queryClient";
 
 export const useAuthStore = create<AuthState<AuthUser>>((set, get) => ({
   accessToken: null,
@@ -10,6 +11,7 @@ export const useAuthStore = create<AuthState<AuthUser>>((set, get) => ({
   loading: false,
 
   clearState: () => {
+    queryClient.clear();
     set({ accessToken: null, user: null, loading: false });
   },
   setAccessToken: (token) => {
@@ -23,17 +25,6 @@ export const useAuthStore = create<AuthState<AuthUser>>((set, get) => ({
     });
   },
 
-  signUp: async (payload) => {
-    try {
-      set({ loading: true });
-      await authService.signUp(payload);
-    } catch (error: any) {
-      //console.error(error.response?.data?.message);
-      alert("Unable to signup");
-    } finally {
-      set({ loading: false });
-    }
-  },
   signIn: async (payload) => {
     try {
       set({ loading: true });

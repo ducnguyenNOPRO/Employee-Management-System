@@ -8,7 +8,7 @@ import EmployeeDetail from "./pages/employeeDetail";
 import Login from "./pages/login";
 import EmpLeaveRequest from "./pages/Employee/leaveRequest";
 import DepartmentDetail from "./pages/departmentDetail";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import Forbidden from "./pages/403";
 import CreatePassword from "./pages/createPassword";
@@ -20,6 +20,7 @@ import Shifts from "./pages/Employee/shifts";
 import EmployeeProfile from "./pages/Employee/employeeProfile";
 import ToManyRequests from "./pages/429";
 import HomePage from "./pages/Home";
+import { queryClient } from "./lib/queryClient";
 
 const router = createBrowserRouter([
   // Public routes
@@ -31,10 +32,6 @@ const router = createBrowserRouter([
     path: "/login",
     element: <Login />,
   },
-  // {
-  //   path: "/register",
-  //   element: <Register />,
-  // },
   {
     path: "/create-password",
     element: <CreatePassword />,
@@ -59,16 +56,6 @@ const router = createBrowserRouter([
     ],
   },
 
-  // // Dev mode
-  // {
-  //   path: "emp",
-  //   element: <TopBarLayout />,
-  //   children: [
-  //     { index: true, element: <Shifts /> },
-  //     {path: "/emp/profile", element: <EmployeeProfile />}
-  //   ]
-  // },
-
   // Manager Routes
   {
     element: <ProtectedRoute role="MANAGER" />,
@@ -88,31 +75,7 @@ const router = createBrowserRouter([
       },
     ],
   },
-  // Dev mode
-  // {
-  //   path: "/dashboard",
-  //   element: <DashboardLayout />,
-  // children: [
-  //   { index: true, element: <Dashboard /> },
-  //   { path: "attendance", element: <AttendanceDashboard /> },
-  //   { path: "schedule", element: <Schedule /> },
-  //   { path: "employees", element: <Employees /> },
-  //   { path: "employees/:id", element: <EmployeeDetail /> },
-  //   { path: "departments/:id", element: <DepartmentDetail /> },
-  //   { path: "leaves", element: <LeaveRequests /> },
-  // ],
-  // },
 ]);
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60 * 5 * 1000, // 5 minute
-      retry: 1, // default 3
-      refetchOnWindowFocus: false,
-    },
-  },
-});
 
 function App() {
   return (

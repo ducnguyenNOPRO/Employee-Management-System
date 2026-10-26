@@ -2,7 +2,6 @@ import type { DashboardSummary } from "@/types/dashboard";
 import { Calendar, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import UserCharacters from "../ui/characters";
-import { differenceInDays, format } from "date-fns";
 import { formatDateRange, formatSnakeCase } from "@/utils/format";
 import { Button } from "../ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -39,7 +38,6 @@ export default function PendignRequest({ pendingRequests }: Props) {
       id,
       payload: {
         status,
-        approver_id: user?.id ?? "cmoi6iiq00005x47kn0ufzg1n",
       },
     });
   };
@@ -60,7 +58,7 @@ export default function PendignRequest({ pendingRequests }: Props) {
           </div>
         </div>
         <Link
-          to="/leaves"
+          to="/gm/leaves"
           className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
         >
           View all

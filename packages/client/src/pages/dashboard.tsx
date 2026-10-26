@@ -23,7 +23,7 @@ export default function Dashboard() {
     <>
       <div className="space-y-6 p-6">
         <div className="flex flex-col justify-center">
-          <h1 className="text-2xl text-gray-900 font-bold">Dahsboard</h1>
+          <h1 className="text-2xl text-gray-900 font-bold">Dashboard</h1>
           <p className="text-md text-gray-700">
             Welcome back {user?.first_name} {user?.last_name}! Here's what's
             happening with your team

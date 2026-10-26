@@ -1,4 +1,4 @@
-import type { SignInPayload, RegisterPayload } from "../lib/zodSchema";
+import type { SignInPayload } from "../lib/zodSchema";
 import type { MutableUserFields } from "./user";
 
 export interface AuthState<AuthUser> {
@@ -10,7 +10,6 @@ export interface AuthState<AuthUser> {
   setAccessToken: (token: string) => void;
   updateUser: (data: MutableUserFields) => void;
 
-  signUp: (payload: RegisterPayload) => Promise<void>;
   signIn: (payload: SignInPayload) => Promise<string>;
   signOut: () => Promise<void>;
   fetchMe: () => Promise<void>;
