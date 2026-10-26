@@ -1,6 +1,8 @@
 # dependencies (bun install)
 node_modules
 
+packages/tests/auth.json
+
 # output
 out
 dist
